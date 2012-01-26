@@ -1,0 +1,60 @@
+#
+# Generic framework for controlling remote processors
+#
+
+# Remote proc gets selected by whoever wants it.
+config REMOTE_PROC
+	tristate
+
+config REMOTE_PROC_AUTOSUSPEND
+	bool "Autosuspend support for remoteproc"
+	depends on REMOTE_PROC
+	default y
+	help
+          Say Y here if you want remote processor to suspend
+          after some time of inactivity.
+
+# can't be tristate, due to omap_device_* and omap_hwmod_* dependency
+config OMAP_REMOTE_PROC
+	bool "OMAP remoteproc support"
+	depends on ARCH_OMAP4
+	select OMAP_IOMMU
+	select REMOTE_PROC
+	default y
+	help
+	  Say y here to support OMAP's remote processors (dual M3
+	  and DSP on OMAP4) via the remote processor framework.
+
+	  Currently only supported on OMAP4.
+
+	  Usually you want to say y here, in order to enable multimedia
+	  use-cases to run on your platform (multimedia codecs are
+	  offloaded to remote DSP processors using this framework).
+
+	  It's safe to say n here if you're not interested in multimedia
+	  offloading or just want a bare minium kernel.
+
+config OMAP_RPRES
+	bool "Remote Processor Resources"
+	depends on OMAP_REMOTE_PROC
+	default y
+	help
+	  Say Y here if you want to use OMAP remote processor resources
+	  frame work.
+
+config REMOTEPROC_WATCHDOG
+	bool "OMAP remoteproc watchdog timer"
+	depends on REMOTE_PROC
+	default y
+	help
+	  Say y to enable watchdog timer for remote cores
+
+config REMOTEPROC_CORE_DUMP
+	bool "Support for extracting a core dump from a remote processor"
+	depends on REMOTE_PROC
+	default y
+	help
+	  Say y to enable extracting a core dump from a running remote
+          processor at <debugfs>/remoteproc/<remoteproc>/core.  Extracting the
+	  core dump does not pause the remote processor--this must be
+	  implemented separately.
