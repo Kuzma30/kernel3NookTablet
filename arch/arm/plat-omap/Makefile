@@ -9,6 +9,13 @@ obj-m :=
 obj-n :=
 obj-  :=
 
+# OPP support in (OMAP3+ only at the moment)
+ifdef CONFIG_PM
+#obj-$(CONFIG_ARCH_OMAP3) += opp.o
+#obj-$(CONFIG_ARCH_OMAP4) += opp.o
+obj-$(CONFIG_TWL4030_CORE) += opp_twl_tps.o
+endif
+
 # OCPI interconnect support for 1710, 1610 and 5912
 obj-$(CONFIG_ARCH_OMAP16XX) += ocpi.o
 
