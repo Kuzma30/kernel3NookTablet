@@ -24,6 +24,7 @@
 #include <linux/i2c/twl.h>
 #include <linux/regulator/machine.h>
 #include <linux/regulator/fixed.h>
+#include <linux/regulator/tps6130x.h>
 #include <linux/interrupt.h>
 #include <linux/delay.h>
 #include <linux/wl12xx.h>
@@ -34,6 +35,7 @@
 #include <mach/lpddr2-elpida.h>
 #include <mach/lpddr2-samsung.h>
 #include <mach/board-nooktablet.h>
+#include <linux/mfd/twl6040-codec.h>
 
 #include <asm/mach-types.h>
 #include <asm/mach/arch.h>
@@ -59,6 +61,8 @@
 
 #include "mux.h"
 #include "hsmmc.h"
+#include <plat/omap-pm.h>
+#include "pm.h"
 //#include "smartreflex-class3.h"
 //#include "board-4430sdp-wifi.h"
 
@@ -98,6 +102,8 @@
 #define  SAMSUNG_SDRAM 0x1
 #define  ELPIDA_SDRAM  0x3
 #define  HYNIX_SDRAM   0x6
+
+#define TPS62361_GPIO   7
 
 static int max17042_gpio_for_irq = 0;
 static int kxtf9_gpio_for_irq = 0;
@@ -746,11 +752,15 @@ static struct wl12xx_platform_data omap4_panda_wlan_data __initdata = {
 #endif
 
 static struct regulator_consumer_supply sdp4430_vmmc_supply[] = {
-	REGULATOR_SUPPLY("vmmc", "mmci-omap-hs.0"),
+  		.supply = "vmmc",
+		.dev_name = "omap_hsmmc.0",
+// 	REGULATOR_SUPPLY("vmmc", "mmci-omap-hs.0"),
 };
 
 static struct regulator_consumer_supply sdp4430_vemmc_supply[] = {
-	REGULATOR_SUPPLY("vmmc", "mmci-omap-hs.1"),
+  		.supply = "vemmc",
+		.dev_name = "omap_hsmmc.1",
+// 	REGULATOR_SUPPLY("vmmc", "mmci-omap-hs.1"),
 };
 
 static struct regulator_consumer_supply sdp4430_vwlan_supply[] = {
@@ -810,22 +820,38 @@ static int __init omap4_twl6030_hsmmc_init(struct omap2_hsmmc_info *controllers)
 
 static struct regulator_init_data sdp4430_vaux1 = {
 	.constraints = {
+// 		.min_uV			= 1000000,
+// 		.max_uV			= 3000000,
+// 		.apply_uV		= true,
+// 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
+// 			| REGULATOR_MODE_STANDBY,
+// 		.valid_ops_mask	 = REGULATOR_CHANGE_VOLTAGE
+// 			| REGULATOR_CHANGE_MODE
+// 			| REGULATOR_CHANGE_STATUS,
+// 		.state_mem = {
+// 			.enabled	= false,
+// 			.disabled	= true,
+// 		},
+// 		.always_on	= true,
+// 	},
+// 	//.num_consumer_supplies	= 1,
+// 	//.consumer_supplies	= sdp4430_vemmc_supply,
+
 		.min_uV			= 1000000,
 		.max_uV			= 3000000,
 		.apply_uV		= true,
 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
-			| REGULATOR_MODE_STANDBY,
+					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask	 = REGULATOR_CHANGE_VOLTAGE
-			| REGULATOR_CHANGE_MODE
-			| REGULATOR_CHANGE_STATUS,
-		.state_mem = {
-			.enabled	= false,
-			.disabled	= true,
-		},
-		.always_on	= true,
+					| REGULATOR_CHANGE_MODE
+					| REGULATOR_CHANGE_STATUS,
 	},
-	//.num_consumer_supplies	= 1,
-	//.consumer_supplies	= sdp4430_vemmc_supply,
+	.num_consumer_supplies  = 1,
+	.consumer_supplies      = sdp4430_vaux_supply,	  
+};
+
+static struct regulator_consumer_supply sdp4430_vaux2_supply[] = {
+	REGULATOR_SUPPLY("av-switch", "soc-audio"),
 };
 
 static struct regulator_init_data sdp4430_vaux2 = {
@@ -834,15 +860,13 @@ static struct regulator_init_data sdp4430_vaux2 = {
 		.max_uV			= 2800000,
 		.apply_uV		= true,
 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
-			| REGULATOR_MODE_STANDBY,
+					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask	 = REGULATOR_CHANGE_VOLTAGE
-			| REGULATOR_CHANGE_MODE
-			| REGULATOR_CHANGE_STATUS,
-		.state_mem = {
-			.enabled	= false,
-			.disabled	= true,
-		},
+					| REGULATOR_CHANGE_MODE
+					| REGULATOR_CHANGE_STATUS,
 	},
+	.num_consumer_supplies	= 1,
+	.consumer_supplies	= sdp4430_vaux2_supply,
 };
 
 static struct regulator_init_data sdp4430_vaux3 = {
@@ -890,14 +914,10 @@ static struct regulator_init_data sdp4430_vpp = {
 		.max_uV			= 2500000,
 		.apply_uV		= true,
 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
-			| REGULATOR_MODE_STANDBY,
+					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask	 = REGULATOR_CHANGE_VOLTAGE
-			| REGULATOR_CHANGE_MODE
-			| REGULATOR_CHANGE_STATUS,
-		.state_mem = {
-			.enabled	= false,
-			.disabled	= true,
-		},
+					| REGULATOR_CHANGE_MODE
+					| REGULATOR_CHANGE_STATUS,
 	},
 };
 
@@ -907,14 +927,10 @@ static struct regulator_init_data sdp4430_vusim = {
 		.max_uV			= 2900000,
 		.apply_uV		= true,
 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
-			| REGULATOR_MODE_STANDBY,
+					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask	 = REGULATOR_CHANGE_VOLTAGE
-			| REGULATOR_CHANGE_MODE
-			| REGULATOR_CHANGE_STATUS,
-		.state_mem = {
-			.enabled	= false,
-			.disabled	= true,
-		},
+					| REGULATOR_CHANGE_MODE
+					| REGULATOR_CHANGE_STATUS,
 	},
 };
 
@@ -922,15 +938,11 @@ static struct regulator_init_data sdp4430_vana = {
 	.constraints = {
 		.min_uV			= 2100000,
 		.max_uV			= 2100000,
-		.apply_uV		= true,
 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
-			| REGULATOR_MODE_STANDBY,
+					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask	 = REGULATOR_CHANGE_MODE
-			| REGULATOR_CHANGE_STATUS,
-		.state_mem = {
-			.enabled	= false,
-			.disabled	= true,
-		},
+					| REGULATOR_CHANGE_STATUS,
+		.always_on	= true,
 	},
 };
 
@@ -938,16 +950,19 @@ static struct regulator_init_data sdp4430_vcxio = {
 	.constraints = {
 		.min_uV			= 1800000,
 		.max_uV			= 1800000,
-		.apply_uV		= true,
 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
-			| REGULATOR_MODE_STANDBY,
+					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask	 = REGULATOR_CHANGE_MODE
-			| REGULATOR_CHANGE_STATUS,
-		.state_mem = {
-			.enabled	= false,
-			.disabled	= true,
-		},
+					| REGULATOR_CHANGE_STATUS,
 		.always_on	= true,
+	},
+	.num_consumer_supplies	= ARRAY_SIZE(sdp4430_vcxio_supply),
+	.consumer_supplies	= sdp4430_vcxio_supply,
+};
+
+static struct regulator_consumer_supply sdp4430_vdac_supply[] = {
+	{
+		.supply = "hdmi_vref",
 	},
 };
 
@@ -955,18 +970,15 @@ static struct regulator_init_data sdp4430_vdac = {
 	.constraints = {
 		.min_uV			= 1800000,
 		.max_uV			= 1800000,
-		.apply_uV		= true,
 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
-			| REGULATOR_MODE_STANDBY,
+					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask	 = REGULATOR_CHANGE_MODE
-			| REGULATOR_CHANGE_STATUS,
-		.state_mem = {
-			.enabled	= false,
-			.disabled	= true,
-		},
+					| REGULATOR_CHANGE_STATUS,
+		.always_on	= true,
 	},
+	.num_consumer_supplies  = ARRAY_SIZE(sdp4430_vdac_supply),
+	.consumer_supplies      = sdp4430_vdac_supply,
 };
-
 
 static struct regulator_init_data sdp4430_vusb = {
 	.constraints = {
@@ -974,21 +986,16 @@ static struct regulator_init_data sdp4430_vusb = {
 		.max_uV			= 3300000,
 		.apply_uV		= true,
 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
-			| REGULATOR_MODE_STANDBY,
+					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask	 =	REGULATOR_CHANGE_MODE
-			| REGULATOR_CHANGE_STATUS,
-		.state_mem = {
-			.enabled	= false,
-			.disabled	= true,
-		},
+					| REGULATOR_CHANGE_STATUS,
 	},
 };
 
 static struct regulator_init_data sdp4430_clk32kg = {
 	.constraints = {
-		.valid_modes_mask	= REGULATOR_MODE_NORMAL,
-		.valid_ops_mask	 = REGULATOR_CHANGE_STATUS,
-		.always_on	= true,
+		.valid_ops_mask		= REGULATOR_CHANGE_STATUS,
+		.always_on		= true,
 	},
 };
 
@@ -1038,7 +1045,10 @@ static struct twl4030_platform_data sdp4430_twldata = {
 	.vaux3		= &sdp4430_vaux3,
 	.usb		= &omap4_usbphy_data,
 	.clk32kg        = &sdp4430_clk32kg,      // always ON for WiFi
-	.madc           = &sdp4430_gpadc_data,
+	/* children */
+	.codec		= &twl6040_codec,
+	.madc		= &twl6030_gpadc,	
+// 	.madc           = &sdp4430_gpadc_data,
 };
 
 static struct i2c_board_info __initdata sdp4430_i2c_1_boardinfo[] = {
@@ -1193,6 +1203,8 @@ static int __init omap4_i2c_init(void)
 	omap_register_i2c_bus(4, 400, sdp4430_i2c_4_boardinfo, ARRAY_SIZE(sdp4430_i2c_4_boardinfo));
 	return 0;
 }
+static bool enable_suspend_off = true;
+module_param(enable_suspend_off, bool, S_IRUSR | S_IRGRP | S_IROTH);
 
 static void enable_board_wakeup_source(void)
 {
@@ -1517,7 +1529,7 @@ void __init acclaim_peripherals_init(void)
 #ifdef CONFIG_TIWLAN_SDIO
 	config_wlan_mux();
 #else
-	//omap4_4430sdp_wifi_init();
+	//omap4_4430sdp_wifi_init();//FIXME
 #endif
 
 	kxtf9_dev_init();
@@ -1537,8 +1549,20 @@ void __init acclaim_peripherals_init(void)
 
 	nooktablet_panel_init();
 	enable_board_wakeup_source();
-	omap_voltage_register_pmic(&omap_pmic_core, "core");
-	omap_voltage_register_pmic(&omap_pmic_mpu, "mpu");
-	omap_voltage_register_pmic(&omap_pmic_iva, "iva");
-	omap_voltage_init_vc(&vc_config);
+// 	omap_voltage_register_data(&omap_pmic_core, "core");
+// 	omap_voltage_register_data(&omap_pmic_mpu, "mpu");
+// 	omap_voltage_register_data(&omap_pmic_iva, "iva");
+// 	omap_voltage_init_vc(&vc_config);
+	
+		if (cpu_is_omap446x()) {
+		/* Vsel0 = gpio, vsel1 = gnd */
+		status = omap_tps6236x_board_setup(true, TPS62361_GPIO, -1,
+					OMAP_PIN_OFF_OUTPUT_HIGH, -1);
+		if (status)
+			pr_err("TPS62361 initialization failed: %d\n", status);
+	}
+
+	omap_enable_smartreflex_on_init();
+        if (enable_suspend_off)
+                omap_pm_enable_off_mode();
 }

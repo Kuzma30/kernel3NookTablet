@@ -24,7 +24,7 @@
 #include "clockdomain.h"
 #include "pm.h"
 
-struct voltagedomain *voltdm_lookup(const char *name);
+//struct voltagedomain *voltdm_lookup(const char *name);
 int voltdm_scale(struct voltagedomain *voltdm, struct omap_volt_data *target_volt);
 int omap_voltage_late_init(void);
 /**

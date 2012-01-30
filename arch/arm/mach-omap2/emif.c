@@ -29,7 +29,7 @@
 #include <mach/lpddr2-jedec.h>
 #include <mach/omap4-common.h>
 
-#include "v_oltage.h"
+#include "voltage.h"
 
 /* Utility macro for masking and setting a field in a register/variable */
 #define mask_n_set(reg, shift, msk, val) \
@@ -1424,7 +1424,8 @@ int __init omap_init_emif_timings(void)
 
 	return ret;
 }
-late_initcall(omap_init_emif_timings);
+//late_initcall(omap_init_emif_timings);
+
 int sdram_vendor(void)
 {
         int ddr_manufact_id =0; 
@@ -1436,5 +1437,4 @@ int sdram_vendor(void)
         ddr_manufact_id =  __raw_readb(base  +  OMAP44XX_EMIF_LPDDR2_MODE_REG_DATA);
 
         return ddr_manufact_id ;
-
 }

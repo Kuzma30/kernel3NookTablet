@@ -35,7 +35,8 @@
 #include "prminst44xx.h"
 #include "control.h"
 
-#include "voltage.h"
+#include <plat/voltage.h>
+//#include "voltage.h"
 #include "powerdomain.h"
 
 #include "vc.h"
@@ -631,7 +632,7 @@ static int _voltdm_register(struct voltagedomain *voltdm)
  * Find a registered voltagedomain by its name @name.  Returns a pointer
  * to the struct voltagedomain if found, or NULL otherwise.
  */
-struct voltagedomain *voltdm_lookup(const char *name);
+//struct voltagedomain *voltdm_lookup(const char *name);
 
 struct voltagedomain *voltdm_lookup(const char *name)
 {
@@ -662,4 +663,59 @@ void voltdm_init(struct voltagedomain **voltdms)
 		for (v = voltdms; *v; v++)
 			_voltdm_register(*v);
 	}
+}
+/*
+ * Default voltage controller settings.
+ */
+static struct omap_volt_vc_data vc_config = {
+.clksetup = 0xff,
+.voltsetup_time1 = 0xfff,
+.voltsetup_time2 = 0xfff,
+.voltoffset = 0xff,
+.voltsetup2 = 0xff,
+.vdd0_on = 1200000,        /* 1.2v */
+.vdd0_onlp = 1000000,      /* 1.0v */
+.vdd0_ret = 975000,       /* 0.975v */
+.vdd0_off = 600000,       /* 0.6v */
+.vdd1_on = 1150000,        /* 1.15v */
+.vdd1_onlp = 1000000,      /* 1.0v */
+.vdd1_ret = 975000,       /* .975v */
+.vdd1_off = 600000,       /* 0.6v */
+};
+
+
+/**
+ * omap_voltage_init_vc - polpulates vc_config with values specified in
+ *  board file
+ * @setup_vc - the structure with various vc parameters
+ *
+ * Updates vc_config with the voltage setup times and other parameters as
+ * specified in setup_vc. vc_config is later used in init_voltagecontroller
+ * to initialize the voltage controller registers. Board files should call
+ * this function with the correct volatge settings corresponding
+ * the particular PMIC and chip.
+ */
+
+void __init omap_voltage_init_vc(struct omap_volt_vc_data *setup_vc)
+{
+if (!setup_vc)
+return;
+
+vc_config.clksetup = setup_vc->clksetup;
+vc_config.voltsetup_time1 = setup_vc->voltsetup_time1;
+vc_config.voltsetup_time2 = setup_vc->voltsetup_time2;
+vc_config.voltoffset = setup_vc->voltoffset;
+vc_config.voltsetup2 = setup_vc->voltsetup2;
+vc_config.vdd0_on = setup_vc->vdd0_on;
+vc_config.vdd0_onlp = setup_vc->vdd0_onlp;
+vc_config.vdd0_ret = setup_vc->vdd0_ret;
+vc_config.vdd0_off = setup_vc->vdd0_off;
+vc_config.vdd1_on = setup_vc->vdd1_on;
+vc_config.vdd1_onlp = setup_vc->vdd1_onlp;
+vc_config.vdd1_ret = setup_vc->vdd1_ret;
+vc_config.vdd1_off = setup_vc->vdd1_off;
+vc_config.vdd2_on = setup_vc->vdd2_on;
+vc_config.vdd2_onlp = setup_vc->vdd2_onlp;
+vc_config.vdd2_ret = setup_vc->vdd2_ret;
+vc_config.vdd2_off = setup_vc->vdd2_off;
 }
