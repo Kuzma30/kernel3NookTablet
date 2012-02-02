@@ -33,9 +33,9 @@
 #include <mach/omap4-common.h>
 #include <mach/emif.h>
 #include <mach/lpddr2-elpida.h>
-#include <mach/lpddr2-samsung.h>
+#include <mach/dmm.h>
+//#include <mach/lpddr2-samsung.h>
 #include <mach/board-nooktablet.h>
-#include <linux/mfd/twl6040-codec.h>
 
 #include <asm/mach-types.h>
 #include <asm/mach/arch.h>
@@ -49,20 +49,21 @@
 #include <plat/usb.h>
 #include <plat/omap_device.h>
 #include <plat/omap_hwmod.h>
-#ifdef CONFIG_SERIAL_OMAP
-#include <plat/omap-serial-old.h>
+#include <plat/omap-serial.h>
 #include <plat/serial.h>
-#endif
 #include <linux/wakelock.h>
 #include <plat/opp_twl_tps.h>
 #include <plat/mmc.h>
 #include <plat/omap4-keypad.h>
 #include <plat/voltage.h>
-
+#include "omap_ram_console.h"
+#include "common-board-devices.h"
 #include "mux.h"
 #include "hsmmc.h"
 #include <plat/omap-pm.h>
 #include "pm.h"
+#include "board-44xx-tablet.h"
+#include "omap4_ion.h"
 //#include "smartreflex-class3.h"
 //#include "board-4430sdp-wifi.h"
 
@@ -76,6 +77,8 @@
 #include <linux/input/kxtf9.h>
 #include <linux/power/max17042.h>
 #include <linux/power/max8903.h>
+
+
 
 #define WILINK_UART_DEV_NAME "/dev/ttyO1"
 #define KXTF9_DEVICE_ID                 "kxtf9"
@@ -752,15 +755,15 @@ static struct wl12xx_platform_data omap4_panda_wlan_data __initdata = {
 #endif
 
 static struct regulator_consumer_supply sdp4430_vmmc_supply[] = {
-  		.supply = "vmmc",
-		.dev_name = "omap_hsmmc.0",
-// 	REGULATOR_SUPPLY("vmmc", "mmci-omap-hs.0"),
+//		.supply = "vmmc",
+//		.dev_name = "omap_hsmmc.0",
+	REGULATOR_SUPPLY("vmmc", "mmci-omap-hs.0"),
 };
 
 static struct regulator_consumer_supply sdp4430_vemmc_supply[] = {
-  		.supply = "vemmc",
-		.dev_name = "omap_hsmmc.1",
-// 	REGULATOR_SUPPLY("vmmc", "mmci-omap-hs.1"),
+//		.supply = "vmmc",
+//		.dev_name = "omap_hsmmc.1",
+	REGULATOR_SUPPLY("vmmc", "mmci-omap-hs.1"),
 };
 
 static struct regulator_consumer_supply sdp4430_vwlan_supply[] = {
@@ -847,7 +850,7 @@ static struct regulator_init_data sdp4430_vaux1 = {
 					| REGULATOR_CHANGE_STATUS,
 	},
 	.num_consumer_supplies  = 1,
-	.consumer_supplies      = sdp4430_vaux_supply,	  
+	.consumer_supplies      = sdp4430_vemmc_supply,
 };
 
 static struct regulator_consumer_supply sdp4430_vaux2_supply[] = {
@@ -956,8 +959,8 @@ static struct regulator_init_data sdp4430_vcxio = {
 					| REGULATOR_CHANGE_STATUS,
 		.always_on	= true,
 	},
-	.num_consumer_supplies	= ARRAY_SIZE(sdp4430_vcxio_supply),
-	.consumer_supplies	= sdp4430_vcxio_supply,
+//	.num_consumer_supplies	= ARRAY_SIZE(sdp4430_vcxio_supply),
+//	.consumer_supplies	= sdp4430_vcxio_supply,
 };
 
 static struct regulator_consumer_supply sdp4430_vdac_supply[] = {
@@ -1045,10 +1048,7 @@ static struct twl4030_platform_data sdp4430_twldata = {
 	.vaux3		= &sdp4430_vaux3,
 	.usb		= &omap4_usbphy_data,
 	.clk32kg        = &sdp4430_clk32kg,      // always ON for WiFi
-	/* children */
-	.codec		= &twl6040_codec,
-	.madc		= &twl6030_gpadc,	
-// 	.madc           = &sdp4430_gpadc_data,
+ 	.madc           = &sdp4430_gpadc_data,
 };
 
 static struct i2c_board_info __initdata sdp4430_i2c_1_boardinfo[] = {
@@ -1128,6 +1128,14 @@ static struct omap_i2c_bus_board_data __initdata sdp4430_i2c_2_bus_pdata;
 static struct omap_i2c_bus_board_data __initdata sdp4430_i2c_3_bus_pdata;
 static struct omap_i2c_bus_board_data __initdata sdp4430_i2c_4_bus_pdata;
 
+static void blaze_set_osc_timings(void)
+{
+	/* Device Oscilator
+	 * tstart = 2ms + 2ms = 4ms.
+	 * tshut = Not defined in oscillator data sheet so setting to 1us
+	 */
+	omap_pm_set_osc_lp_time(4000, 1);
+}
 /*
  * LPDDR2 Configuration Data:
  * The memory organisation is as below :
@@ -1140,16 +1148,114 @@ static struct omap_i2c_bus_board_data __initdata sdp4430_i2c_4_bus_pdata;
  *
  * Same devices installed on EMIF1 and EMIF2
  */
-static __initdata struct emif_device_details emif_devices_samsung = {
-	.cs0_device = &samsung_4G_S4,
-	.cs1_device = 0
-};
-
-static __initdata struct emif_device_details emif_devices_elpida = {
+static __initdata struct emif_device_details emif_devices = {
 	.cs0_device = &lpddr2_elpida_2G_S4_dev,
 	.cs1_device = &lpddr2_elpida_2G_S4_dev
 };
 
+static struct omap_device_pad blaze_uart1_pads[] __initdata = {
+	{
+		.name	= "uart1_cts.uart1_cts",
+		.enable	= OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE0,
+	},
+	{
+		.name	= "uart1_rts.uart1_rts",
+		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
+	},
+	{
+		.name	= "uart1_tx.uart1_tx",
+		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
+	},
+	{
+		.name	= "uart1_rx.uart1_rx",
+		.flags	= OMAP_DEVICE_PAD_REMUX | OMAP_DEVICE_PAD_WAKEUP,
+		.enable	= OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE0,
+		.idle	= OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE0,
+	},
+};
+
+
+static struct omap_device_pad blaze_uart2_pads[] __initdata = {
+	{
+		.name	= "uart2_cts.uart2_cts",
+		.enable	= OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE0,
+		.flags  = OMAP_DEVICE_PAD_REMUX,
+		.idle   = OMAP_WAKEUP_EN | OMAP_PIN_OFF_INPUT_PULLUP |
+			  OMAP_MUX_MODE0,
+	},
+	{
+		.name	= "uart2_rts.uart2_rts",
+		.flags  = OMAP_DEVICE_PAD_REMUX,
+		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
+		.idle   = OMAP_PIN_OFF_INPUT_PULLUP | OMAP_MUX_MODE7,
+	},
+	{
+		.name	= "uart2_tx.uart2_tx",
+		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
+	},
+	{
+		.name	= "uart2_rx.uart2_rx",
+		.enable	= OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE0,
+	},
+};
+
+static struct omap_device_pad blaze_uart3_pads[] __initdata = {
+	{
+		.name	= "uart3_cts_rctx.uart3_cts_rctx",
+		.enable	= OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE0,
+	},
+	{
+		.name	= "uart3_rts_sd.uart3_rts_sd",
+		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
+	},
+	{
+		.name	= "uart3_tx_irtx.uart3_tx_irtx",
+		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
+	},
+	{
+		.name	= "uart3_rx_irrx.uart3_rx_irrx",
+		.flags	= OMAP_DEVICE_PAD_REMUX | OMAP_DEVICE_PAD_WAKEUP,
+		.enable	= OMAP_PIN_INPUT | OMAP_MUX_MODE0,
+		.idle	= OMAP_PIN_INPUT | OMAP_MUX_MODE0,
+	},
+};
+
+static struct omap_device_pad blaze_uart4_pads[] __initdata = {
+	{
+		.name	= "uart4_tx.uart4_tx",
+		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
+	},
+	{
+		.name	= "uart4_rx.uart4_rx",
+		.flags	= OMAP_DEVICE_PAD_REMUX | OMAP_DEVICE_PAD_WAKEUP,
+		.enable	= OMAP_PIN_INPUT | OMAP_MUX_MODE0,
+		.idle	= OMAP_PIN_INPUT | OMAP_MUX_MODE0,
+	},
+};
+
+static struct omap_uart_port_info blaze_uart_info_uncon __initdata = {
+	.use_dma	= 0,
+	.auto_sus_timeout = DEFAULT_AUTOSUSPEND_DELAY,
+        .wer = 0,
+};
+
+static struct omap_uart_port_info blaze_uart_info __initdata = {
+	.use_dma	= 0,
+	.auto_sus_timeout = DEFAULT_AUTOSUSPEND_DELAY,
+        .wer = (OMAP_UART_WER_TX | OMAP_UART_WER_RX | OMAP_UART_WER_CTS),
+};
+
+static inline void __init board_serial_init(void)
+{
+	omap_serial_init_port_pads(0, blaze_uart1_pads,
+		ARRAY_SIZE(blaze_uart1_pads), &blaze_uart_info_uncon);
+	omap_serial_init_port_pads(1, blaze_uart2_pads,
+		ARRAY_SIZE(blaze_uart2_pads), &blaze_uart_info);
+	omap_serial_init_port_pads(2, blaze_uart3_pads,
+		ARRAY_SIZE(blaze_uart3_pads), &blaze_uart_info);
+	omap_serial_init_port_pads(3, blaze_uart4_pads,
+		ARRAY_SIZE(blaze_uart4_pads), &blaze_uart_info_uncon);
+}
 /*static void __init omap_i2c_hwspin_lock_init(int bus_id, unsigned int
 		spinlock_id, struct omap_i2c_bus_board_data *pdata)
 {
@@ -1161,6 +1267,14 @@ static __initdata struct emif_device_details emif_devices_elpida = {
 		pr_err("I2C hwspinlock request failed for bus %d\n", bus_id);
 	}
 }*/
+
+static void __init blaze_pmic_mux_init(void)
+{
+
+	omap_mux_init_signal("sys_nirq1", OMAP_PIN_INPUT_PULLUP |
+						OMAP_WAKEUP_EN);
+}
+
 static void __init omap_i2c_hwspinlock_init(int bus_id, int spinlock_id,
 struct omap_i2c_bus_board_data *pdata)
 {
@@ -1206,31 +1320,31 @@ static int __init omap4_i2c_init(void)
 static bool enable_suspend_off = true;
 module_param(enable_suspend_off, bool, S_IRUSR | S_IRGRP | S_IROTH);
 
-static void enable_board_wakeup_source(void)
-{
-	int gpio_val;
-	/* Android does not have touchscreen as wakeup source */
-#if !defined(CONFIG_ANDROID)
-	gpio_val = omap_mux_get_gpio(OMAP4_TOUCH_IRQ_1);
-	if ((gpio_val & OMAP44XX_PADCONF_WAKEUPENABLE0) == 0) {
-		gpio_val |= OMAP44XX_PADCONF_WAKEUPENABLE0;
-		omap_mux_set_gpio(gpio_val, OMAP4_TOUCH_IRQ_1);
-	}
+//static void enable_board_wakeup_source(void)
+//{
+//	int gpio_val;
+//	/* Android does not have touchscreen as wakeup source */
+//#if !defined(CONFIG_ANDROID)
+//	gpio_val = omap_mux_get_gpio(OMAP4_TOUCH_IRQ_1);
+//	if ((gpio_val & OMAP44XX_PADCONF_WAKEUPENABLE0) == 0) {
+//		gpio_val |= OMAP44XX_PADCONF_WAKEUPENABLE0;
+//		omap_mux_set_gpio(gpio_val, OMAP4_TOUCH_IRQ_1);
+//	}
 
-#endif
-	gpio_val = omap_mux_get_gpio(32);
+//#endif
+//	gpio_val = omap_mux_get_gpio(32);
 
-	if ((gpio_val & OMAP44XX_PADCONF_WAKEUPENABLE0) == 0) {
-		gpio_val |= OMAP44XX_PADCONF_WAKEUPENABLE0;
-		omap_mux_set_gpio(gpio_val, 32);
-	}
+//	if ((gpio_val & OMAP44XX_PADCONF_WAKEUPENABLE0) == 0) {
+//		gpio_val |= OMAP44XX_PADCONF_WAKEUPENABLE0;
+//		omap_mux_set_gpio(gpio_val, 32);
+//	}
 
-	gpio_val = omap_mux_get_gpio(29);
+//	gpio_val = omap_mux_get_gpio(29);
 
-	if ((gpio_val & OMAP44XX_PADCONF_WAKEUPENABLE0) == 0) {
-		gpio_val |= OMAP44XX_PADCONF_WAKEUPENABLE0;
-		omap_mux_set_gpio(gpio_val, 29);
-	}
+//	if ((gpio_val & OMAP44XX_PADCONF_WAKEUPENABLE0) == 0) {
+//		gpio_val |= OMAP44XX_PADCONF_WAKEUPENABLE0;
+//		omap_mux_set_gpio(gpio_val, 29);
+//	}
 
 	/*
 	 * Enable IO daisy for sys_nirq1/2, to be able to
@@ -1238,7 +1352,7 @@ static void enable_board_wakeup_source(void)
 	 * Needed only in Device OFF mode.
 	 */
 //	omap_mux_set_wakeupenable("sys_nirq1");//FIXME new interface added in this kernel
-}
+//}
 
 static struct omap_volt_pmic_info omap_pmic_core = {
 	.name = "twl",
@@ -1333,7 +1447,7 @@ void plat_hold_wakelock(void *up, int flag)
 	return;
 }
 
-static struct omap_uart_port_info omap_serial_platform_data[] = {
+/*static struct omap_uart_port_info omap_serial_platform_data[] = {
 	{
 		.use_dma	= 0,
 		.dma_rx_buf_size = DEFAULT_RXDMA_BUFSIZE,
@@ -1419,7 +1533,7 @@ static struct omap_uart_port_info omap_serial_platform_data[] = {
 	{
 		.flags		= 0
 	}
-};
+};*/
 
 #ifdef CONFIG_OMAP_MUX
 static struct omap_board_mux board_mux[] __initdata = {
@@ -1490,71 +1604,170 @@ static inline void ramconsole_init(void)
 static inline void ramconsole_init(void) {}
 #endif /* CONFIG_ANDROID_RAM_CONSOLE */
 
+#if defined(CONFIG_USB_EHCI_HCD_OMAP) || defined(CONFIG_USB_OHCI_HCD_OMAP3)
+struct usbhs_omap_board_data usbhs_bdata __initdata = {
+	.port_mode[0] = OMAP_EHCI_PORT_MODE_PHY,
+	.port_mode[1] = OMAP_OHCI_PORT_MODE_PHY_6PIN_DATSE0,
+	.port_mode[2] = OMAP_USBHS_PORT_MODE_UNUSED,
+	.phy_reset  = false,
+	.reset_gpio_port[0]  = -EINVAL,
+	.reset_gpio_port[1]  = -EINVAL,
+	.reset_gpio_port[2]  = -EINVAL
+};
+
+static void __init omap4_ehci_ohci_init(void)
+{
+
+//	omap_mux_init_signal("usbb2_ulpitll_clk.gpio_157", \
+		OMAP_PIN_OUTPUT | \
+		OMAP_PIN_OFF_NONE);
+
+	/* Power on the ULPI PHY */
+//	if (gpio_is_valid(BLAZE_MDM_PWR_EN_GPIO)) {
+//		gpio_request(BLAZE_MDM_PWR_EN_GPIO, "USBB1 PHY VMDM_3V3");
+//		gpio_direction_output(BLAZE_MDM_PWR_EN_GPIO, 1);
+//	}
+
+//	usbhs_init(&usbhs_bdata);
+
+	return;
+
+}
+#else
+static void __init omap4_ehci_ohci_init(void){}
+#endif
+
+static struct omap_board_config_kernel sdp4430_config[] __initdata = {
+};
+
 void __init acclaim_peripherals_init(void)
 {
-	int status;
-	int package = OMAP_PACKAGE_CBS;
+//	int status;
+//	int package = OMAP_PACKAGE_CBS;
 
-	ramconsole_init();
+//	ramconsole_init();
+
+//	if (omap_rev() == OMAP4430_REV_ES1_0)
+//		package = OMAP_PACKAGE_CBL;
+//	omap4_mux_init(board_mux, NULL, package);
+//	acclaim_board_init();
+
+//	if (sdram_vendor() == SAMSUNG_SDRAM) {
+//		omap_emif_setup_device_details(&emif_devices, &emif_devices);
+//		printk(KERN_INFO"Samsung DDR Memory \n");
+//	} else if (sdram_vendor() == ELPIDA_SDRAM) {
+//		omap_emif_setup_device_details(&emif_devices_elpida, &emif_devices_elpida);
+//		printk(KERN_INFO"Elpida DDR Memory \n");
+//	} else if (sdram_vendor() == HYNIX_SDRAM) {
+//		/* Re-use ELPIDA timings as they are absolutely the same */
+//		omap_emif_setup_device_details(&emif_devices_elpida, &emif_devices_elpida);
+//		printk(KERN_INFO"Hynix DDR Memory \n");
+//	} else
+//		pr_err("Memory type does not exist\n");
+
+//	omap_init_emif_timings();
+
+//	enable_rtc_gpio();
+//	omap4_i2c_init();
+//	platform_add_devices(nooktablet_devices, ARRAY_SIZE(nooktablet_devices));
+//	acclaim_init_charger();
+
+//	wake_lock_init(&uart_lock, WAKE_LOCK_SUSPEND, "uart_wake_lock");
+//	omap_serial_init(/*omap_serial_platform_data*/);
+//	omap4_twl6030_hsmmc_init(mmc);
+
+//#ifdef CONFIG_TIWLAN_SDIO
+//	config_wlan_mux();
+//#else
+//	//omap4_4430sdp_wifi_init();//FIXME
+//#endif
+
+//	kxtf9_dev_init();
+//#ifdef CONFIG_BATTERY_MAX17042
+//	max17042_dev_init();
+//#endif
+
+//	usbhs_init(&usbhs_pdata);
+//	usb_musb_init(&musb_board_data);
+
+//	status = omap4_keyboard_init(&sdp4430_keypad_data);
+//	if (status)
+//		pr_err("Keypad initialization failed: %d\n", status);
+//
+//	spi_register_board_info(sdp4430_spi_board_info,
+//			ARRAY_SIZE(sdp4430_spi_board_info));
+
+//	nooktablet_panel_init();
+//	enable_board_wakeup_source();
+// 	omap_voltage_register_data(&omap_pmic_core, "core");
+// 	omap_voltage_register_data(&omap_pmic_mpu, "mpu");
+// 	omap_voltage_register_data(&omap_pmic_iva, "iva");
+// 	omap_voltage_init_vc(&vc_config);
+	
+//		if (cpu_is_omap446x()) {
+//		/* Vsel0 = gpio, vsel1 = gnd */
+//		status = omap_tps6236x_board_setup(true, TPS62361_GPIO, -1,
+//					OMAP_PIN_OFF_OUTPUT_HIGH, -1);
+//		if (status)
+//			pr_err("TPS62361 initialization failed: %d\n", status);
+//	}
+//
+//	omap_enable_smartreflex_on_init();
+//        if (enable_suspend_off)
+//                omap_pm_enable_off_mode();
+		
+			int status;
+	int package = OMAP_PACKAGE_CBS;
 
 	if (omap_rev() == OMAP4430_REV_ES1_0)
 		package = OMAP_PACKAGE_CBL;
 	omap4_mux_init(board_mux, NULL, package);
-	acclaim_board_init();
 
-	if (sdram_vendor() == SAMSUNG_SDRAM) {
-		omap_emif_setup_device_details(&emif_devices_samsung, &emif_devices_samsung);
-		printk(KERN_INFO"Samsung DDR Memory \n");
-	} else if (sdram_vendor() == ELPIDA_SDRAM) {
-		omap_emif_setup_device_details(&emif_devices_elpida, &emif_devices_elpida);
-		printk(KERN_INFO"Elpida DDR Memory \n");
-	} else if (sdram_vendor() == HYNIX_SDRAM) {
-		/* Re-use ELPIDA timings as they are absolutely the same */
-		omap_emif_setup_device_details(&emif_devices_elpida, &emif_devices_elpida);
-		printk(KERN_INFO"Hynix DDR Memory \n");
-	} else
-		pr_err("Memory type does not exist\n");
+	omap_emif_setup_device_details(&emif_devices, &emif_devices);
 
-	omap_init_emif_timings();
+	omap_board_config = sdp4430_config;
+	omap_board_config_size = ARRAY_SIZE(sdp4430_config);
 
-	enable_rtc_gpio();
+	//omap_init_board_version(0);
+
+	//omap4_audio_conf();
+	omap4_create_board_props();
+	blaze_pmic_mux_init();
+	blaze_set_osc_timings();
 	omap4_i2c_init();
+	//blaze_sensor_init();
+	//blaze_touch_init();
+	omap4_register_ion();
 	platform_add_devices(nooktablet_devices, ARRAY_SIZE(nooktablet_devices));
-	acclaim_init_charger();
-
-	wake_lock_init(&uart_lock, WAKE_LOCK_SUSPEND, "uart_wake_lock");
-	omap_serial_init(/*omap_serial_platform_data*/);
-	omap4_twl6030_hsmmc_init(mmc);
-
-#ifdef CONFIG_TIWLAN_SDIO
-	config_wlan_mux();
-#else
-	//omap4_4430sdp_wifi_init();//FIXME
-#endif
-
+	wake_lock_init(&st_wk_lock, WAKE_LOCK_SUSPEND, "st_wake_lock");
+	board_serial_init();
+//	omap4_sdp4430_wifi_init();
 	kxtf9_dev_init();
 #ifdef CONFIG_BATTERY_MAX17042
 	max17042_dev_init();
 #endif
+	omap4_twl6030_hsmmc_init(mmc);
 
-	usbhs_init(&usbhs_pdata);
+	/* blaze_modem_init shall be called before omap4_ehci_ohci_init */
+//	if (!strcmp(modem_ipc, "hsi"))
+//		blaze_modem_init(true);
+//	else
+//		blaze_modem_init(false);
+
+	omap4_ehci_ohci_init();
+
 	usb_musb_init(&musb_board_data);
 
 	status = omap4_keyboard_init(&sdp4430_keypad_data);
 	if (status)
 		pr_err("Keypad initialization failed: %d\n", status);
 
-	spi_register_board_info(sdp4430_spi_board_info,
-			ARRAY_SIZE(sdp4430_spi_board_info));
+	omap_dmm_init();
+//	omap_4430sdp_display_init();
+//	blaze_panel_init();
+//	blaze_keypad_init();
 
-	nooktablet_panel_init();
-	enable_board_wakeup_source();
-// 	omap_voltage_register_data(&omap_pmic_core, "core");
-// 	omap_voltage_register_data(&omap_pmic_mpu, "mpu");
-// 	omap_voltage_register_data(&omap_pmic_iva, "iva");
-// 	omap_voltage_init_vc(&vc_config);
-	
-		if (cpu_is_omap446x()) {
+	if (cpu_is_omap446x()) {
 		/* Vsel0 = gpio, vsel1 = gnd */
 		status = omap_tps6236x_board_setup(true, TPS62361_GPIO, -1,
 					OMAP_PIN_OFF_OUTPUT_HIGH, -1);
@@ -1565,4 +1778,5 @@ void __init acclaim_peripherals_init(void)
 	omap_enable_smartreflex_on_init();
         if (enable_suspend_off)
                 omap_pm_enable_off_mode();
+
 }

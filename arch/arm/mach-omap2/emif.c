@@ -29,7 +29,7 @@
 #include <mach/lpddr2-jedec.h>
 #include <mach/omap4-common.h>
 
-#include "voltage.h"
+#include <plat/voltage.h>
 
 /* Utility macro for masking and setting a field in a register/variable */
 #define mask_n_set(reg, shift, msk, val) \

@@ -19,7 +19,7 @@
 #include <plat/omap_device.h>
 #include <plat/common.h>
 
-#include "voltage.h"
+#include <plat/voltage.h>
 #include "powerdomain.h"
 #include "clockdomain.h"
 #include "pm.h"

@@ -22,9 +22,9 @@
 
 #include "prm44xx.h"
 #include "prm-regbits-44xx.h"
-#include "voltage.h"
+#include <plat/voltage.h>
 
-#include "vc.h"
+#include <plat/vc.h>
 
 static u16 pre_scaler_to_sysclk_cycles_44xx[] = {16, 64, 128, 512};
 static struct setup_time_ramp_params omap4_vc_setuptime_params = {

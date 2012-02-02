@@ -25,7 +25,7 @@
 #include <plat/omap_device.h>
 
 #include "smartreflex.h"
-#include "voltage.h"
+#include <plat/voltage.h>
 #include "control.h"
 #include "pm.h"
 

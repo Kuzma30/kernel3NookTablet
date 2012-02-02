@@ -19,8 +19,8 @@
 
 #include <mach/ctrl_module_core_44xx.h>
 
-#include "voltage.h"
-#include "ldo.h"
+#include <plat/voltage.h>
+#include <plat/ldo.h>
 #include "control.h"
 
 #define OMAP4460_MPU_OPP_DPLL_TRIM	BIT(18)

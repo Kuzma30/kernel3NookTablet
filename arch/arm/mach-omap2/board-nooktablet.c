@@ -106,7 +106,7 @@ static void __init omap_nooktablet_init(void)
 
 static void __init omap_nooktablet_map_io(void)
 {
-	ramconsole_reserve_sdram();
+//	ramconsole_reserve_sdram();
 	omap2_set_globals_443x();
 	omap44xx_map_common_io();
 }

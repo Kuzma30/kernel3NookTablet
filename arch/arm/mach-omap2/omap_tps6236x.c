@@ -16,7 +16,7 @@
 #include <linux/i2c/twl.h>
 
 #include "pm.h"
-#include "vc.h"
+#include <plat/vc.h>
 #include "mux.h"
 
 /* Voltage limits supported */

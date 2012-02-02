@@ -54,8 +54,8 @@
 
 #include "smartreflex.h"
 #include "dvfs.h"
-#include "voltage.h"
-#include "vc.h"
+#include <plat/voltage.h>
+#include <plat/vc.h>
 #include "control.h"
 
 struct power_state {
