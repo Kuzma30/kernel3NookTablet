@@ -22,9 +22,9 @@
 
 #include <linux/device.h>
 
-#include "vc.h"
-#include "vp.h"
-#include "ldo.h"
+#include <plat/vc.h>
+#include <plat/vp.h>
+#include <plat/ldo.h>
 
 extern u32 enable_sr_vp_debug;
 #ifdef CONFIG_PM_DEBUG
@@ -412,7 +412,7 @@ struct omap_vdd_dep_info {
 	struct omap_vdd_dep_volt *dep_table;
 	int nr_dep_entries;
 };
-struct voltagedomain *_dep_voltdm;
+//struct voltagedomain *_dep_voltdm;
 struct voltagedomain *voltdm_lookup(const char *name);
 struct omap_volt_data *omap_voltage_get_voltdata(struct voltagedomain *voltdm, unsigned long volt);
 

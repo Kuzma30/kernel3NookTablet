@@ -39,8 +39,8 @@
 //#include "voltage.h"
 #include "powerdomain.h"
 
-#include "vc.h"
-#include "vp.h"
+#include <plat/vc.h>
+#include <plat/vp.h>
 
 static LIST_HEAD(voltdm_list);
 

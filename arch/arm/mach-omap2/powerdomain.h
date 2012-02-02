@@ -27,7 +27,7 @@
 
 #include <plat/cpu.h>
 
-#include "voltage.h"
+#include <plat/voltage.h>
 
 /* Powerdomain basic power states */
 #define PWRDM_POWER_OFF		0x0

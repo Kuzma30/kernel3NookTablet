@@ -21,7 +21,7 @@
 
 #include <plat/omap_hwmod.h>
 
-#include "voltage.h"
+#include <plat/voltage.h>
 
 /*
  * *BIG FAT WARNING*:

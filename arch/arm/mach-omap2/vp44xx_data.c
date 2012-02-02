@@ -24,9 +24,9 @@
 #include "pm.h"
 #include "prm44xx.h"
 #include "prm-regbits-44xx.h"
-#include "voltage.h"
+#include <plat/voltage.h>
 
-#include "vp.h"
+#include <plat/vp.h>
 
 /* OMAP4 is hooked such that only a cold reset will reset VP */
 static void omap4_vp_recover(u8 vp_id)

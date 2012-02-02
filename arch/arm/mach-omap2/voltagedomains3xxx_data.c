@@ -23,7 +23,7 @@
 
 #include "prm-regbits-34xx.h"
 #include "omap_opp_data.h"
-#include "voltage.h"
+#include <plat/voltage.h>
 #include "vc.h"
 #include "vp.h"
 #include "ldo.h"

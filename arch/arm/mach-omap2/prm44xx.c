@@ -21,8 +21,8 @@
 #include <plat/cpu.h>
 #include <plat/prcm.h>
 
-#include "voltage.h"
-#include "vp.h"
+#include <plat/voltage.h>
+#include <plat/vp.h>
 #include "prm44xx.h"
 #include "prm-regbits-44xx.h"
 #include "prcm44xx.h"
