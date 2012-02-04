@@ -81,6 +81,10 @@ __init int omap_init_board_version(int forced_rev)
 			board_revision = OMAP4_BLAZE;
 			board_id = OMAP4_BLAZE_ID;
 			break;
+		case OMAP4_NOOKTABLET:
+			board_revision = OMAP4_NOOKTABLET;
+			board_id = OMAP4_NOOKTABLET_ID;
+			break;
 		default:
 			board_revision = -1;
 		}

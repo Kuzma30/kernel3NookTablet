@@ -152,7 +152,7 @@ static __initdata struct omap_dss_board_info sdp4430_dss_data = {
 void __init nooktablet_panel_init(void)
 {
 	nooktablet_panel_get_resource();
-	omap_display_init(&sdp4430_dss_data);
+//	omap_display_init(&sdp4430_dss_data);
 	nooktablet_init_display_led();
 	platform_add_devices(nooktablet_devices, ARRAY_SIZE(nooktablet_devices));
 }
