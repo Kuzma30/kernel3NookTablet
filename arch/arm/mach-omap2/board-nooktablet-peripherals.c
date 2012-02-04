@@ -1722,7 +1722,7 @@ void __init acclaim_peripherals_init(void)
 	if (omap_rev() == OMAP4430_REV_ES1_0)
 		package = OMAP_PACKAGE_CBL;
 	omap4_mux_init(board_mux, NULL, package);
-
+	acclaim_board_init();
 	omap_emif_setup_device_details(&emif_devices, &emif_devices);
 
 	omap_board_config = sdp4430_config;

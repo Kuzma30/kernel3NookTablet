@@ -67,6 +67,7 @@ static const char *app_board_rev_types[] = {
 	[OMAP4_TABLET_2_1_1_ID]		= "Tablet 2.1.1",
 	[OMAP4_BLAZE_ID]		= "Blaze/SDP",
 	[OMAP4_PANDA_ID]		= "Panda",
+	[OMAP4_NOOKTABLET_ID]		= "NookTablet",
 	[OMAP4_MAX_ID]			= "Unknown",
 };
 
