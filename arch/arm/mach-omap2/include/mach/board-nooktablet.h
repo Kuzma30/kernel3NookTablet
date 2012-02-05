@@ -25,7 +25,7 @@
 
 static inline int acclaim_board_type(void)
 {
-	return 0x05; //system_rev;  // This is set by U-Boot
+	return system_rev;  // This is set by U-Boot
 }
 
 #define BN_USB_VENDOR_ID            0x2080
