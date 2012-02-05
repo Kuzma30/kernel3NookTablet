@@ -78,7 +78,7 @@
 #include <linux/power/max17042.h>
 #include <linux/power/max8903.h>
 
-
+#include <plat/mcspi.h>
 
 #define WILINK_UART_DEV_NAME "/dev/ttyO1"
 #define KXTF9_DEVICE_ID                 "kxtf9"
@@ -472,13 +472,17 @@ struct max17042_platform_data max17042_platform_data_here = {
 
 };
 #endif
-
+static struct omap2_mcspi_device_config boxer_mcspi_config = {
+		.turbo_mode= 1,
+		.single_channel= 1,  /* 0: slave, 1: master */
+};
 static struct spi_board_info sdp4430_spi_board_info[] __initdata = {
 	{
 		.modalias		= "boxer_disp_spi",
 		.bus_num		= 4,	/* 4: McSPI4 */
 		.chip_select		= 0,
 		.max_speed_hz		= 375000,
+		.controller_data	= &boxer_mcspi_config
 	},
 };
 
@@ -714,7 +718,7 @@ static struct omap2_hsmmc_info mmc[] = {
 		.ocr_mask	= MMC_VDD_165_195,
 		.nonremovable   = true,
 #ifdef CONFIG_PM_RUNTIME
-		.power_saving	= true,
+		.power_saving	= false,//true,
 #endif
 	},
 	{
@@ -723,7 +727,7 @@ static struct omap2_hsmmc_info mmc[] = {
 			MMC_CAP_1_8V_DDR,
 		.gpio_wp	= -EINVAL,
 #ifdef CONFIG_PM_RUNTIME
-		.power_saving	= true,
+		.power_saving	= false,//true,
 #endif
 	},
 #ifdef CONFIG_TIWLAN_SDIO
@@ -1257,8 +1261,8 @@ static inline void __init board_serial_init(void)
 		ARRAY_SIZE(blaze_uart1_pads), &blaze_uart_info_uncon);
 	omap_serial_init_port_pads(1, blaze_uart2_pads,
 		ARRAY_SIZE(blaze_uart2_pads), &blaze_uart_info);
-	omap_serial_init_port_pads(2, blaze_uart3_pads,
-		ARRAY_SIZE(blaze_uart3_pads), &blaze_uart_info);
+//	omap_serial_init_port_pads(2, blaze_uart3_pads,
+//		ARRAY_SIZE(blaze_uart3_pads), &blaze_uart_info);
 //	omap_serial_init_port_pads(3, blaze_uart4_pads,
 //		ARRAY_SIZE(blaze_uart4_pads), &blaze_uart_info_uncon);
 }

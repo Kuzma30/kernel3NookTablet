@@ -390,7 +390,7 @@ static void __init omap4_check_revision(void)
 	 */
 	idcode = read_tap_reg(OMAP_TAP_IDCODE);
 	hawkeye = (idcode >> 12) & 0xffff;
-	rev = (idcode >> 28) & 0xf;
+	rev = (idcode >> 28) & 0xff;
 
 	/*
 	 * Few initial 4430 ES2.0 samples IDCODE is same as ES1.0
