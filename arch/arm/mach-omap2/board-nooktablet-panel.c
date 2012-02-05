@@ -27,7 +27,7 @@
 #include <linux/delay.h>
 #include <linux/twl6040-vib.h>
 #include <linux/wl12xx.h>
-//#include <linux/cdc_tcxo.h>
+//#include <video/omapdss.h>
 
 #include <mach/hardware.h>
 #include <mach/omap4-common.h>
@@ -126,16 +126,29 @@ static void nooktablet_panel_get_resource(void)
 		printk("%s: could not request CABC1\n",__FUNCTION__);
 	}
 }
+static void __init nooktablet_lcd_panel_init(void)
+{
 
+}
+static int nooktablet_panel_enable_lcd(struct omap_dss_device *dssdev)
+{
+return 0;
+}
+
+static void nooktablet_panel_disable_lcd(struct omap_dss_device *dssdev)
+{
+}
 static struct boxer_panel_data boxer_panel;
 
 static struct omap_dss_device sdp4430_boxer_device = {
 	.name				= "boxerLCD",
-	.driver_name		= "boxer_panel_drv",
+	.driver_name			= "boxer_panel_drv",
 	.type				= OMAP_DISPLAY_TYPE_DPI,
-	.phy.dpi.data_lines	= 24,
-	.channel			= OMAP_DSS_CHANNEL_LCD2,
-	.data				= &boxer_panel,
+	.phy.dpi.data_lines		= 24,
+//	.channel			= OMAP_DSS_CHANNEL_LCD2,
+//	.data				= &boxer_panel,
+	.platform_enable		= nooktablet_panel_enable_lcd,
+	.platform_disable		= nooktablet_panel_disable_lcd,
 };
 
 static struct omap_dss_device *sdp4430_dss_devices[] = {
@@ -150,8 +163,9 @@ static __initdata struct omap_dss_board_info sdp4430_dss_data = {
 
 void __init nooktablet_panel_init(void)
 {
-	nooktablet_panel_get_resource();
+//	nooktablet_panel_get_resource();
 	omap_display_init(&sdp4430_dss_data);
 	nooktablet_init_display_led();
-	platform_add_devices(nooktablet_devices, ARRAY_SIZE(nooktablet_devices));
+	nooktablet_lcd_panel_init();
+//	platform_add_devices(nooktablet_devices, ARRAY_SIZE(nooktablet_devices));
 }
