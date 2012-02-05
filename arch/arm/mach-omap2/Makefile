@@ -273,7 +273,7 @@ obj-$(CONFIG_MACH_OMAP4_PANDA)		+= board-omap4panda.o \
 					   omap_phy_internal.o
 
 obj-$(CONFIG_MACH_OMAP4_NOOKTABLET)	+= board-nooktablet.o \
-					   leds-omap-pwm.o \
+					   board-nooktablet-panel.o \
                                            board-nooktablet-peripherals.o \
                                            omap_phy_internal.o \
                                            board-44xx-identity.o \
