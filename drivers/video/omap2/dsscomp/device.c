@@ -605,8 +605,9 @@ void dsscomp_kdump(void)
 		.size = sizeof(dump_buf) - 1,
 	};
 	int i;
-
+#ifdef CONFIG_DSSCOMP_DEBUG_LOG
 	dsscomp_dbg_events(&s);
+#endif
 	dsscomp_dbg_comps(&s);
 	dsscomp_dbg_gralloc(&s);
 
