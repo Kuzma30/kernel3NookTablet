@@ -662,10 +662,12 @@ static struct omap_musb_board_data musb_board_data = {
 	.interface_type		= MUSB_INTERFACE_UTMI,
 #ifdef CONFIG_USB_MUSB_OTG
 	.mode			= MUSB_OTG,
-#else
+#elif defined(CONFIG_USB_MUSB_HDRC_HCD)
+	.mode			= MUSB_HOST,
+#elif defined(CONFIG_USB_GADGET_MUSB_HDRC)
 	.mode			= MUSB_PERIPHERAL,
 #endif
-	.power			= 200,
+	.power			= 100,
 };
 
 #ifndef CONFIG_TIWLAN_SDIO
@@ -699,7 +701,6 @@ static struct twl4030_usb_data omap4_usbphy_data = {
 	.phy_exit	= omap4430_phy_exit,
 	.phy_power	= omap4430_phy_power,
 	.phy_set_clock	= omap4430_phy_set_clk,
-	.phy_suspend	= omap4430_phy_suspend,
 };
 
 static struct omap2_hsmmc_info mmc[] = {
@@ -763,11 +764,6 @@ static struct regulator_consumer_supply sdp4430_vemmc_supply[] = {
 //		.supply = "vmmc",
 //		.dev_name = "omap_hsmmc.1",
 	REGULATOR_SUPPLY("vmmc", "mmci-omap-hs.1"),
-};
-
-static struct regulator_consumer_supply sdp4430_vcxio_supply[] = {
-	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dss"),
-	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dsi1"),
 };
 
 static struct regulator_consumer_supply sdp4430_vwlan_supply[] = {
@@ -963,8 +959,8 @@ static struct regulator_init_data sdp4430_vcxio = {
 					| REGULATOR_CHANGE_STATUS,
 		.always_on	= true,
 	},
-	.num_consumer_supplies	= ARRAY_SIZE(sdp4430_vcxio_supply),
-	.consumer_supplies	= sdp4430_vcxio_supply,
+//	.num_consumer_supplies	= ARRAY_SIZE(sdp4430_vcxio_supply),
+//	.consumer_supplies	= sdp4430_vcxio_supply,
 };
 
 static struct regulator_consumer_supply sdp4430_vdac_supply[] = {
@@ -1158,14 +1154,14 @@ static __initdata struct emif_device_details emif_devices = {
 };
 
 static struct omap_device_pad blaze_uart1_pads[] __initdata = {
-//	{
-//		.name	= "uart1_cts.uart1_cts",
-//		.enable	= OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE0,
-//	},
-//	{
-//		.name	= "uart1_rts.uart1_rts",
-//		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
-//	},
+	{
+		.name	= "uart1_cts.uart1_cts",
+		.enable	= OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE0,
+	},
+	{
+		.name	= "uart1_rts.uart1_rts",
+		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
+	},
 	{
 		.name	= "uart1_tx.uart1_tx",
 		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
@@ -1203,7 +1199,7 @@ static struct omap_device_pad blaze_uart2_pads[] __initdata = {
 	},
 };
 
-/*static struct omap_device_pad blaze_uart3_pads[] __initdata = {
+static struct omap_device_pad blaze_uart3_pads[] __initdata = {
 	{
 		.name	= "uart3_cts_rctx.uart3_cts_rctx",
 		.enable	= OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE0,
@@ -1235,7 +1231,7 @@ static struct omap_device_pad blaze_uart4_pads[] __initdata = {
 		.enable	= OMAP_PIN_INPUT | OMAP_MUX_MODE0,
 		.idle	= OMAP_PIN_INPUT | OMAP_MUX_MODE0,
 	},
-};*/
+};
 
 static struct omap_uart_port_info blaze_uart_info_uncon __initdata = {
 	.use_dma	= 0,
@@ -1255,10 +1251,10 @@ static inline void __init board_serial_init(void)
 		ARRAY_SIZE(blaze_uart1_pads), &blaze_uart_info_uncon);
 	omap_serial_init_port_pads(1, blaze_uart2_pads,
 		ARRAY_SIZE(blaze_uart2_pads), &blaze_uart_info);
-//	omap_serial_init_port_pads(2, blaze_uart3_pads,
-//		ARRAY_SIZE(blaze_uart3_pads), &blaze_uart_info);
-//	omap_serial_init_port_pads(3, blaze_uart4_pads,
-//		ARRAY_SIZE(blaze_uart4_pads), &blaze_uart_info_uncon);
+	omap_serial_init_port_pads(2, blaze_uart3_pads,
+		ARRAY_SIZE(blaze_uart3_pads), &blaze_uart_info);
+	omap_serial_init_port_pads(3, blaze_uart4_pads,
+		ARRAY_SIZE(blaze_uart4_pads), &blaze_uart_info_uncon);
 }
 /*static void __init omap_i2c_hwspin_lock_init(int bus_id, unsigned int
 		spinlock_id, struct omap_i2c_bus_board_data *pdata)
@@ -1767,7 +1763,7 @@ void __init acclaim_peripherals_init(void)
 		pr_err("Keypad initialization failed: %d\n", status);
 
 	omap_dmm_init();
-	nooktablet_panel_init();
+//	omap_4430sdp_display_init();
 //	blaze_panel_init();
 //	blaze_keypad_init();
 
