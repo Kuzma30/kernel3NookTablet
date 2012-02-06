@@ -142,11 +142,11 @@ static struct boxer_panel_data boxer_panel;
 
 static struct omap_dss_device sdp4430_boxer_device = {
 	.name				= "boxerLCD",
-	.driver_name			= "boxer_panel_drv",
+	.driver_name			= "boxer_panel",
 	.type				= OMAP_DISPLAY_TYPE_DPI,
 	.phy.dpi.data_lines		= 24,
-//	.channel			= OMAP_DSS_CHANNEL_LCD2,
-//	.data				= &boxer_panel,
+	.channel			= OMAP_DSS_CHANNEL_LCD2,
+	.data				= &boxer_panel,
 	.platform_enable		= nooktablet_panel_enable_lcd,
 	.platform_disable		= nooktablet_panel_disable_lcd,
 };
@@ -166,6 +166,7 @@ void __init nooktablet_panel_init(void)
 //	nooktablet_panel_get_resource();
 	omap_display_init(&sdp4430_dss_data);
 	nooktablet_init_display_led();
+	nooktablet_panel_get_resource();
 	nooktablet_lcd_panel_init();
-//	platform_add_devices(nooktablet_devices, ARRAY_SIZE(nooktablet_devices));
+	platform_add_devices(nooktablet_devices, ARRAY_SIZE(nooktablet_devices));
 }
