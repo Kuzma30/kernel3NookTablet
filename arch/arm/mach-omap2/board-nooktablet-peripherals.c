@@ -54,6 +54,7 @@
 #include <linux/wakelock.h>
 #include <plat/opp_twl_tps.h>
 #include <plat/mmc.h>
+#include <plat/omap_apps_brd_id.h>
 #include <plat/omap4-keypad.h>
 #include <plat/voltage.h>
 #include "omap_ram_console.h"
@@ -473,7 +474,7 @@ struct max17042_platform_data max17042_platform_data_here = {
 };
 #endif
 static struct omap2_mcspi_device_config boxer_mcspi_config = {
-		.turbo_mode= 1,
+		.turbo_mode= 0,
 		.single_channel= 1,  /* 0: slave, 1: master */
 };
 static struct spi_board_info sdp4430_spi_board_info[] __initdata = {
@@ -1738,9 +1739,9 @@ void __init acclaim_peripherals_init(void)
 	omap_board_config = sdp4430_config;
 	omap_board_config_size = ARRAY_SIZE(sdp4430_config);
 
-	//omap_init_board_version(0);
+	omap_init_board_version(OMAP4_NOOKTABLET);
 
-	//omap4_audio_conf();
+//	omap4_audio_conf();
 	omap4_create_board_props();
 	blaze_pmic_mux_init();
 	blaze_set_osc_timings();
@@ -1757,12 +1758,6 @@ void __init acclaim_peripherals_init(void)
 	max17042_dev_init();
 #endif
 	omap4_twl6030_hsmmc_init(mmc);
-
-	/* blaze_modem_init shall be called before omap4_ehci_ohci_init */
-//	if (!strcmp(modem_ipc, "hsi"))
-//		blaze_modem_init(true);
-//	else
-//		blaze_modem_init(false);
 
 	omap4_ehci_ohci_init();
 
