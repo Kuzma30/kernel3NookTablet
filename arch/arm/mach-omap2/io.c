@@ -38,7 +38,7 @@
 #include "io.h"
 
 #include <plat/omap-pm.h>
-#include <plat/voltage.h>
+#include "voltage.h"
 #include "powerdomain.h"
 
 #include "clockdomain.h"

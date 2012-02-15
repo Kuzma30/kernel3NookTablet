@@ -751,6 +751,13 @@ int omap_dm_timer_set_match(struct omap_dm_timer *timer, int enable,
 }
 EXPORT_SYMBOL_GPL(omap_dm_timer_set_match);
 
+unsigned int omap_dm_timer_get_match(struct omap_dm_timer *timer)
+{
+	return omap_dm_timer_read_reg(timer, OMAP_TIMER_MATCH_REG);
+}
+
+EXPORT_SYMBOL_GPL(omap_dm_timer_get_match);
+
 int omap_dm_timer_set_pwm(struct omap_dm_timer *timer, int def_on,
 			   int toggle, int trigger)
 {
@@ -822,30 +829,19 @@ int omap_dm_timer_set_int_enable(struct omap_dm_timer *timer,
 EXPORT_SYMBOL_GPL(omap_dm_timer_set_int_enable);
 
 void omap_dm_timer_set_int_disable(struct omap_dm_timer *timer,
-unsigned int value)
+                                        unsigned int value)
 {
-u32 l;
-struct dmtimer_platform_data *pdata = timer->pdev->dev.platform_data;
+        u32 l;
+    //    struct dmtimer_platform_data *pdata = timer->pdev->dev.platform_data;
 
-omap_dm_timer_enable(timer);
+        omap_dm_timer_enable(timer);
 
-l = omap_dm_timer_read_reg(timer, OMAP_TIMER_WAKEUP_EN_REG);
-//if (pdata->timer_ip_type == OMAP_TIMER_IP_VERSION_2) {
-//l |= value;
-//omap_dm_timer_write_reg(timer, OMAP_TIMER_INT_CLR_REG, value);
-//} else {
-l &= ~value;
-omap_dm_timer_write_reg(timer, OMAP_TIMER_INT_EN_REG, l);
-//}
-omap_dm_timer_write_reg(timer, OMAP_TIMER_WAKEUP_EN_REG, l);
+        l = omap_dm_timer_read_reg(timer, OMAP_TIMER_WAKEUP_EN_REG);
+        l &= ~value;
+        omap_dm_timer_write_reg(timer, OMAP_TIMER_INT_EN_REG, l);
+        omap_dm_timer_write_reg(timer, OMAP_TIMER_WAKEUP_EN_REG, l);
 }
 EXPORT_SYMBOL_GPL(omap_dm_timer_set_int_disable);
-unsigned int omap_dm_timer_get_match(struct omap_dm_timer *timer)
-{
-return omap_dm_timer_read_reg(timer, OMAP_TIMER_MATCH_REG);
-}
-
-EXPORT_SYMBOL_GPL(omap_dm_timer_get_match);
 
 unsigned int omap_dm_timer_read_status(struct omap_dm_timer *timer)
 {

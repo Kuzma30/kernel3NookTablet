@@ -753,4 +753,24 @@ config TOUCHSCREEN_QUANTUM_OBP
 
 	  If unsure, say N.
 
+config TOUCHSCREEN_CYTTSP
+	tristate "CYTTSP based touchscreens"
+	depends on I2C
+	help
+	  Say Y here if you have a CYTTSP based touchscreen
+	  controller.
+	  If unsure, say N.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called cyttsp-i2c.
+
+config TOUCHSCREEN_FT5X06
+	tristate "Focaltech FT5x06 based touchscreens"
+	depends on I2C
+	help
+	  Say Y here if you have a Focaltech FT5x06  
+	  based touchscreen controller.
+	  If unsure, say N.
+
+	  To compile this driver as a module, choose M here
 endif

@@ -13,7 +13,7 @@
 #include <linux/kernel.h>
 #include <linux/string.h>
 
-#include <plat/voltage.h>
+#include "voltage.h"
 
 #include "pm.h"
 

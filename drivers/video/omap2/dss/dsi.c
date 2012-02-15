@@ -2788,10 +2788,10 @@ static void dsi_vc_initial_config(struct platform_device *dsidev, int channel)
 	 * causes DSI errors and does not allow blaze to display anything
 	 * for now cause it to skip on blaze but allow this on tablet video
 	 * displays */
-//	if (!omap_is_board_version(OMAP4_BLAZE)) {
-//		if (channel == 0)
-//			r = FLD_MOD(r, 1, 11, 10); /* OCP_WIDTH = 32 bit */
-//	}
+	if (!omap_is_board_version(OMAP4_BLAZE)) {
+		if (channel == 0)
+			r = FLD_MOD(r, 1, 11, 10); /* OCP_WIDTH = 32 bit */
+	}
 
 	r = FLD_MOD(r, 4, 29, 27); /* DMA_RX_REQ_NB = no dma */
 	r = FLD_MOD(r, 4, 23, 21); /* DMA_TX_REQ_NB = no dma */

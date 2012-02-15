@@ -19,14 +19,11 @@
 #include <plat/omap_device.h>
 #include <plat/common.h>
 
-#include <plat/voltage.h>
+#include "voltage.h"
 #include "powerdomain.h"
 #include "clockdomain.h"
 #include "pm.h"
 
-//struct voltagedomain *voltdm_lookup(const char *name);
-int voltdm_scale(struct voltagedomain *voltdm, struct omap_volt_data *target_volt);
-int omap_voltage_late_init(void);
 /**
  * struct omap2_pm_lp_description - Describe low power behavior of the system
  * @oscillator_startup_time:	Time rounded up to uSec for the oscillator to
@@ -309,7 +306,6 @@ err:
  * opp entry and puts the voltage domain to the voltage specifies
  * in the opp entry
  */
-
 static int __init omap2_set_init_voltage(char *vdd_name, char *clk_name,
 						struct device *dev)
 {

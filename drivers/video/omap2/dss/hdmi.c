@@ -114,7 +114,7 @@ static int hdmi_runtime_get(void)
 		r = dispc_runtime_get();
 		if (r)
 			goto err_get_dispc;
-    
+
 		clk_enable(hdmi.sys_clk);
 		clk_enable(hdmi.hdmi_clk);
 
@@ -157,7 +157,7 @@ static void hdmi_runtime_put(void)
 int hdmi_init_display(struct omap_dss_device *dssdev)
 {
 	DSSDBG("init_display\n");
-	
+
 	return 0;
 }
 

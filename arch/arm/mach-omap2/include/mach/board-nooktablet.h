@@ -40,5 +40,6 @@ struct boxer_panel_data {
 	struct regulator *vlcd;
 };
 
+void omap4_create_board_props(void);
 #endif
 #endif

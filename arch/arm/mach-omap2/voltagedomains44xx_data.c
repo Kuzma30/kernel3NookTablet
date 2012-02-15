@@ -28,11 +28,11 @@
 #include "prm44xx.h"
 #include "prcm44xx.h"
 #include "prminst44xx.h"
-#include <plat/voltage.h>
+#include "voltage.h"
 #include "omap_opp_data.h"
-#include <plat/vc.h>
-#include <plat/vp.h>
-#include <plat/ldo.h>
+#include "vc.h"
+#include "vp.h"
+#include "ldo.h"
 
 static const struct omap_vfsm_instance omap4_vdd_mpu_vfsm = {
 	.voltsetup_reg = OMAP4_PRM_VOLTSETUP_MPU_RET_SLEEP_OFFSET,
