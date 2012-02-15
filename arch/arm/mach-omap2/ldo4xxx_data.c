@@ -10,8 +10,8 @@
  * published by the Free Software Foundation.
  */
 
-#include <plat/voltage.h>
-#include <plat/ldo.h>
+#include "voltage.h"
+#include "ldo.h"
 #include "prm44xx.h"
 #include "prm-regbits-44xx.h"
 

@@ -82,14 +82,6 @@
 
 #define OMAP_UART_SCR_TX_EMPTY	0x08
 
-#define DEFAULT_IDLE_TIMEOUT    5000            /* UART idle timeout (ms) */
-
-#define OMAP_MAX_HSUART_PORTS   4
-#define UART1                  (0x0)
-#define UART2                  (0x1)
-#define UART3                  (0x2)
-#define UART4                  (0x3)
-
 struct omap_uart_port_info {
 	int                     dma_rx_buf_size;/* DMA Rx Buffer Size */
 	int                     dma_rx_timeout; /* DMA RX timeout */
@@ -177,12 +169,7 @@ struct uart_omap_port {
 	bool (*chk_wakeup)(struct platform_device *);
 	void (*wake_peer)(struct uart_port *);
 };
-enum {
-        WAKELK_IRQ,
-        WAKELK_RESUME,
-        WAKELK_TX,
-        WAKELK_RX
-};
+
 int omap_serial_ext_uart_enable(u8 port_id);
 int omap_serial_ext_uart_disable(u8 port_id);
 #endif /* __OMAP_SERIAL_H__ */

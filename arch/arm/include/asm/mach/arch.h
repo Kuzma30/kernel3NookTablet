@@ -16,9 +16,6 @@ struct sys_timer;
 
 struct machine_desc {
 	unsigned int		nr;		/* architecture number	*/
-	unsigned intphys_io;/* start of physical io*/
-	unsigned intio_pg_offst;/* byte offset for io 
-				- * page tabe entry*/
 	const char		*name;		/* architecture name	*/
 	unsigned long		boot_params;	/* tagged list		*/
 	const char		**dt_compat;	/* array of device tree

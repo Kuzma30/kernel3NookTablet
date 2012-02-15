@@ -28,7 +28,7 @@
 #include <linux/opp.h>
 
 #include "smartreflex.h"
-#include <plat/voltage.h>
+#include "voltage.h"
 #include "dvfs.h"
 
 #define MAX_VDDS		3

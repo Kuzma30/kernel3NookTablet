@@ -14,6 +14,7 @@
 #include <linux/init.h>
 #include <linux/err.h>
 #include <linux/earlysuspend.h>
+#include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/leds.h>
 #include <linux/ctype.h>
@@ -110,7 +111,7 @@ static inline void omap_pwm_set_match(struct omap_dm_timer *timer,
 				      unsigned int val)
 {
 	omap_dm_timer_set_match(timer, 1, val);
-	omap_dm_timer_set_int_disable(timer, TIMER_INT_FLAGS);
+	omap_dm_timer_set_int_disable(timer, TIMER_INT_FLAGS); 
 }
 
 static irqreturn_t intensity_timer_match_interrupt(int irq, void *arg)
@@ -119,7 +120,7 @@ static irqreturn_t intensity_timer_match_interrupt(int irq, void *arg)
 	struct omap_dm_timer	*timer;
 	unsigned int		counter;
 	unsigned int		match_val;
-	unsigned int		current_match_val;
+	u32			current_match_val;
 	unsigned int		status;
 
 	led   = (struct omap_pwm_led *) arg;
@@ -134,7 +135,7 @@ static irqreturn_t intensity_timer_match_interrupt(int irq, void *arg)
 
 	/* get current match value */
 	current_match_val = omap_dm_timer_get_match(timer);
-
+	
 	/* We must update match register only in case:
 	* - new match value is bigger than old one
 	* - when old match value is bigger than new one, current

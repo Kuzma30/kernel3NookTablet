@@ -680,13 +680,6 @@ static int __init parse_tag_cmdline(const struct tag *tag)
 
 __tagtable(ATAG_CMDLINE, parse_tag_cmdline);
 
-static int __init parse_tag_modelid(const struct tag *tag)
-{
-	system_modelid = tag->u.modelid.id;
-return 0;
-}
-
-__tagtable(ATAG_MODELID , parse_tag_modelid);
 /*
  * Scan the tag table for this tag, and call its parse function.
  * The tag table is built by the linker from all the __tagtable
@@ -705,6 +698,14 @@ static int __init parse_tag(const struct tag *tag)
 
 	return t < &__tagtable_end;
 }
+
+static int __init parse_tag_modelid(const struct tag *tag)
+{
+	system_modelid = tag->u.modelid.id;
+	return 0;
+}
+
+__tagtable(ATAG_MODELID , parse_tag_modelid);
 
 /*
  * Parse all tags in the list, checking both the global and architecture
@@ -879,7 +880,7 @@ static struct machine_desc * __init setup_machine_tags(unsigned int nr)
 
 	/* parse_early_param needs a boot_command_line */
 	strlcpy(boot_command_line, from, COMMAND_LINE_SIZE);
-
+	early_print("Setup machine tags finished\n");
 	return mdesc;
 }
 

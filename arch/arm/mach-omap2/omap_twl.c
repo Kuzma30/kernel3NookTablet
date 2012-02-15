@@ -17,8 +17,9 @@
 #include <linux/io.h>
 #include <linux/kernel.h>
 #include <linux/i2c/twl.h>
+#include <asm/setup.h>
 
-#include <plat/voltage.h>
+#include "voltage.h"
 
 #include "pm.h"
 

@@ -30,8 +30,8 @@
 #include <linux/interrupt.h>
 #include <linux/slab.h>
 #include <linux/earlysuspend.h>
-
-//#define KXTF9_DEBUG
+#include <linux/module.h>
+#define KXTF9_DEBUG
 
 #include <linux/input/kxtf9.h>
 
@@ -97,7 +97,6 @@ struct {
 	80,	ODR25F}, {
 	0,	ODR12_5F},
 };
-
 struct kxtf9_data {
 	struct i2c_client *client;
 	struct kxtf9_platform_data *pdata;

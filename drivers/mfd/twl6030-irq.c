@@ -500,14 +500,12 @@ int twl6030_init_irq(int irq_num, unsigned irq_base, unsigned irq_end)
 		pr_err("twl6030: could not claim irq%d: %d\n", irq_num, status);
 		goto fail_irq;
 	}
-
 	twl_irq = irq_num;
 	register_pm_notifier(&twl6030_irq_pm_notifier_block);
 
 	status = twl6030_vlow_init(twl6030_irq_base + TWL_VLOW_INTR_OFFSET);
 	if (status < 0)
 		goto fail_vlow;
-
 	return status;
 
 fail_vlow:

@@ -263,9 +263,4 @@ int omap_emif_setup_device_details(
 			const struct emif_device_details *emif2_devices);
 
 void emif_clear_irq(int emif_id);
-
-int omap_init_emif_timings(void);
-
-int sdram_vendor(void);
-
 #endif

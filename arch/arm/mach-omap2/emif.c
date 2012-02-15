@@ -29,7 +29,7 @@
 #include <mach/lpddr2-jedec.h>
 #include <mach/omap4-common.h>
 
-#include <plat/voltage.h>
+#include "voltage.h"
 
 /* Utility macro for masking and setting a field in a register/variable */
 #define mask_n_set(reg, shift, msk, val) \
@@ -1381,8 +1381,7 @@ static void __init setup_lowpower_regs(u32 emif_nr,
  * currently.  This has the effect of setting the EMIF DDR AC timing
  * registers to the values currently defined by the kernel.
  */
-
-int __init omap_init_emif_timings(void)
+static int __init omap_init_emif_timings(void)
 {
 	struct clk *dpll_core_m2_clk;
 	int ret;
@@ -1424,17 +1423,4 @@ int __init omap_init_emif_timings(void)
 
 	return ret;
 }
-//late_initcall(omap_init_emif_timings);
-
-int sdram_vendor(void)
-{
-        int ddr_manufact_id =0; 
-        void __iomem *base;
-
-        base = emif[EMIF1].base;
-
-        __raw_writel(LPDDR2_MR5, base + OMAP44XX_EMIF_LPDDR2_MODE_REG_CFG);
-        ddr_manufact_id =  __raw_readb(base  +  OMAP44XX_EMIF_LPDDR2_MODE_REG_DATA);
-
-        return ddr_manufact_id ;
-}
+late_initcall(omap_init_emif_timings);

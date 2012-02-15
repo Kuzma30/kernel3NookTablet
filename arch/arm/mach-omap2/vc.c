@@ -5,8 +5,8 @@
 
 #include <plat/cpu.h>
 
-#include <plat/voltage.h>
-#include <plat/vc.h>
+#include "voltage.h"
+#include "vc.h"
 #include "prm-regbits-34xx.h"
 #include "prm-regbits-44xx.h"
 #include "prm44xx.h"

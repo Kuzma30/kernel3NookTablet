@@ -9,4 +9,3 @@ obj-$(CONFIG_PANEL_ACX565AKM) += panel-acx565akm.o
 
 obj-$(CONFIG_PANEL_TC358765) += panel-tc358765.o
 obj-$(CONFIG_PANEL_BOXER) += panel-boxer.o
-

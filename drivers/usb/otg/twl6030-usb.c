@@ -484,6 +484,12 @@ static int twl6030_set_power(struct otg_transceiver *x, unsigned int mA)
 	return 0;
 }
 
+static int twl6030_get_link_status(struct otg_transceiver *x)
+{
+	struct twl6030_usb *twl = xceiv_to_twl(x);
+	return twl->linkstat;
+}
+
 static int __devinit twl6030_usb_probe(struct platform_device *pdev)
 {
 	struct twl6030_usb	*twl;
@@ -507,12 +513,13 @@ static int __devinit twl6030_usb_probe(struct platform_device *pdev)
 	twl->otg.set_vbus	= twl6030_set_vbus;
 	twl->otg.set_hz_mode	= twl6030_set_hz_mode;
 	twl->otg.init		= twl6030_phy_init;
-	twl->otg.set_power    = twl6030_set_power;
+	twl->otg.set_power	= twl6030_set_power;
 	twl->otg.shutdown	= twl6030_phy_shutdown;
 	twl->otg.set_suspend	= twl6030_phy_suspend;
 	twl->otg.start_srp	= twl6030_start_srp;
 	twl->otg.state		= OTG_STATE_UNDEFINED;
-
+	twl->otg.get_link_status = twl6030_get_link_status;
+	
 	/* init spinlock for workqueue */
 	spin_lock_init(&twl->lock);
 

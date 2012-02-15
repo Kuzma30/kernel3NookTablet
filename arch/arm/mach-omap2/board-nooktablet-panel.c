@@ -25,9 +25,10 @@
 #include <linux/leds-omap4430sdp-display.h>
 #include <linux/interrupt.h>
 #include <linux/delay.h>
-#include <linux/twl6040-vib.h>
-#include <linux/wl12xx.h>
-//#include <video/omapdss.h>
+
+//#include <linux/twl6040-vib.h>
+//#include <linux/wl12xx.h>
+//#include <linux/cdc_tcxo.h>
 
 #include <mach/hardware.h>
 #include <mach/omap4-common.h>
@@ -41,8 +42,8 @@
 
 #include <plat/board.h>
 #include <plat/common.h>
-#include "control.h"
-#include "timer-gp.h"
+//#include <plat/control.h>
+//#include <plat/timer-gp.h>
 #include <plat/display.h>
 #include <plat/usb.h>
 #include <plat/omap_device.h>
@@ -57,7 +58,7 @@
 
 #define DEFAULT_BACKLIGHT_BRIGHTNESS	105
 
-static void nooktablet_init_display_led(void)
+static void acclaim4430_init_display_led(void)
 {
 	if (acclaim_board_type() >= EVT2) {
 		printk(KERN_INFO "init_display_led: evt2 hardware\n");
@@ -75,7 +76,7 @@ static void nooktablet_init_display_led(void)
 	}
 }
 
-static void nooktablet_disp_backlight_setpower(struct omap_pwm_led_platform_data *pdata, int state)
+static void acclaim4430_disp_backlight_setpower(struct omap_pwm_led_platform_data *pdata, int state)
 {
 	if (state)
 		gpio_direction_output(38, (acclaim_board_type() >= EVT2) ? 1 : 0);
@@ -86,29 +87,29 @@ static void nooktablet_disp_backlight_setpower(struct omap_pwm_led_platform_data
 	printk("[BL set power] %d\n", state);
 }
 
-static struct omap_pwm_led_platform_data nooktablet_disp_backlight_data = {
+static struct omap_pwm_led_platform_data acclaim4430_disp_backlight_data = {
 	.name 		 = "lcd-backlight",
 	.intensity_timer = 11,
 	.def_on		 = 0,
 	.def_brightness	 = DEFAULT_BACKLIGHT_BRIGHTNESS,
-	.set_power	 = nooktablet_disp_backlight_setpower,
+	.set_power	 = acclaim4430_disp_backlight_setpower,
 };
 
-static struct platform_device nooktablet_disp_led = {
+static struct platform_device sdp4430_disp_led = {
 	.name	=	"omap_pwm_led",
 	.id	=	-1,
 	.dev	= {
-		.platform_data = &nooktablet_disp_backlight_data,
+		.platform_data = &acclaim4430_disp_backlight_data,
 	},
 };
 
-static struct platform_device *nooktablet_devices[] __initdata = {
-	&nooktablet_disp_led,
+static struct platform_device *sdp4430_devices[] __initdata = {
+	&sdp4430_disp_led,
 };
 
 /*--------------------------------------------------------------------------*/
 
-static void nooktablet_panel_get_resource(void)
+static void sdp4430_panel_get_resource(void)
 {
 	int ret_val = 0;
 
@@ -126,18 +127,7 @@ static void nooktablet_panel_get_resource(void)
 		printk("%s: could not request CABC1\n",__FUNCTION__);
 	}
 }
-static void __init nooktablet_lcd_panel_init(void)
-{
 
-}
-static int nooktablet_panel_enable_lcd(struct omap_dss_device *dssdev)
-{
-return 0;
-}
-
-static void nooktablet_panel_disable_lcd(struct omap_dss_device *dssdev)
-{
-}
 static struct boxer_panel_data boxer_panel;
 
 static struct omap_dss_device sdp4430_boxer_device = {
@@ -147,8 +137,6 @@ static struct omap_dss_device sdp4430_boxer_device = {
 	.phy.dpi.data_lines		= 24,
 	.channel			= OMAP_DSS_CHANNEL_LCD2,
 	.data				= &boxer_panel,
-	.platform_enable		= nooktablet_panel_enable_lcd,
-	.platform_disable		= nooktablet_panel_disable_lcd,
 };
 
 static struct omap_dss_device *sdp4430_dss_devices[] = {
@@ -161,12 +149,10 @@ static __initdata struct omap_dss_board_info sdp4430_dss_data = {
 	.default_device	=	&sdp4430_boxer_device,
 };
 
-void __init nooktablet_panel_init(void)
+void __init acclaim_panel_init(void)
 {
-//	nooktablet_panel_get_resource();
-	omap_display_init(&sdp4430_dss_data);
-	nooktablet_init_display_led();
-	nooktablet_panel_get_resource();
-	nooktablet_lcd_panel_init();
-	platform_add_devices(nooktablet_devices, ARRAY_SIZE(nooktablet_devices));
+//	sdp4430_panel_get_resource();
+//	omap_display_init(&sdp4430_dss_data);
+//	acclaim4430_init_display_led();
+//	platform_add_devices(sdp4430_devices, ARRAY_SIZE(sdp4430_devices));
 }
