@@ -147,7 +147,9 @@ static irqreturn_t intensity_timer_match_interrupt(int irq, void *arg)
 	* match value is lower than counter. This will result in missing
 	* the match event for this period.
 	*/
+	printk(KERN_INFO "Start read counter from OMAP DM timer...");
 	counter = omap_dm_timer_read_counter(timer);
+	printk(KERN_INFO "OMAP DM timer read counter = %d", counter);
 
 	if ((counter + COUNTER_TO_MATCH_GUARD) < match_val)
 		omap_pwm_set_match(timer, match_val);
@@ -197,15 +199,20 @@ static void omap_pwm_led_power_on(struct omap_pwm_led *led)
 	led->powered = 1;
 
 	/* Select clock source */
+	pr_info("Omap DM timer enable\n");
 	omap_dm_timer_enable(led->intensity_timer);
+	pr_info("OMAP DM timer set source\n");
 	omap_dm_timer_set_source(led->intensity_timer, OMAP_TIMER_SRC_SYS_CLK);
+	pr_info("OMAP DM timer set prescaler\n");
 	omap_dm_timer_set_prescaler(led->intensity_timer, COUNTER_DEVIDER);
 	/* Enable PWM timers */
 	if (led->blink_timer != NULL) {
+		pr_info("Enable PWM timer start\n");
 		omap_dm_timer_enable(led->blink_timer);
 		omap_dm_timer_set_source(led->blink_timer,
 					 OMAP_TIMER_SRC_32_KHZ);
 		omap_pwm_led_set_blink(led);
+		pr_info("Enable PWM timer finish\n");
 	}
 
 	omap_dm_timer_set_pwm(led->intensity_timer, def_on ? 0 : 1, 1,

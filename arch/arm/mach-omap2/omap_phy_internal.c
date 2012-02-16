@@ -106,8 +106,8 @@ int omap4430_phy_set_clk(struct device *dev, int on)
 		clk_enable(clk48m);
 		clk_enable(clk32k);
 		state = 1;
-	} else if (state) {
-		/* Disable the phy clocks */
+	} else if (!on && state) {
+ 		/* Disable the phy clocks */
 		clk_disable(phyclk);
 		clk_disable(clk48m);
 		clk_disable(clk32k);
