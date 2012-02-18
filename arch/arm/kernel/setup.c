@@ -898,6 +898,7 @@ void __init setup_arch(char **cmdline_p)
 	machine_desc = mdesc;
 	machine_name = mdesc->name;
 
+	printk("Mashine NAME=%s",machine_name);
 	if (mdesc->soft_reboot)
 		reboot_setup("s");
 

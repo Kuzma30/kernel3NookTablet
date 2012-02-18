@@ -104,7 +104,7 @@ static void acclaim4430_disp_backlight_setpower(struct omap_pwm_led_platform_dat
 static struct omap_pwm_led_platform_data acclaim4430_disp_backlight_data = {
 	.name 		 = "lcd-backlight",
 	.intensity_timer = 11,
-	.def_on		 = 1,
+	.def_on		 = 0,
 	.def_brightness	 = DEFAULT_BACKLIGHT_BRIGHTNESS,
 	.set_power	 = acclaim4430_disp_backlight_setpower,
 };
@@ -191,8 +191,13 @@ static struct omap_dss_device sdp4430_boxer_device = {
 	.phy.dpi.data_lines		= 24,
 	.channel			= OMAP_DSS_CHANNEL_LCD2,
 	.data				= &boxer_panel,
-	.platform_enable		= nooktablet_panel_enable_lcd,
-	.platform_disable		= nooktablet_panel_disable_lcd,
+	.clocks = {
+ 		.dispc	= {
+ 			.dispc_fclk_src	= OMAP_DSS_CLK_SRC_FCK,
+ 		},
+	},
+//	.platform_enable		= nooktablet_panel_enable_lcd,
+//	.platform_disable		= nooktablet_panel_disable_lcd,
 };
 
 
@@ -215,7 +220,7 @@ static struct omap_dss_device sdp4430_boxer_device = {
 
 static struct omap_dss_device *sdp4430_dss_devices[] = {
  	&sdp4430_boxer_device,
-	//&sdp4430_hdmi_device,
+//	&sdp4430_hdmi_device,
 };
  
  static struct omap_dss_board_info sdp4430_dss_data = {
@@ -239,11 +244,11 @@ static struct omap_dss_device *sdp4430_dss_devices[] = {
 void __init acclaim_panel_init(void)
 {
 	sdp4430_panel_get_resource();
-	acclaim4430_init_display_led();
-	//sdp4430_hdmi_mux_init();
+
+//	sdp4430_hdmi_mux_init();
 	omap_vram_set_sdram_vram(BLAZE_FB_RAM_SIZE, 0);
 	omapfb_set_platform_data(&blaze_fb_pdata);
 	omap_display_init(&sdp4430_dss_data);
-	
+	acclaim4430_init_display_led();	
 	platform_add_devices(sdp4430_devices, ARRAY_SIZE(sdp4430_devices));
 }

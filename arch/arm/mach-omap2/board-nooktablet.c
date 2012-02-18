@@ -683,6 +683,7 @@ static int plat_uart_disable(void)
 	int port_id = 0;
 	int err = 0;
 	if (uart_req) {
+		pr_info(KERN_INFO "port_id= %d", port_id);
 		sscanf(WILINK_UART_DEV_NAME, "/dev/ttyO%d", &port_id);
 		err = omap_serial_ext_uart_disable(port_id);
 		if (!err)
@@ -836,10 +837,11 @@ static struct omap2_hsmmc_info mmc[] = {
 		.mmc		= 1,
 		.caps		= MMC_CAP_4_BIT_DATA | MMC_CAP_8_BIT_DATA |
 			MMC_CAP_1_8V_DDR,
+		.gpio_cd	= -EINVAL,
 		.gpio_wp	= -EINVAL,
-#ifdef CONFIG_PM_RUNTIME
-		.power_saving	= true,
-#endif
+//#ifdef CONFIG_PM_RUNTIME
+//		.power_saving	= true,
+//#endif
 	},
 #ifdef CONFIG_TIWLAN_SDIO
 	{
@@ -951,10 +953,12 @@ static int omap4_twl6030_hsmmc_late_init(struct device *dev)
 				struct platform_device, dev);
 	struct omap_mmc_platform_data *pdata = dev->platform_data;
 
-	pr_info("Setting MMC1 Card detect Irq\n");
+	
 	/* Setting MMC1 Card detect Irq */
 	if (pdev->id == 0) {
+		pr_info("Setting MMC1 Card detect Irq\n");
 		ret = twl6030_mmc_card_detect_config();
+		pr_info("Setting MMC card detect config\n");
 		if (ret)
 			pr_err("Failed configuring MMC1 card detect\n");
 		pdata->slots[0].card_detect_irq = TWL6030_IRQ_BASE +
@@ -964,7 +968,10 @@ static int omap4_twl6030_hsmmc_late_init(struct device *dev)
 #ifndef CONFIG_TIWLAN_SDIO
 	/* Set the MMC5 (wlan) power function */
 	if (pdev->id == 4)
+	{
+	      pr_info("Set MMC5 power function\n");
 		pdata->slots[0].set_power = wifi_set_power;
+	}
 #endif
 	return ret;
 }
@@ -1216,10 +1223,11 @@ static struct regulator_init_data sdp4430_vmmc = {
 		.valid_ops_mask	 = REGULATOR_CHANGE_VOLTAGE
 			| REGULATOR_CHANGE_MODE
 			| REGULATOR_CHANGE_STATUS,
-		.state_mem = {
-			.enabled	= false,
-			.disabled	= true,
-		},
+//		.state_mem = {
+//			.enabled	= false,
+//			.disabled	= true,
+//		},
+		.always_on	= true,
 	},
 	.num_consumer_supplies  = 1,
 	.consumer_supplies      = sdp4430_vmmc_supply,
@@ -1888,6 +1896,7 @@ static __initdata struct emif_device_details emif_devices = {
 	.cs1_device = &lpddr2_elpida_2G_S4_dev
 };
 
+
 static struct omap_device_pad blaze_uart1_pads[] __initdata = {
 	{
 		.name	= "uart1_cts.uart1_cts",
@@ -1989,7 +1998,7 @@ static inline void __init board_serial_init(void)
 	omap_serial_init_port_pads(2, blaze_uart3_pads,
 		ARRAY_SIZE(blaze_uart3_pads), &blaze_uart_info);
 	omap_serial_init_port_pads(3, blaze_uart4_pads,
-		ARRAY_SIZE(blaze_uart4_pads), &blaze_uart_info_uncon);
+				   ARRAY_SIZE(blaze_uart4_pads), &blaze_uart_info);
 }
 
 static void omap4_sdp4430_wifi_mux_init(void)
@@ -2208,7 +2217,7 @@ static void __init omap_4430sdp_reserve(void)
 	omap_reserve();
 }
 
-MACHINE_START(OMAP4_NOOKTABLET, "B@N NOOK TABLET")
+MACHINE_START(OMAP4_NOOKTABLET, "NOOKTABLET")
 	.boot_params	= 0x80000100,
 	.reserve	= omap_4430sdp_reserve,
 	.map_io		= omap_4430sdp_map_io,

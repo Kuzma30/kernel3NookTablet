@@ -850,10 +850,6 @@ int omap_dm_timer_set_int_disable(struct omap_dm_timer *timer,
                 omap_dm_timer_write_reg(timer, OMAP_TIMER_INT_EN_REG, l);
         }
         omap_dm_timer_write_reg(timer, OMAP_TIMER_WAKEUP_EN_REG, l);
-//        l = omap_dm_timer_read_reg(timer, OMAP_TIMER_WAKEUP_EN_REG);
-//        l &= ~value;
-//        omap_dm_timer_write_reg(timer, OMAP_TIMER_INT_EN_REG, l);
-//        omap_dm_timer_write_reg(timer, OMAP_TIMER_WAKEUP_EN_REG, l);
         if (!timer->is_early_init)
 		__timer_disable(timer);
         spin_unlock_irqrestore(&timer->lock,flags);
@@ -913,9 +909,8 @@ unsigned int omap_dm_timer_read_counter(struct omap_dm_timer *timer)
 		spin_unlock_irqrestore(&timer->lock, flags);
 		return ret;
 	}
-
-	spin_unlock_irqrestore(&timer->lock, flags);
 	WARN_ON(!timer->enabled);
+	spin_unlock_irqrestore(&timer->lock, flags);
 	return -EINVAL;
 }
 EXPORT_SYMBOL_GPL(omap_dm_timer_read_counter);
