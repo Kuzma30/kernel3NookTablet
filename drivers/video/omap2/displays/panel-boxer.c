@@ -119,14 +119,14 @@ static void boxer_init_panel(void)
 {
 	spi_send(boxer_spi_device, 0, 0x00);
 
-	spi_send(boxer_spi_device,   0, 0xad);
-	spi_send(boxer_spi_device,   1, 0x30);
-	spi_send(boxer_spi_device,   2, 0x40);
-	spi_send(boxer_spi_device, 0xe, 0x5f);
-	spi_send(boxer_spi_device, 0xf, 0xa4);
-	spi_send(boxer_spi_device, 0xd, 0x00);
-	spi_send(boxer_spi_device, 0x2, 0x43);
-	spi_send(boxer_spi_device, 0xa, 0x28);
+	spi_send(boxer_spi_device, 0x00, 0xad);
+	spi_send(boxer_spi_device, 0x01, 0x30);
+	spi_send(boxer_spi_device, 0x02, 0x40);
+	spi_send(boxer_spi_device, 0x0e, 0x5f);
+	spi_send(boxer_spi_device, 0x0f, 0xa4);
+	spi_send(boxer_spi_device, 0x0d, 0x00);
+	spi_send(boxer_spi_device, 0x02, 0x43);
+	spi_send(boxer_spi_device, 0x0a, 0x28);
 	spi_send(boxer_spi_device, 0x10, 0x41);
 }
 
@@ -157,7 +157,7 @@ static int boxer_panel_enable(struct omap_dss_device *dssdev)
 		boxer_panel_dssdev = dssdev;
 		queue_work(boxer_panel_wq, &boxer_panel_work);
 	}
-
+	dssdev->state=OMAP_DSS_DISPLAY_ACTIVE;
 	return 0;
 }
 
@@ -176,11 +176,13 @@ static void boxer_panel_disable(struct omap_dss_device *dssdev)
 		       __func__);
 		WARN_ON(1);
 	}
+	dssdev->state=OMAP_DSS_DISPLAY_DISABLED;
 }
 
 static int boxer_panel_suspend(struct omap_dss_device *dssdev)
 {
 	boxer_panel_disable(dssdev);
+	dssdev->state=OMAP_DSS_DISPLAY_DISABLED;
 	return 0;
 }
 

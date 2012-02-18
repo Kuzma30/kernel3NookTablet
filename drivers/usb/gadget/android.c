@@ -15,8 +15,8 @@
  *
  */
 
-/* #define DEBUG */
-/* #define VERBOSE_DEBUG */
+// // #define DEBUG
+// // #define VERBOSE_DEBUG 
 
 #include <linux/init.h>
 #include <linux/module.h>

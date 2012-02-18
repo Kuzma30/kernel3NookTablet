@@ -199,20 +199,20 @@ static void omap_pwm_led_power_on(struct omap_pwm_led *led)
 	led->powered = 1;
 
 	/* Select clock source */
-	pr_info("Omap DM timer enable\n");
+//	pr_info("Omap DM timer enable\n");
 	omap_dm_timer_enable(led->intensity_timer);
-	pr_info("OMAP DM timer set source\n");
+//	pr_info("OMAP DM timer set source\n");
 	omap_dm_timer_set_source(led->intensity_timer, OMAP_TIMER_SRC_SYS_CLK);
-	pr_info("OMAP DM timer set prescaler\n");
+//	pr_info("OMAP DM timer set prescaler\n");
 	omap_dm_timer_set_prescaler(led->intensity_timer, COUNTER_DEVIDER);
 	/* Enable PWM timers */
 	if (led->blink_timer != NULL) {
-		pr_info("Enable PWM timer start\n");
+//		pr_info("Enable PWM timer start\n");
 		omap_dm_timer_enable(led->blink_timer);
 		omap_dm_timer_set_source(led->blink_timer,
 					 OMAP_TIMER_SRC_32_KHZ);
 		omap_pwm_led_set_blink(led);
-		pr_info("Enable PWM timer finish\n");
+//		pr_info("Enable PWM timer finish\n");
 	}
 
 	omap_dm_timer_set_pwm(led->intensity_timer, def_on ? 0 : 1, 1,
@@ -225,7 +225,6 @@ static void omap_pwm_led_power_on(struct omap_pwm_led *led)
 	timerval = omap_dm_timer_read_counter(led->intensity_timer);
 	if (timerval < COUNTER_LOAD_VAL)
 		omap_dm_timer_write_counter(led->intensity_timer, -2);
-
 	/* Turn voltage on */
 	if (led->pdata->set_power != NULL)
 		led->pdata->set_power(led->pdata, 1);
