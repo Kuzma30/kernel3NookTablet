@@ -124,6 +124,18 @@ config SND_OMAP_SOC_SDP4430
 	  Say Y if you want to add support for SoC audio on Texas Instruments
 	  SDP4430 or PandaBoard.
 
+config SND_OMAP_SOC_ACCLAIM
+	tristate "SoC Audio support for OMAP4 Panda-AIC board with AIC3100"
+	depends on SND_OMAP_SOC
+	select SND_OMAP_SOC_MCBSP
+	select SND_SOC_TLV320AIC3100
+	select SND_SOC_OMAP4_AIC3100
+	select SND_OMAP_SOC_ABE
+	select SND_OMAP_SOC_ABE_DSP
+	select ABE_44100
+	help
+	  Say Y if you want to add support for SoC audio on the OMAP4 Panda board. Uses MCBSP2.
+
 config SND_OMAP_SOC_OMAP4_HDMI
 	tristate "SoC Audio support for Texas Instruments OMAP4 HDMI"
 	depends on SND_OMAP_SOC && OMAP4_DSS_HDMI && OMAP2_DSS && ARCH_OMAP4

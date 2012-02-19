@@ -737,6 +737,13 @@ struct snd_soc_dai_link {
 	const char *codec_dai_name;
 
 	struct snd_soc_dsp_link *dsp_link;
+	
+	/* supported BE */
+	const char **supported_be;
+	int num_be;
+	int fe_playback_channels;
+	int fe_capture_channels;
+	
 	/* Keep DAI active over suspend */
 	unsigned int ignore_suspend:1;
 
@@ -760,6 +767,7 @@ struct snd_soc_dai_link {
 	int (*be_hw_params_fixup)(struct snd_soc_pcm_runtime *rtd,
 			struct snd_pcm_hw_params *params);
 
+	void *private_data;
 	/* machine stream operations */
 	struct snd_soc_ops *ops;
 

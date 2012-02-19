@@ -375,6 +375,9 @@ config SND_SOC_WM9712
 config SND_SOC_WM9713
 	tristate
 
+config SND_SOC_TLV320AIC3100
+	tristate "TI TLV320AIC3100 Codec support"
+
 # Amp
 config SND_SOC_LM4857
 	tristate
