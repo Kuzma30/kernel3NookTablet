@@ -45,7 +45,7 @@
 #define LCD_YRES		600
 
 #define LCD_PIXCLOCK_MIN	39000 /* CPT MIN PIX Clock is 39MHz */
-#define Lcd_Pixclock_Typ	45000 /* Typical PIX clock is 45MHz */
+#define Lcd_Pixclock_Typ	46000 /* Typical PIX clock is 45MHz */
 #define LCD_PIXCLOCK_MAX	52000 /* Maximum is 52MHz */
 
 /* Current Pixel clock */
@@ -57,6 +57,18 @@ static struct regulator *boxer_panel_regulator;
 static struct spi_device *boxer_spi_device;
 static atomic_t boxer_panel_is_enabled = ATOMIC_INIT(0);
 
+/* Get FT i2c adapter for lock/unlock it */
+struct i2c_adapter *g_ft_i2c_adapter = NULL;
+
+extern void register_ft_i2c_adapter(struct i2c_adapter *adapter)
+{
+	g_ft_i2c_adapter = adapter;
+}
+
+extern void unregister_ft_i2c_adapter(struct i2c_adapter *adapter)
+{
+	g_ft_i2c_adapter = NULL;
+}
 /*NEC NL8048HL11-01B  Manual
  * defines HFB, HSW, HBP, VFP, VSW, VBP as shown below
  */
@@ -105,6 +117,7 @@ static int spi_send(struct spi_device *spi, unsigned char reg_addr,
 {
 	int ret = 0;
 	uint16_t msg;
+	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
 	msg = (reg_addr << 10) | reg_data;
 
 	if (spi_write(spi, (unsigned char *)&msg, 2))
@@ -117,8 +130,8 @@ static int spi_send(struct spi_device *spi, unsigned char reg_addr,
 
 static void boxer_init_panel(void)
 {
+	printk(KERN_INFO "Boxer init panel start\n");
 	spi_send(boxer_spi_device, 0, 0x00);
-
 	spi_send(boxer_spi_device, 0x00, 0xad);
 	spi_send(boxer_spi_device, 0x01, 0x30);
 	spi_send(boxer_spi_device, 0x02, 0x40);
@@ -128,6 +141,7 @@ static void boxer_init_panel(void)
 	spi_send(boxer_spi_device, 0x02, 0x43);
 	spi_send(boxer_spi_device, 0x0a, 0x28);
 	spi_send(boxer_spi_device, 0x10, 0x41);
+	printk(KERN_INFO "Boxer init panel finish\n");
 }
 
 static void boxer_panel_work_func(struct work_struct *work)
@@ -259,6 +273,7 @@ static int boxer_spi_probe(struct spi_device *spi)
 {
 	spi->mode = SPI_MODE_0;
 	spi->bits_per_word = 16;
+	spi->chip_select=0;
 	spi_setup(spi);
 
 	boxer_spi_device = spi;
@@ -283,7 +298,7 @@ static int boxer_spi_remove(struct spi_device *spi)
 
 static struct spi_driver boxer_spi_driver = {
 	.probe           = boxer_spi_probe,
-	.remove	= __devexit_p(boxer_spi_remove),
+	.remove		= __devexit_p(boxer_spi_remove),
 	.driver         = {
 		.name   = "boxer_disp_spi",
 		.bus    = &spi_bus_type,
@@ -297,6 +312,7 @@ static int __init boxer_lcd_init(void)
 
 	boxer_panel_wq = create_singlethread_workqueue("boxer-panel-wq");
 
+
 	printk(KERN_WARNING "Enabling power for LCD\n");
 	boxer_panel_regulator = regulator_get(NULL, "vlcd");
 
@@ -306,9 +322,17 @@ static int __init boxer_lcd_init(void)
 		ret = -ENODEV;
 		goto out;
 	}
-
+	
+	if (g_ft_i2c_adapter) {
+		i2c_lock_adapter(g_ft_i2c_adapter);
+	}
+	
 	ret = regulator_enable(boxer_panel_regulator);
-
+	printk(KERN_WARNING "Enabling boxer panel regulator vlcd\n");
+	
+	if (g_ft_i2c_adapter) {
+		i2c_unlock_adapter(g_ft_i2c_adapter);
+	}
 	if (ret) {
 		printk(KERN_ERR "Failed to enable regulator vlcd!\n");
 		regulator_put(boxer_panel_regulator);
@@ -326,19 +350,6 @@ static void __exit boxer_lcd_exit(void)
 	regulator_disable(boxer_panel_regulator);
 	regulator_put(boxer_panel_regulator);
 	destroy_workqueue(boxer_panel_wq);
-}
-
-/* Get FT i2c adapter for lock/unlock it */
-struct i2c_adapter *g_ft_i2c_adapter = NULL;
-
-extern void register_ft_i2c_adapter(struct i2c_adapter *adapter)
-{
-	g_ft_i2c_adapter = adapter;
-}
-
-extern void unregister_ft_i2c_adapter(struct i2c_adapter *adapter)
-{
-	g_ft_i2c_adapter = NULL;
 }
 
 module_init(boxer_lcd_init);

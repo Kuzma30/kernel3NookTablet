@@ -65,6 +65,11 @@
 #define HDMI_GPIO_HPD			63  /* Hot plug pin for HDMI */
 #define HDMI_GPIO_LS_OE 41
 
+#define LCD_RST_DELAY		100
+#define LCD_INIT_DELAY		200
+
+static struct spi_device *boxer_spi;
+
 #define DEFAULT_BACKLIGHT_BRIGHTNESS	10
 
 static struct gpio sdp4430_hdmi_gpios[] = {
@@ -174,9 +179,15 @@ static void sdp4430_hdmi_mux_init(void)
 }
 static struct boxer_panel_data boxer_panel;
 
+static inline struct boxer_panel_data * get_panel_data(struct omap_dss_device *dssdev)
+{
+	return dssdev->data;
+}
+
 static int nooktablet_panel_enable_lcd(struct omap_dss_device *dssdev)
 {
 	pr_info("NookTablet LCD enable!\n");
+
 	return 0;
 }
 
@@ -191,13 +202,8 @@ static struct omap_dss_device sdp4430_boxer_device = {
 	.phy.dpi.data_lines		= 24,
 	.channel			= OMAP_DSS_CHANNEL_LCD2,
 	.data				= &boxer_panel,
-	.clocks = {
- 		.dispc	= {
- 			.dispc_fclk_src	= OMAP_DSS_CLK_SRC_FCK,
- 		},
-	},
-//	.platform_enable		= nooktablet_panel_enable_lcd,
-//	.platform_disable		= nooktablet_panel_disable_lcd,
+// 	.platform_enable		= nooktablet_panel_enable_lcd,
+// 	.platform_disable		= nooktablet_panel_disable_lcd,
 };
 
 

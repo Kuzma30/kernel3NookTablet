@@ -835,15 +835,15 @@ static struct omap2_hsmmc_info mmc[] = {
 	},
 	{
 		.mmc		= 1,
-		.caps		= MMC_CAP_4_BIT_DATA | MMC_CAP_8_BIT_DATA |
-			MMC_CAP_1_8V_DDR,
+		.caps		= MMC_CAP_4_BIT_DATA | MMC_CAP_8_BIT_DATA |	MMC_CAP_1_8V_DDR,
 		.gpio_cd	= -EINVAL,
 		.gpio_wp	= -EINVAL,
+// 		.ocr_mask	= MMC_VDD_165_195,
 //#ifdef CONFIG_PM_RUNTIME
 //		.power_saving	= true,
 //#endif
 	},
-#ifdef CONFIG_TIWLAN_SDIO
+/*#ifdef CONFIG_TIWLAN_SDIO
 	{
 		.mmc		= 3,
 		.caps		= MMC_CAP_4_BIT_DATA,
@@ -860,7 +860,7 @@ static struct omap2_hsmmc_info mmc[] = {
 		.ocr_mask	= MMC_VDD_165_195,
 		.nonremovable	= true,
 	},
-#endif
+#endif*/
   // 	{
 // 		.mmc		= 2,
 // 		.caps		= MMC_CAP_4_BIT_DATA | MMC_CAP_8_BIT_DATA |
@@ -889,26 +889,26 @@ static struct omap2_hsmmc_info mmc[] = {
 };
 
 
-static struct regulator_consumer_supply sdp4430_vmmc_supply[] = {
-	REGULATOR_SUPPLY("vmmc", "mmci-omap-hs.0"),
-};
-
-static struct regulator_consumer_supply sdp4430_vemmc_supply[] = {
-	REGULATOR_SUPPLY("vmmc", "mmci-omap-hs.1"),
-};
-
-// static struct regulator_consumer_supply sdp4430_vaux_supply[] = {
-// 	{
-// 		.supply = "vmmc",
-// 		.dev_name = "omap_hsmmc.1",
-// 	},
-// };
 // static struct regulator_consumer_supply sdp4430_vmmc_supply[] = {
-// 	{
-// 		.supply = "vmmc",
-// 		.dev_name = "omap_hsmmc.0",
-// 	},
+// 	REGULATOR_SUPPLY("vmmc", "omap_hsmmc.0" /*"mmci-omap-hs.0"*/),
 // };
+// 
+// static struct regulator_consumer_supply sdp4430_vemmc_supply[] = {
+// 	REGULATOR_SUPPLY("vmmc", "omap_hsmmc.1"/*"mmci-omap-hs.1"*/),
+// };
+
+static struct regulator_consumer_supply sdp4430_vaux_supply[] = {
+ 	{
+		.supply = "vmmc",
+ 		.dev_name = "omap_hsmmc.0",
+ 	},
+};
+static struct regulator_consumer_supply sdp4430_vmmc_supply[] = {
+	{
+ 		.supply = "vemmc",
+		.dev_name = "omap_hsmmc.1",
+	},
+};
 // static struct regulator_consumer_supply sdp4430_vcxio_supply[] = {
 // 	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dss"),
 // 	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dsi1"),
@@ -963,15 +963,17 @@ static int omap4_twl6030_hsmmc_late_init(struct device *dev)
 			pr_err("Failed configuring MMC1 card detect\n");
 		pdata->slots[0].card_detect_irq = TWL6030_IRQ_BASE +
 						MMCDETECT_INTR_OFFSET;
+		pr_info("Setting Card detect Irq\n");
 		pdata->slots[0].card_detect = twl6030_mmc_card_detect;
+		pr_info("Setting Card detect function\n");
 	}
 #ifndef CONFIG_TIWLAN_SDIO
-	/* Set the MMC5 (wlan) power function */
-	if (pdev->id == 4)
-	{
-	      pr_info("Set MMC5 power function\n");
-		pdata->slots[0].set_power = wifi_set_power;
-	}
+ 	/* Set the MMC5 (wlan) power function */
+ 	if (pdev->id == 4)
+ 	{
+ 	      pr_info("Set MMC5 power function\n");
+ 		pdata->slots[0].set_power = wifi_set_power;
+ 	}
 #endif
 	return ret;
 }
@@ -980,6 +982,7 @@ static __init void omap4_twl6030_hsmmc_set_late_init(struct device *dev)
 {
 	struct omap_mmc_platform_data *pdata;
 
+	pr_info("omap4_twl6030_hsmmc_set_late_init start\n");
 	/* dev can be null if CONFIG_MMC_OMAP_HS is not set */
 	if (!dev) {
 		pr_err("Failed %s\n", __func__);
@@ -987,16 +990,18 @@ static __init void omap4_twl6030_hsmmc_set_late_init(struct device *dev)
 	}
 	pdata = dev->platform_data;
 	pdata->init =	omap4_twl6030_hsmmc_late_init;
+	pr_info("omap4_twl6030_hsmmc_set_late_init end\n");
 }
 
 static int __init omap4_twl6030_hsmmc_init(struct omap2_hsmmc_info *controllers)
 {
 	struct omap2_hsmmc_info *c;
 
+	pr_info("omap4_twl6030_hsmmc_init start\n");
 	omap2_hsmmc_init(controllers);
 	for (c = controllers; c->mmc; c++)
 		omap4_twl6030_hsmmc_set_late_init(c->dev);
-
+	pr_info("omap4_twl6030_hsmmc_init end\n");
 	return 0;
 }
 
@@ -1166,14 +1171,14 @@ static struct regulator_init_data sdp4430_vaux1 = {
 		.valid_ops_mask	 = REGULATOR_CHANGE_VOLTAGE
 			| REGULATOR_CHANGE_MODE
 			| REGULATOR_CHANGE_STATUS,
-		.state_mem = {
-			.enabled	= false,
-			.disabled	= true,
-		},
+// 		.state_mem = {
+// 			.enabled	= false,
+// 			.disabled	= true,
+// // 		},
 		.always_on	= true,
 	},
 	.num_consumer_supplies	= 1,
-	.consumer_supplies	= sdp4430_vemmc_supply,
+	.consumer_supplies	= sdp4430_vaux_supply,
 };
 
 static struct regulator_init_data sdp4430_vaux2 = {
@@ -1476,13 +1481,13 @@ static struct twl4030_platform_data sdp4430_twldata = {
 	/* Regulators */
 	.vmmc		= &sdp4430_vmmc,
 	.vpp		= &sdp4430_vpp,
-//	.vusim		= &sdp4430_vusim,
+	.vusim		= &sdp4430_vusim,
 	.vana		= &sdp4430_vana,
 	.vcxio		= &sdp4430_vcxio,
 //	.vdac		= &sdp4430_vdac,
 	.vusb		= &sdp4430_vusb,
 	.vaux1		= &sdp4430_vaux1,
-//	.vaux2		= &sdp4430_vaux2,
+	.vaux2		= &sdp4430_vaux2,
 	.vaux3		= &sdp4430_vaux3,
 	.clk32kg	= &sdp4430_clk32kg,
 	.usb		= &omap4_usbphy_data,
@@ -1529,9 +1534,9 @@ static struct i2c_board_info __initdata sdp4430_i2c_2_boardinfo[] = {
 		.platform_data = &ft5x06_platform_data,
 		.irq = OMAP_GPIO_IRQ(OMAP_FT5x06_GPIO),
 	},
-// 	{
-// 		I2C_BOARD_INFO("tlv320aic3100", 0x18),
-// 	},
+ 	{
+ 		I2C_BOARD_INFO("tlv320aic3100", 0x18),
+ 	},
 };
 
 static struct i2c_board_info __initdata sdp4430_i2c_3_boardinfo[] = {
@@ -1991,6 +1996,7 @@ static struct omap_uart_port_info blaze_uart_info __initdata = {
 
 static inline void __init board_serial_init(void)
 {
+	pr_info(KERN_INFO "Board serial init\n");
 	omap_serial_init_port_pads(0, blaze_uart1_pads,
 		ARRAY_SIZE(blaze_uart1_pads), &blaze_uart_info_uncon);
 	omap_serial_init_port_pads(1, blaze_uart2_pads,
@@ -1998,7 +2004,7 @@ static inline void __init board_serial_init(void)
 	omap_serial_init_port_pads(2, blaze_uart3_pads,
 		ARRAY_SIZE(blaze_uart3_pads), &blaze_uart_info);
 	omap_serial_init_port_pads(3, blaze_uart4_pads,
-				   ARRAY_SIZE(blaze_uart4_pads), &blaze_uart_info);
+				   ARRAY_SIZE(blaze_uart4_pads), &blaze_uart_info_uncon);
 }
 
 static void omap4_sdp4430_wifi_mux_init(void)
@@ -2035,7 +2041,7 @@ static void omap4_sdp4430_wifi_init(void)
 	platform_device_register(&omap_vwlan_device);
 }
 
-#if defined(CONFIG_USB_EHCI_HCD_OMAP) || defined(CONFIG_USB_OHCI_HCD_OMAP3)
+// #if defined(CONFIG_USB_EHCI_HCD_OMAP) || defined(CONFIG_USB_OHCI_HCD_OMAP3)
 struct usbhs_omap_board_data usbhs_bdata __initdata = {
 	.port_mode[0] = OMAP_EHCI_PORT_MODE_PHY,
 	.port_mode[1] = OMAP_OHCI_PORT_MODE_PHY_6PIN_DATSE0,
@@ -2064,9 +2070,9 @@ static void __init omap4_ehci_ohci_init(void)
 	return;
 
 }
-#else
-static void __init omap4_ehci_ohci_init(void){}
-#endif
+// // #else
+// // static void __init omap4_ehci_ohci_init(void){}
+// // #endif
 
 static void blaze_set_osc_timings(void)
 {
@@ -2077,20 +2083,6 @@ static void blaze_set_osc_timings(void)
 	omap_pm_set_osc_lp_time(4000, 1);
 }
 
-
-/*
- * As OMAP4430 mux HSI and USB signals, when HSI is used (for instance HSI
- * modem is plugged) we should configure HSI pad conf and disable some USB
- * configurations.
- * HSI usage is declared using bootargs variable:
- * board-4430sdp.modem_ipc=hsi
- * Any other or missing value will not setup HSI pad conf, and port_mode[0]
- * will be used by USB.
- * Variable modem_ipc is used to catch bootargs parameter value.
- */
-// static char *modem_ipc = "n/a";
-// module_param(modem_ipc, charp, 0);
-// MODULE_PARM_DESC(modem_ipc, "Modem IPC setting");
 
 static void __init omap_4430sdp_init(void)
 {
@@ -2108,11 +2100,11 @@ static void __init omap_4430sdp_init(void)
 	omap_board_config = sdp4430_config;
 	omap_board_config_size = ARRAY_SIZE(sdp4430_config);
 
-	omap_init_board_version(0);
+//	omap_init_board_version(0);
 
 //	omap4_audio_conf();
-	omap4_create_board_props();
-	blaze_pmic_mux_init();
+// 	omap4_create_board_props();
+// 	blaze_pmic_mux_init();
 	blaze_set_osc_timings();
 	omap4_i2c_init();
 //	blaze_sensor_init();
@@ -2201,8 +2193,7 @@ static void __init omap_4430sdp_map_io(void)
 }
 static void __init omap_4430sdp_reserve(void)
 {
-	omap_ram_console_init(OMAP_RAM_CONSOLE_START_DEFAULT,
-			OMAP_RAM_CONSOLE_SIZE_DEFAULT);
+	omap_ram_console_init(ACCLAIM_RAM_CONSOLE_START, (1 << CONFIG_LOG_BUF_SHIFT));
 
 	/* do the static reservations first */
 	memblock_remove(PHYS_ADDR_SMC_MEM, PHYS_ADDR_SMC_SIZE);
@@ -2217,7 +2208,7 @@ static void __init omap_4430sdp_reserve(void)
 	omap_reserve();
 }
 
-MACHINE_START(OMAP4_NOOKTABLET, "NOOKTABLET")
+MACHINE_START(OMAP4_NOOKTABLET, "OMAP4430 NOOKTABLET")
 	.boot_params	= 0x80000100,
 	.reserve	= omap_4430sdp_reserve,
 	.map_io		= omap_4430sdp_map_io,
