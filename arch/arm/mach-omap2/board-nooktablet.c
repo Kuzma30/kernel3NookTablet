@@ -835,13 +835,13 @@ static struct omap2_hsmmc_info mmc[] = {
 	},
 	{
 		.mmc		= 1,
-		.caps		= MMC_CAP_4_BIT_DATA | MMC_CAP_8_BIT_DATA |	MMC_CAP_1_8V_DDR,
-		.gpio_cd	= -EINVAL,
-		.gpio_wp	= -EINVAL,
+		.caps		= MMC_CAP_4_BIT_DATA | MMC_CAP_8_BIT_DATA | MMC_CAP_1_8V_DDR,
+		.gpio_cd	= 0,//-EINVAL,
+		.gpio_wp	= 4,//-EINVAL,
 // 		.ocr_mask	= MMC_VDD_165_195,
-//#ifdef CONFIG_PM_RUNTIME
-//		.power_saving	= true,
-//#endif
+#ifdef CONFIG_PM_RUNTIME
+		.power_saving	= true,
+#endif
 	},
 /*#ifdef CONFIG_TIWLAN_SDIO
 	{
@@ -2157,7 +2157,10 @@ static void __init omap_4430sdp_init(void)
 			ARRAY_SIZE(sdp4430_spi_board_info));
 	
 	omap_dmm_init();
+	printk("Acclaim panel init\n");
 	acclaim_panel_init();
+	printk("Acclaim panel init finish\n");
+	
 //	blaze_panel_init();
 //	blaze_keypad_init();
 

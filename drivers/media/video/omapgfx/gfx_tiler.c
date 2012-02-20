@@ -15,10 +15,10 @@
 #include "v4gfx.h"
 #include "gfx_bc.h"
 
-#ifdef CONFIG_TILER_OMAP
+//#ifdef CONFIG_TI_TILER
 #include <mach/tiler.h>
 #define TILER_ALLOCATE_V4L2
-#endif
+//#endif
 
 void v4gfx_tiler_buffer_free(struct v4gfx_device *vout, unsigned int count,
 			     unsigned int startindex)

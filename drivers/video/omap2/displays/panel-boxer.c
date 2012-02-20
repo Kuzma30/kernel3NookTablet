@@ -49,7 +49,7 @@
 #define LCD_PIXCLOCK_MAX	52000 /* Maximum is 52MHz */
 
 /* Current Pixel clock */
-#define LCD_PIXEL_CLOCK		68000
+#define LCD_PIXEL_CLOCK		46000
 
 static struct workqueue_struct *boxer_panel_wq;
 static struct omap_dss_device *boxer_panel_dssdev;
@@ -99,9 +99,10 @@ int boxer_get_recommended_bpp(struct omap_dss_device *dssdev)
 	return 24;
 }
 
-
 static int boxer_panel_probe(struct omap_dss_device *dssdev)
 {
+	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
+	
 	dssdev->panel.config = OMAP_DSS_LCD_TFT | OMAP_DSS_LCD_IVS |
 		OMAP_DSS_LCD_IHS | OMAP_DSS_LCD_IPC;
 	dssdev->panel.timings = boxer_panel_timings;
@@ -110,6 +111,7 @@ static int boxer_panel_probe(struct omap_dss_device *dssdev)
 
 static void boxer_panel_remove(struct omap_dss_device *dssdev)
 {
+	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
 }
 
 static int spi_send(struct spi_device *spi, unsigned char reg_addr,
@@ -130,7 +132,7 @@ static int spi_send(struct spi_device *spi, unsigned char reg_addr,
 
 static void boxer_init_panel(void)
 {
-	printk(KERN_INFO "Boxer init panel start\n");
+	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
 	spi_send(boxer_spi_device, 0, 0x00);
 	spi_send(boxer_spi_device, 0x00, 0xad);
 	spi_send(boxer_spi_device, 0x01, 0x30);
@@ -141,13 +143,15 @@ static void boxer_init_panel(void)
 	spi_send(boxer_spi_device, 0x02, 0x43);
 	spi_send(boxer_spi_device, 0x0a, 0x28);
 	spi_send(boxer_spi_device, 0x10, 0x41);
-	printk(KERN_INFO "Boxer init panel finish\n");
 }
 
 static void boxer_panel_work_func(struct work_struct *work)
 {
-	if (!regulator_is_enabled(boxer_panel_regulator))
+	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
+	if (!regulator_is_enabled(boxer_panel_regulator)){
 		regulator_enable(boxer_panel_regulator);
+		printk(KERN_INFO " boxer : %s called , line %d, regulator_enable(boxer_panel_regulator); \n", __FUNCTION__ , __LINE__);
+	}
 
 	msleep(LCD_RST_DELAY);
 
@@ -159,15 +163,19 @@ static void boxer_panel_work_func(struct work_struct *work)
 
 	msleep(LCD_INIT_DELAY);
 
-	if (boxer_panel_dssdev->platform_enable)
+	if (boxer_panel_dssdev->platform_enable){
 		boxer_panel_dssdev->platform_enable(boxer_panel_dssdev);
+		printk(KERN_INFO " boxer : %s called , line %d, boxer_panel_dssdev->platform_enable(boxer_panel_dssdev)\n", __FUNCTION__ , __LINE__);
+	}
 }
 
 static DECLARE_WORK(boxer_panel_work, boxer_panel_work_func);
 
 static int boxer_panel_enable(struct omap_dss_device *dssdev)
 {
+	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
 	if (atomic_add_unless(&boxer_panel_is_enabled, 1, 1)) {
+		printk(KERN_INFO " boxer : %s called , line %d, queue_work(boxer_panel_wq, &boxer_panel_work)\n", __FUNCTION__ , __LINE__);
 		boxer_panel_dssdev = dssdev;
 		queue_work(boxer_panel_wq, &boxer_panel_work);
 	}
@@ -177,14 +185,18 @@ static int boxer_panel_enable(struct omap_dss_device *dssdev)
 
 static void boxer_panel_disable(struct omap_dss_device *dssdev)
 {
+	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
 	if (atomic_dec_and_test(&boxer_panel_is_enabled)) {
 		cancel_work_sync(&boxer_panel_work);
 
-		if (dssdev->platform_disable)
+		if (dssdev->platform_disable){
+			printk(KERN_INFO " boxer : %s called , line %d, dssdev->platform_disable(dssdev);\n", __FUNCTION__ , __LINE__);
 			dssdev->platform_disable(dssdev);
-
-		if (regulator_is_enabled(boxer_panel_regulator))
+		}
+		if (regulator_is_enabled(boxer_panel_regulator)){
+			printk(KERN_INFO " boxer : %s called , line %d, regulator_disable(boxer_panel_regulator);\n", __FUNCTION__ , __LINE__);
 			regulator_disable(boxer_panel_regulator);
+		}
 	} else {
 		printk(KERN_WARNING "%s: attempting to disable panel twice!\n",
 		       __func__);
@@ -195,6 +207,7 @@ static void boxer_panel_disable(struct omap_dss_device *dssdev)
 
 static int boxer_panel_suspend(struct omap_dss_device *dssdev)
 {
+	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
 	boxer_panel_disable(dssdev);
 	dssdev->state=OMAP_DSS_DISPLAY_DISABLED;
 	return 0;
@@ -202,6 +215,7 @@ static int boxer_panel_suspend(struct omap_dss_device *dssdev)
 
 static int boxer_panel_resume(struct omap_dss_device *dssdev)
 {
+	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
 	return boxer_panel_enable(dssdev);
 }
 
@@ -231,6 +245,7 @@ static ssize_t lcd_reg_store(struct device *dev, struct device_attribute *attr,
 
 	struct spi_device *spi = to_spi_device(dev);
 
+	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
 	args = argv_split(GFP_KERNEL, buf, &argc);
 
 	if (args == NULL) {
@@ -271,6 +286,7 @@ static struct attribute_group boxer_lcd_spi_attributes_group = {
 
 static int boxer_spi_probe(struct spi_device *spi)
 {
+	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
 	spi->mode = SPI_MODE_0;
 	spi->bits_per_word = 16;
 	spi->chip_select=0;
@@ -289,6 +305,7 @@ static int boxer_spi_probe(struct spi_device *spi)
 
 static int boxer_spi_remove(struct spi_device *spi)
 {
+	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
 	sysfs_remove_group(&spi->dev.kobj, &boxer_lcd_spi_attributes_group);
 	omap_dss_unregister_driver(&boxer_driver);
 
@@ -308,6 +325,7 @@ static struct spi_driver boxer_spi_driver = {
 
 static int __init boxer_lcd_init(void)
 {
+	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
 	int ret = 0;
 
 	boxer_panel_wq = create_singlethread_workqueue("boxer-panel-wq");
@@ -315,6 +333,7 @@ static int __init boxer_lcd_init(void)
 
 	printk(KERN_WARNING "Enabling power for LCD\n");
 	boxer_panel_regulator = regulator_get(NULL, "vlcd");
+	printk(KERN_INFO " boxer : %s called , line %d, regulator_get\n", __FUNCTION__ , __LINE__);
 
 	if (IS_ERR(boxer_panel_regulator)) {
 		printk(KERN_ERR "Unable to get vlcd regulator, reason: %ld!\n",
@@ -328,7 +347,7 @@ static int __init boxer_lcd_init(void)
 	}
 	
 	ret = regulator_enable(boxer_panel_regulator);
-	printk(KERN_WARNING "Enabling boxer panel regulator vlcd\n");
+	printk(KERN_INFO " boxer : %s called , line %d, Enabling boxer panel regulator vlcd\n", __FUNCTION__ , __LINE__);
 	
 	if (g_ft_i2c_adapter) {
 		i2c_unlock_adapter(g_ft_i2c_adapter);
@@ -346,6 +365,7 @@ out:
 
 static void __exit boxer_lcd_exit(void)
 {
+	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
 	spi_unregister_driver(&boxer_spi_driver);
 	regulator_disable(boxer_panel_regulator);
 	regulator_put(boxer_panel_regulator);
