@@ -16,7 +16,7 @@
 #ifndef _OMAP_V4L2_GFX_H_
 #define _OMAP_V4L2_GFX_H_
 
-#include <linux/videodev.h>
+#include "videodev.h"
 
 /*
  * @see V4L2_GFX_IOC_CONSUMER, struct v4l2_gfx_consumer_params
