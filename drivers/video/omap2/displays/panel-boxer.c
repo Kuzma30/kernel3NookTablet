@@ -174,7 +174,10 @@ static DECLARE_WORK(boxer_panel_work, boxer_panel_work_func);
 static int boxer_panel_enable(struct omap_dss_device *dssdev)
 {
 	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
+		regulator_enable(boxer_panel_regulator);
+		printk(KERN_INFO " boxer : %s called , line %d, regulator_enable(boxer_panel_regulator); \n", __FUNCTION__ , __LINE__);
 	if (atomic_add_unless(&boxer_panel_is_enabled, 1, 1)) {
+
 		printk(KERN_INFO " boxer : %s called , line %d, queue_work(boxer_panel_wq, &boxer_panel_work)\n", __FUNCTION__ , __LINE__);
 		boxer_panel_dssdev = dssdev;
 		queue_work(boxer_panel_wq, &boxer_panel_work);
