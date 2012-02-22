@@ -198,27 +198,28 @@ static void boxer_panel_disable(struct omap_dss_device *dssdev)
 		}
 		if (regulator_is_enabled(boxer_panel_regulator)){
 			printk(KERN_INFO " boxer : %s called , line %d, regulator_disable(boxer_panel_regulator);\n", __FUNCTION__ , __LINE__);
-			regulator_disable(boxer_panel_regulator);
+			//regulator_disable(boxer_panel_regulator);
 		}
 	} else {
 		printk(KERN_WARNING "%s: attempting to disable panel twice!\n",
 		       __func__);
 		WARN_ON(1);
 	}
-	dssdev->state=OMAP_DSS_DISPLAY_DISABLED;
+	dssdev->state = OMAP_DSS_DISPLAY_DISABLED;
 }
 
 static int boxer_panel_suspend(struct omap_dss_device *dssdev)
 {
 	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
 	boxer_panel_disable(dssdev);
-	dssdev->state=OMAP_DSS_DISPLAY_DISABLED;
+	dssdev->state = OMAP_DSS_DISPLAY_SUSPENDED;
 	return 0;
 }
 
 static int boxer_panel_resume(struct omap_dss_device *dssdev)
 {
 	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
+	dssdev->state = OMAP_DSS_DISPLAY_ACTIVE;
 	return boxer_panel_enable(dssdev);
 }
 
