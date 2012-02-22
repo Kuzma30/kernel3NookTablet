@@ -531,7 +531,7 @@ static int kxtf9_get_acceleration_data(struct kxtf9_data *tf9, int *xyz)
 	/* x,y,z hardware values */
 	int hw_d[3];
 
-	aprintk("kxtf9: kxtf9_get_acceleration_data ...\n");
+//	aprintk("kxtf9: kxtf9_get_acceleration_data ...\n");
 
 	err = kxtf9_i2c_read(tf9, XOUT_L, acc_data, 6);
 	if (err < 0)
@@ -565,7 +565,7 @@ static int kxtf9_get_acceleration_data(struct kxtf9_data *tf9, int *xyz)
 
 static void kxtf9_report_values(struct kxtf9_data *tf9, int *xyz)
 {
-	aprintk("kxtf9: kxtf9_report_value ...\n");
+//	aprintk("kxtf9: kxtf9_report_value ...\n");
 
 	input_report_rel(tf9->input_dev, REL_X, xyz[0]);
 	input_report_rel(tf9->input_dev, REL_Y, xyz[1]);
@@ -625,7 +625,7 @@ static void kxtf9_input_work_func(struct work_struct *work)
 						struct kxtf9_data, input_work);
 	int xyz[3] = { 0 };
 
-	aprintk("kxtf9: kxtf9_input_work_func ...\n");
+//	aprintk("kxtf9: kxtf9_input_work_func ...\n");
 
 	mutex_lock(&tf9->lock);
 

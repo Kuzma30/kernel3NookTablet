@@ -124,7 +124,7 @@
 #define MAX17042_GPIO_FOR_IRQ  65
 #define KXTF9_GPIO_FOR_IRQ  66
 
-void __init acclaim_panel_init(void);
+void acclaim_panel_init(void);
 
 #ifdef CONFIG_BATTERY_MAX17042
 static void max17042_dev_init(void)
