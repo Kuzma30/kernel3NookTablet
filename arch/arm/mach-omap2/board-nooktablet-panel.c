@@ -98,7 +98,7 @@ static void acclaim4430_disp_backlight_setpower(struct omap_pwm_led_platform_dat
 static struct omap_pwm_led_platform_data acclaim4430_disp_backlight_data = {
 	.name 		 = "lcd-backlight",
 	.intensity_timer = 11,
-	.def_on		 = 0,
+	.def_on		 = 1,
 	.def_brightness	 = DEFAULT_BACKLIGHT_BRIGHTNESS,
 	.set_power	 = acclaim4430_disp_backlight_setpower,
 };
@@ -146,27 +146,25 @@ static inline struct boxer_panel_data * get_panel_data(struct omap_dss_device *d
 
 static int nooktablet_panel_enable_lcd(struct omap_dss_device *dssdev)
 {
-	pr_info("NookTablet LCD enable!\n");
-// 	        printk("Enabling backlight PWM for LCD\n");
-//         acclaim4430_disp_backlight_data.def_on = 1; // change the PWM polarity
+	  pr_info("NookTablet LCD enable!\n");
+	  printk("Enabling backlight PWM for LCD\n");
+	  acclaim4430_disp_backlight_data.def_on = 1; // change the PWM polarity
 // 
 //         //gpio_request(38, "lcd backlight evt2");
 // 
 //         //gpio_request(44, "lcd CABC0");
-//         gpio_direction_output(44,0);
-//         gpio_set_value(44,0);
+         gpio_direction_output(44,0);
+         gpio_set_value(44,0);
 // 
 //         //gpio_request(45, "lcd CABC1");
-//         gpio_direction_output(45,0);
-//         gpio_set_value(45,0);
-	dssdev->state=OMAP_DSS_DISPLAY_ACTIVE;
+         gpio_direction_output(45,0);
+         gpio_set_value(45,0);
 	return 0;
 }
 
 static void nooktablet_panel_disable_lcd(struct omap_dss_device *dssdev)
 {
   	pr_info("NookTablet LCD disable!\n");
-	dssdev->state=OMAP_DSS_DISPLAY_DISABLED;
 }
 static int nooktablet_set_bl_intensity(struct omap_dss_device *dssdev, int level)
 {
@@ -179,9 +177,9 @@ static struct omap_dss_device sdp4430_boxer_device = {
 	.phy.dpi.data_lines		= 24,
 	.channel			= OMAP_DSS_CHANNEL_LCD2,
 	.data				= &boxer_panel,
- 	.platform_enable		= nooktablet_panel_enable_lcd,
- 	.platform_disable		= nooktablet_panel_disable_lcd,
-	.set_backlight			= nooktablet_set_bl_intensity,
+  	.platform_enable		= nooktablet_panel_enable_lcd,
+  	.platform_disable		= nooktablet_panel_disable_lcd,
+ 	.set_backlight			= nooktablet_set_bl_intensity,
 };
 
 
