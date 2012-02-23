@@ -499,22 +499,38 @@ void keypad_pad_wkup(int enable)
 
 }
 
-static struct omap_device_pad keypad_pads[] = {
-	{	.name   = "kpd_col0.kpd_col0",
-		.enable = OMAP_WAKEUP_EN | OMAP_MUX_MODE0,
-	},
-	{	.name   = "kpd_row0.kpd_row0",
-		.enable = OMAP_WAKEUP_EN | OMAP_MUX_MODE0,
-	},
-	{	.name   = "kpd_row1.kpd_row1",
-		.enable = OMAP_PULL_ENA | OMAP_PULL_UP | OMAP_WAKEUP_EN | OMAP_MUX_MODE0 | OMAP_INPUT_EN,
-	},
-};
-static struct omap_board_data keypad_data = {
-	.id	    		= 1,
-	.pads	 		= keypad_pads,
-	.pads_cnt       	= ARRAY_SIZE(keypad_pads),
-};
+void keyboard_mux_init(void)
+{
+	// Column mode
+	omap_mux_init_signal("kpd_col0.kpd_col0",
+			OMAP_WAKEUP_EN | OMAP_MUX_MODE0);
+	// Row mode
+	omap_mux_init_signal("kpd_row0.kpd_row0",
+			OMAP_PULL_ENA | OMAP_PULL_UP |
+			OMAP_WAKEUP_EN | OMAP_MUX_MODE0 |
+			OMAP_INPUT_EN);
+	omap_mux_init_signal("kpd_row1.kpd_row1",
+			OMAP_PULL_ENA | OMAP_PULL_UP |
+			OMAP_WAKEUP_EN | OMAP_MUX_MODE0 |
+			OMAP_INPUT_EN);
+}
+
+// static struct omap_device_pad keypad_pads[] = {
+// 	{	.name   = "kpd_col0.kpd_col0",
+// 		.enable = OMAP_WAKEUP_EN | OMAP_MUX_MODE0,
+// 	},
+// 	{	.name   = "kpd_row0.kpd_row0",
+// 		.enable = OMAP_PULL_ENA | OMAP_PULL_UP | OMAP_WAKEUP_EN | OMAP_MUX_MODE0 | OMAP_INPUT_EN,
+// 	},
+// 	{	.name   = "kpd_row1.kpd_row1",
+// 		.enable = OMAP_PULL_ENA | OMAP_PULL_UP | OMAP_WAKEUP_EN | OMAP_MUX_MODE0 | OMAP_INPUT_EN,
+// 	},
+// };
+// static struct omap_board_data keypad_data = {
+// 	.id	    		= 1,
+// 	.pads	 		= keypad_pads,
+// 	.pads_cnt       	= ARRAY_SIZE(keypad_pads),
+// };
 
 static struct omap4_keypad_platform_data sdp4430_keypad_data = {
 	.keymap_data		= &sdp4430_keymap_data,
@@ -2148,7 +2164,7 @@ static void __init omap_4430sdp_init(void)
 // 		spi_register_board_info(sdp4430_spi_board_info,
 // 				ARRAY_SIZE(sdp4430_spi_board_info));
 // 	}
-
+ 	keyboard_mux_init();
 	status = omap4_keyboard_init(&sdp4430_keypad_data);
 	if (status)
 		pr_err("Keypad initialization failed: %d\n", status);

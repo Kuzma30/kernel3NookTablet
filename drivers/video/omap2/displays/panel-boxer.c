@@ -45,7 +45,7 @@
 #define LCD_YRES		600
 
 #define LCD_PIXCLOCK_MIN	39000 /* CPT MIN PIX Clock is 39MHz */
-#define Lcd_Pixclock_Typ	46000 /* Typical PIX clock is 45MHz */
+#define LCD_PIXCLOCK_TYP	46000 /* Typical PIX clock is 45MHz */
 #define LCD_PIXCLOCK_MAX	52000 /* Maximum is 52MHz */
 
 /* Current Pixel clock */
@@ -77,13 +77,13 @@ static struct omap_video_timings boxer_panel_timings = {
 	/* 1024 x 600 @ 60 Hz  Reduced blanking VESA CVT 0.31M3-R */
 	.x_res          = LCD_XRES,
 	.y_res          = LCD_YRES,
-	.pixel_clock    = LCD_PIXEL_CLOCK,
-	.hfp            = 48,
-	.hsw            = 40,
-	.hbp            = 65,
-	.vfp            = 3,
-	.vsw            = 10,
-	.vbp            = 25,
+	.pixel_clock    = LCD_PIXEL_CLOCK,/* in kHz */
+	.hfp            = 160,
+	.hsw            = 10,
+	.hbp            = 160,
+	.vfp            = 10,
+	.vsw            = 2,
+	.vbp            = 23,
 };
 
 static void boxer_get_resolution(struct omap_dss_device *dssdev,
@@ -124,7 +124,7 @@ static int spi_send(struct spi_device *spi, unsigned char reg_addr,
 
 	if (spi_write(spi, (unsigned char *)&msg, 2))
 		printk(KERN_ERR "error in spi_write %x\n", msg);
-
+	else printk(KERN_INFO "Spi_write %x\n", msg);
 	udelay(10);
 
 	return ret;
@@ -133,16 +133,29 @@ static int spi_send(struct spi_device *spi, unsigned char reg_addr,
 static void boxer_init_panel(void)
 {
 	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
-	spi_send(boxer_spi_device, 0, 0x00);
-	spi_send(boxer_spi_device, 0x00, 0xad);
-	spi_send(boxer_spi_device, 0x01, 0x30);
-	spi_send(boxer_spi_device, 0x02, 0x40);
-	spi_send(boxer_spi_device, 0x0e, 0x5f);
-	spi_send(boxer_spi_device, 0x0f, 0xa4);
-	spi_send(boxer_spi_device, 0x0d, 0x00);
-	spi_send(boxer_spi_device, 0x02, 0x43);
-	spi_send(boxer_spi_device, 0x0a, 0x28);
-	spi_send(boxer_spi_device, 0x10, 0x41);
+
+/*		spi_send(boxer_spi_device, 0x00, 0xad);
+		spi_send(boxer_spi_device, 0x01, 0x30);
+		spi_send(boxer_spi_device, 0x02, 0x40);
+		spi_send(boxer_spi_device, 0x0e, 0x5f);
+		spi_send(boxer_spi_device, 0x0f, 0xa4);
+		spi_send(boxer_spi_device, 0x0d, 0x00);
+		spi_send(boxer_spi_device, 0x02, 0x43);
+		spi_send(boxer_spi_device, 0x0a, 0x28);
+		spi_send(boxer_spi_device, 0x10, 0x41);*/
+		
+		
+		spi_send(boxer_spi_device, 0x00, 0x21);
+		spi_send(boxer_spi_device, 0x00, 0xa5);
+		spi_send(boxer_spi_device, 0x01, 0x30);
+		spi_send(boxer_spi_device, 0x02, 0x40);
+		spi_send(boxer_spi_device, 0x0e, 0x5f);
+		spi_send(boxer_spi_device, 0x0f, 0xa4);
+		spi_send(boxer_spi_device, 0x0d, 0x00);
+		spi_send(boxer_spi_device, 0x02, 0x43);
+		spi_send(boxer_spi_device, 0x0a, 0x28);
+		spi_send(boxer_spi_device, 0x10, 0x41);
+		spi_send(boxer_spi_device, 0x00, 0xad);
 }
 
 static void boxer_panel_work_func(struct work_struct *work)
@@ -182,7 +195,9 @@ static int boxer_panel_enable(struct omap_dss_device *dssdev)
 		boxer_panel_dssdev = dssdev;
 		queue_work(boxer_panel_wq, &boxer_panel_work);
 	}
+	omapdss_dpi_display_enable(dssdev);
 	dssdev->state=OMAP_DSS_DISPLAY_ACTIVE;
+	
 	return 0;
 }
 
@@ -205,13 +220,16 @@ static void boxer_panel_disable(struct omap_dss_device *dssdev)
 		       __func__);
 		WARN_ON(1);
 	}
+	omapdss_dpi_display_disable(dssdev);
 	dssdev->state = OMAP_DSS_DISPLAY_DISABLED;
+	
 }
 
 static int boxer_panel_suspend(struct omap_dss_device *dssdev)
 {
 	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
 	boxer_panel_disable(dssdev);
+// 	omapdss_dpi_display_disable(dssdev);
 	dssdev->state = OMAP_DSS_DISPLAY_SUSPENDED;
 	return 0;
 }
@@ -219,6 +237,7 @@ static int boxer_panel_suspend(struct omap_dss_device *dssdev)
 static int boxer_panel_resume(struct omap_dss_device *dssdev)
 {
 	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
+// 	omapdss_dpi_display_enable(dssdev);
 	dssdev->state = OMAP_DSS_DISPLAY_ACTIVE;
 	return boxer_panel_enable(dssdev);
 }
@@ -346,11 +365,15 @@ static int __init boxer_lcd_init(void)
 		goto out;
 	}
 	
+	if (!regulator_is_enabled(boxer_panel_regulator)) {
+	
 	if (g_ft_i2c_adapter) {
 		i2c_lock_adapter(g_ft_i2c_adapter);
 	}
 	
 	ret = regulator_enable(boxer_panel_regulator);
+	mdelay(2);
+	
 	printk(KERN_INFO " boxer : %s called , line %d, Enabling boxer panel regulator vlcd\n", __FUNCTION__ , __LINE__);
 	
 	if (g_ft_i2c_adapter) {
@@ -360,6 +383,7 @@ static int __init boxer_lcd_init(void)
 		printk(KERN_ERR "Failed to enable regulator vlcd!\n");
 		regulator_put(boxer_panel_regulator);
 		goto out;
+	}
 	}
 
 	return spi_register_driver(&boxer_spi_driver);
