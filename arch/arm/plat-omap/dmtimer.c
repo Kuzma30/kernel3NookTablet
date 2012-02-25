@@ -909,6 +909,7 @@ unsigned int omap_dm_timer_read_counter(struct omap_dm_timer *timer)
 		spin_unlock_irqrestore(&timer->lock, flags);
 		return ret;
 	}
+	WARN_ON(!timer->is_early_init);
 	WARN_ON(!timer->enabled);
 	spin_unlock_irqrestore(&timer->lock, flags);
 	return -EINVAL;
