@@ -264,6 +264,7 @@ void ft5x06_xy_worker(struct work_struct *work)
     static u8 prev_gest = 0;
     static u8 gest_count = 0;
 
+    int clear_touch = 0;    /* ics multi-touch workaround */
 
     if (inpt == NULL )
     {
@@ -386,8 +387,6 @@ void ft5x06_xy_worker(struct work_struct *work)
     {
         rev_y = false;
     }
-
-    rev_y = true;
 
     /* process the touches */
     switch (cur_tch)
@@ -516,6 +515,17 @@ void ft5x06_xy_worker(struct work_struct *work)
             break;
     }
 
+	/* Workaround ICS Multi-touch issue */
+	clear_touch = 0;
+	for (id = 0; id < FT_NUM_MT_TCH_ID; id++) {
+		if (ts->act_trk[id] == 1) {
+		clear_touch++;
+		}
+	}
+	if (clear_touch == 2 && cur_tch == 0) {
+		clear_touch = 1;
+	}
+
     /* handle Multi-touch signals */
     if (ts->platform_data->use_mt)
     {
@@ -525,7 +535,7 @@ void ft5x06_xy_worker(struct work_struct *work)
              * is missing from the current event */
             for (id = 0; id < FT_NUM_TRK_ID; id++)
             {
-                if ((ts->act_trk[id] != FT_NTCH) && (cur_trk[id] == FT_NTCH))
+                if ((ts->act_trk[id] != FT_NTCH) && (cur_trk[id] == FT_NTCH)&& (clear_touch == 1))
                 {
                     input_report_abs(ts->input, ABS_MT_TRACKING_ID, id);
                     input_report_abs(ts->input, ABS_MT_TOUCH_MAJOR, FT_NTCH);
@@ -533,6 +543,8 @@ void ft5x06_xy_worker(struct work_struct *work)
                     input_report_abs(ts->input, ABS_MT_POSITION_X,  ts->prv_mt_pos[id][FT_XPOS]);
                     input_report_abs(ts->input, ABS_MT_POSITION_Y,  ts->prv_mt_pos[id][FT_YPOS]);
 
+		    input_report_key(ts->input, BTN_TOUCH, 0);
+		    
                     FT_MT_SYNC(ts->input);
 
                     ts->act_trk[id] = FT_NTCH;
@@ -552,7 +564,9 @@ void ft5x06_xy_worker(struct work_struct *work)
                     input_report_abs(ts->input, ABS_MT_POSITION_X,  cur_mt_pos[id][FT_XPOS]);
                     input_report_abs(ts->input, ABS_MT_POSITION_Y,  cur_mt_pos[id][FT_YPOS]);
 
-                    FT_MT_SYNC(ts->input);
+                    input_report_key(ts->input, BTN_TOUCH, 1);
+		    
+		    FT_MT_SYNC(ts->input);
 
                     ts->act_trk[id] = FT_TCH;
                     ts->prv_mt_pos[id][FT_XPOS] = cur_mt_pos[id][FT_XPOS];
@@ -621,6 +635,8 @@ void ft5x06_xy_worker(struct work_struct *work)
                     input_report_abs(ts->input, ABS_MT_POSITION_X,  cur_mt_pos[snd_trk[id]][FT_XPOS]);
                     input_report_abs(ts->input, ABS_MT_POSITION_Y,  cur_mt_pos[snd_trk[id]][FT_YPOS]);
 
+		    input_report_key(ts->input, BTN_TOUCH, 1);
+		    
                     FT_MT_SYNC(ts->input);
                 }
                 else if (ts->prv_mt_tch[id] < FT_NUM_TRK_ID)
@@ -631,7 +647,9 @@ void ft5x06_xy_worker(struct work_struct *work)
                     input_report_abs(ts->input, ABS_MT_POSITION_X,  ts->prv_mt_pos[ts->prv_mt_tch[id]][FT_XPOS]);
                     input_report_abs(ts->input, ABS_MT_POSITION_Y,  ts->prv_mt_pos[ts->prv_mt_tch[id]][FT_YPOS]);
 
-                    FT_MT_SYNC(ts->input);
+                    input_report_key(ts->input, BTN_TOUCH, 0);
+		    
+		    FT_MT_SYNC(ts->input);
                     /* ACCLPLAT-821 Do not report the duplicated release events */
 			ts->prv_mt_pos[ts->prv_mt_tch[id]][FT_XPOS] = 0;
 			ts->prv_mt_pos[ts->prv_mt_tch[id]][FT_YPOS] = 0;
