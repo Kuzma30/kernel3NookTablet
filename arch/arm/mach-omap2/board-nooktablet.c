@@ -39,7 +39,8 @@
 #include <linux/mfd/twl6040-codec.h>
 
 #include <linux/input/cyttsp.h>
-#include <linux/input/ft5x06.h>
+// #include <linux/input/ft5x06.h>
+#include <linux/input/edt-ft5x06.h>
 #include <linux/input/kxtf9.h>
 #include <linux/power/max17042.h>
 #include <linux/power/max8903.h>
@@ -109,18 +110,8 @@
 #define BLUETOOTH_UART			UART2
 #define CONSOLE_UART			UART1
 
-// #define OMAP4_TOUCH_IRQ_1		35
-// #define OMAP4_TOUCH_IRQ_2		36
-// //#define HDMI_GPIO_CT_CP_HPD		60
-// //#define HDMI_GPIO_HPD			63  /* Hot plug pin for HDMI */
-// //#define HDMI_GPIO_LS_OE 41 /* Level shifter for HDMI */
-// #define LCD_BL_GPIO		27	/* LCD Backlight GPIO */
-// /* PWM2 and TOGGLE3 register offsets */
-// #define LED_PWM2ON		0x03
-// #define LED_PWM2OFF		0x04
-// #define TWL6030_TOGGLE3		0x92
-
-// #define TPS62361_GPIO   7
+#define FT_NAME      "edt_ft5x06"
+#define FT_I2C_NAME  "edt_ft5x06_i2c"
 
 #define MAX17042_GPIO_FOR_IRQ  65
 #define KXTF9_GPIO_FOR_IRQ  66

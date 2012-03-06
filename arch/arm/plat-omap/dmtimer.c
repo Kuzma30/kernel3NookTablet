@@ -283,7 +283,8 @@ static void omap_timer_restore_context(struct omap_dm_timer *timer)
 static void __timer_enable(struct omap_dm_timer *timer)
 {
 	if (!timer->enabled) {
-		pm_runtime_get_sync(&timer->pdev->dev);
+		if (timer->loses_context)
+			pm_runtime_get_sync(&timer->pdev->dev);
 		timer->enabled = 1;
 	}
 }
@@ -291,7 +292,8 @@ static void __timer_enable(struct omap_dm_timer *timer)
 static void __timer_disable(struct omap_dm_timer *timer)
 {
 	if (timer->enabled) {
-		pm_runtime_put_sync_suspend(&timer->pdev->dev);
+		if (timer->loses_context)
+			pm_runtime_put_sync_suspend(&timer->pdev->dev);
 		timer->enabled = 0;
 	}
 }
@@ -572,8 +574,8 @@ int omap_dm_timer_start(struct omap_dm_timer *timer)
 		return -EINVAL;
 
 	spin_lock_irqsave(&timer->lock, flags);
+	__timer_enable(timer);
 	if (timer->loses_context) {
-		__timer_enable(timer);
 		if (omap_pm_was_context_lost(&timer->pdev->dev) &&
 			timer->context_saved) {
 			omap_timer_restore_context(timer);
@@ -629,8 +631,8 @@ int omap_dm_timer_stop(struct omap_dm_timer *timer)
 	if (timer->loses_context) {
 		omap_timer_save_context(timer);
 		timer->context_saved = true;
-		__timer_disable(timer);
 	}
+	__timer_disable(timer);
 	spin_unlock_irqrestore(&timer->lock, flags);
 	return 0;
 }
@@ -702,8 +704,8 @@ int omap_dm_timer_set_load_start(struct omap_dm_timer *timer, int autoreload,
 		return -EINVAL;
 
 	spin_lock_irqsave(&timer->lock, flags);
+	__timer_enable(timer);
 	if (timer->loses_context) {
-		__timer_enable(timer);
 		if (omap_pm_was_context_lost(&timer->pdev->dev) &&
 			timer->context_saved) {
 			omap_timer_restore_context(timer);
@@ -750,13 +752,6 @@ int omap_dm_timer_set_match(struct omap_dm_timer *timer, int enable,
 	return 0;
 }
 EXPORT_SYMBOL_GPL(omap_dm_timer_set_match);
-
-unsigned int omap_dm_timer_get_match(struct omap_dm_timer *timer)
-{
-	return omap_dm_timer_read_reg(timer, OMAP_TIMER_MATCH_REG);
-}
-
-EXPORT_SYMBOL_GPL(omap_dm_timer_get_match);
 
 int omap_dm_timer_set_pwm(struct omap_dm_timer *timer, int def_on,
 			   int toggle, int trigger)
@@ -828,35 +823,6 @@ int omap_dm_timer_set_int_enable(struct omap_dm_timer *timer,
 }
 EXPORT_SYMBOL_GPL(omap_dm_timer_set_int_enable);
 
-int omap_dm_timer_set_int_disable(struct omap_dm_timer *timer,
-                                        unsigned int value)
-{
-        u32 l;
-        unsigned long flags;
-	struct dmtimer_platform_data *pdata = timer->pdev->dev.platform_data;
-
-	if (!timer)
-		return -EINVAL;
-	spin_lock_irqsave(&timer->lock,flags);
-        if (!timer->is_early_init)
-		__timer_enable(timer);
-
-        l = omap_dm_timer_read_reg(timer, OMAP_TIMER_WAKEUP_EN_REG);
-        if (pdata->timer_ip_type == OMAP_TIMER_IP_VERSION_2) {
-                l |= value;
-                omap_dm_timer_write_reg(timer, OMAP_TIMER_INT_CLR_REG, value);
-        } else {
-                l &= ~value;
-                omap_dm_timer_write_reg(timer, OMAP_TIMER_INT_EN_REG, l);
-        }
-        omap_dm_timer_write_reg(timer, OMAP_TIMER_WAKEUP_EN_REG, l);
-        if (!timer->is_early_init)
-		__timer_disable(timer);
-        spin_unlock_irqrestore(&timer->lock,flags);
-        return 0;
-}
-EXPORT_SYMBOL_GPL(omap_dm_timer_set_int_disable);
-
 unsigned int omap_dm_timer_read_status(struct omap_dm_timer *timer)
 {
 	unsigned long flags;
@@ -909,9 +875,9 @@ unsigned int omap_dm_timer_read_counter(struct omap_dm_timer *timer)
 		spin_unlock_irqrestore(&timer->lock, flags);
 		return ret;
 	}
-	WARN_ON(!timer->is_early_init);
-	WARN_ON(!timer->enabled);
+
 	spin_unlock_irqrestore(&timer->lock, flags);
+	WARN_ON(!timer->enabled);
 	return -EINVAL;
 }
 EXPORT_SYMBOL_GPL(omap_dm_timer_read_counter);

@@ -98,7 +98,7 @@ static void acclaim4430_disp_backlight_setpower(struct omap_pwm_led_platform_dat
 static struct omap_pwm_led_platform_data acclaim4430_disp_backlight_data = {
 	.name 		 = "lcd-backlight",
 	.intensity_timer = 11,
-	.def_on		 = 1,
+	.def_on		 = 0,
 	.def_brightness	 = DEFAULT_BACKLIGHT_BRIGHTNESS,
 	.set_power	 = acclaim4430_disp_backlight_setpower,
 };
