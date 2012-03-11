@@ -34,7 +34,7 @@
  * with this program; if not, write  to the Free Software Foundation, Inc.,
  * 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-#define DEBUG
+#undef DEBUG
 #define PASS1           "DM Timer level 1->"
 
 #include <linux/clk.h>
@@ -199,8 +199,8 @@ static inline u32 omap_dm_timer_read_reg(struct omap_dm_timer *timer, u32 reg)
 	}
 	u32 return_value;
 	return_value=readl(timer->io_base + (reg & 0xff));
-	pr_debug("%s%s: return_value= %u, reg = , timer->posted=%u \n", PASS1,__func__, return_value, reg, timer->posted);
-	pr_debug("%s%s: timer->io_base + (reg & 0xff)=%u \n", PASS1,__func__,(timer->io_base + (reg & 0xff)));
+// 	pr_debug("%s%s: return_value= %x, reg = %x , timer->posted=%u \n", PASS1,__func__, return_value, reg, timer->posted);
+// 	pr_debug("%s%s: timer->io_base + (reg & 0xff)=%x \n", PASS1,__func__,(timer->io_base + (reg & 0xff)));
 	return return_value;
 }
 
@@ -233,8 +233,8 @@ static void omap_dm_timer_write_reg(struct omap_dm_timer *timer, u32 reg,
 		if (WARN_ON(i == MAX_WRITE_PEND_WAIT))
 			dev_err(&timer->pdev->dev, "write timeout.\n");
 	}
-	pr_debug("%s%s: We write value=%u to register %u, timer->posted=%u \n", PASS1,__func__, value,reg,timer->posted);
-	pr_debug("%s%s: timer->io_base + (reg & 0xff)=%u \n", PASS1,__func__,(timer->io_base + (reg & 0xff)));
+// 	pr_debug("%s%s: We write value=%x to register %x, timer->posted=%u \n", PASS1,__func__, value,reg,timer->posted);
+// 	pr_debug("%s%s: timer->io_base + (reg & 0xff)=%x \n", PASS1,__func__,(timer->io_base + (reg & 0xff)));
 	writel(value, timer->io_base + (reg & 0xff));
 
 }
@@ -1039,10 +1039,10 @@ static int __devinit omap_dm_timer_probe(struct platform_device *pdev)
 		goto err_free_mem;
 	}
 
-// 	if (pdata->timer_ip_type == OMAP_TIMER_IP_VERSION_2) {
-// 		timer->func_offset = VERSION2_TIMER_WAKEUP_EN_REG_OFFSET;
-// 		timer->intr_offset = VERSION2_TIMER_STAT_REG_OFFSET;
-// 	}
+	if (pdata->timer_ip_type == OMAP_TIMER_IP_VERSION_2) {
+		timer->func_offset = VERSION2_TIMER_WAKEUP_EN_REG_OFFSET;
+		timer->intr_offset = VERSION2_TIMER_STAT_REG_OFFSET;
+	}
 
 	timer->irq = irq->start;
 	timer->pdev = pdev;

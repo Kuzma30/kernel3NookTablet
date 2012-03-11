@@ -68,9 +68,9 @@
 
 static void acclaim4430_init_display_led(void)
 {
-	if (acclaim_board_type() >= EVT2) {
-		printk(KERN_INFO "init_display_led: evt2 hardware\n");
-		omap_mux_init_signal("abe_dmic_din2.dmtimer11_pwm_evt", OMAP_MUX_MODE5);
+ 	if (acclaim_board_type() >= EVT2) {
+  		printk(KERN_INFO "init_display_led: evt2 hardware\n");
+  		omap_mux_init_signal("abe_dmic_din2.dmtimer11_pwm_evt", OMAP_MUX_MODE5);
 	} else {
 		printk(KERN_INFO "init_display_led: evt1 hardware\n");
 		printk(KERN_INFO "WARNING: brigthness control disabled on EVT1 hardware\n");
@@ -177,9 +177,9 @@ static struct omap_dss_device sdp4430_boxer_device = {
 	.phy.dpi.data_lines		= 24,
 	.channel			= OMAP_DSS_CHANNEL_LCD2,
 	.data				= &boxer_panel,
-  	.platform_enable		= nooktablet_panel_enable_lcd,
-  	.platform_disable		= nooktablet_panel_disable_lcd,
- 	.set_backlight			= nooktablet_set_bl_intensity,
+//  	.platform_enable		= nooktablet_panel_enable_lcd,
+//  	.platform_disable		= nooktablet_panel_disable_lcd,
+// 	.set_backlight			= nooktablet_set_bl_intensity,
 };
 
 
@@ -193,26 +193,11 @@ static struct omap_dss_device *sdp4430_dss_devices[] = {
  	.default_device	= &sdp4430_boxer_device,
  };
  
-//  #define BLAZE_FB_RAM_SIZE                SZ_16M /* 1920×1080*4 * 2 */
-//  static struct omapfb_platform_data blaze_fb_pdata = {
-//  	.mem_desc = {
-//  		.region_cnt = 1,
-//  		.region = {
-//  			[0] = {
-//  				.size = BLAZE_FB_RAM_SIZE,
-//  			},
-//  		},
-//  	},
-//  };
-
 void __init acclaim_panel_init(void)
 {
 	sdp4430_panel_get_resource();
-
-//	sdp4430_hdmi_mux_init();
-// 	omap_vram_set_sdram_vram(BLAZE_FB_RAM_SIZE, 0);
-// 	omapfb_set_platform_data(&blaze_fb_pdata);
-	omap_display_init(&sdp4430_dss_data);
 	acclaim4430_init_display_led();	
+	omap_display_init(&sdp4430_dss_data);
+	
 	platform_add_devices(sdp4430_devices, ARRAY_SIZE(sdp4430_devices));
 }
