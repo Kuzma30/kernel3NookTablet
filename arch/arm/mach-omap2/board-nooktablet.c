@@ -39,8 +39,14 @@
 #include <linux/mfd/twl6040-codec.h>
 
 #include <linux/input/cyttsp.h>
-// #include <linux/input/ft5x06.h>
+#ifdef CONFIG_TOUCHSCREEN_FT5X06
+#include <linux/input/ft5x06.h>
+#endif
+#ifdef CONFIG_TOUCHSCREEN_EDT_FT5X06
 #include <linux/input/edt-ft5x06.h>
+#define FT_NAME      "edt_ft5x06"
+#define FT_I2C_NAME  "edt_ft5x06_i2c"
+#endif
 #include <linux/input/kxtf9.h>
 #include <linux/power/max17042.h>
 #include <linux/power/max8903.h>
@@ -109,9 +115,6 @@
 #define TWL6030_RTC_GPIO 		6
 #define BLUETOOTH_UART			UART2
 #define CONSOLE_UART			UART1
-
-#define FT_NAME      "edt_ft5x06"
-#define FT_I2C_NAME  "edt_ft5x06_i2c"
 
 #define MAX17042_GPIO_FOR_IRQ  65
 #define KXTF9_GPIO_FOR_IRQ  66
@@ -872,35 +875,35 @@ static struct regulator_consumer_supply sdp4430_vmmc_supply[] = {
 	},
 };
 
-static struct regulator_consumer_supply omap4_sdp4430_vmmc3_supply = {
-	.supply = "wlan",
-	.dev_name = "omap_hsmmc.2",
-};
-static struct regulator_init_data sdp4430_vmmc3 = {
-	.constraints = {
-		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
-	},
-	.num_consumer_supplies = 1,
-	.consumer_supplies = &omap4_sdp4430_vmmc3_supply,
-};
-static struct fixed_voltage_config sdp4430_vwlan = {
-	.supply_name = "vwl1271",
-	.microvolts = 1800000, /* 1.8V */
-	.gpio = GPIO_WIFI_PMENA,
-	.startup_delay = 70000, /* 70msec */
-	.enable_high = 1,
-	.enabled_at_boot = 0,
-	.init_data = &sdp4430_vmmc3,
-};
-static struct platform_device omap_vwlan_device = {
-	.name		= "reg-fixed-voltage",
-	.id		= 1,
-	.dev = {
-		.platform_data = &sdp4430_vwlan,
-               }
-};
+// static struct regulator_consumer_supply omap4_sdp4430_vmmc3_supply = {
+// 	.supply = "wlan",
+// 	.dev_name = "omap_hsmmc.2",
+// };
+// static struct regulator_init_data sdp4430_vmmc3 = {
+// 	.constraints = {
+// 		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
+// 	},
+// 	.num_consumer_supplies = 1,
+// 	.consumer_supplies = &omap4_sdp4430_vmmc3_supply,
+// };
+// static struct fixed_voltage_config sdp4430_vwlan = {
+// 	.supply_name = "vwl1271",
+// 	.microvolts = 1800000, /* 1.8V */
+// 	.gpio = GPIO_WIFI_PMENA,
+// 	.startup_delay = 70000, /* 70msec */
+// 	.enable_high = 1,
+// 	.enabled_at_boot = 0,
+// 	.init_data = &sdp4430_vmmc3,
+// };
+// static struct platform_device omap_vwlan_device = {
+// 	.name		= "reg-fixed-voltage",
+// 	.id		= 1,
+// 	.dev = {
+// 		.platform_data = &sdp4430_vwlan,
+//                }
+// };
 
-static int wifi_set_power(struct device *dev, int slot, int on, int vdd)
+static int wl12xx_set_power(struct device *dev, int slot, int on, int vdd)
 {
 	printk(KERN_WARNING"%s: %d\n", __func__, on);
 	if (on) {
@@ -1598,12 +1601,12 @@ static inline void board_serial_init(void)
 	pr_info(KERN_INFO "Board serial init\n");
 	omap_serial_init_port_pads(0, blaze_uart1_pads,
 		ARRAY_SIZE(blaze_uart1_pads), &blaze_uart_info_uncon);
-//	omap_serial_init_port_pads(1, blaze_uart2_pads,
-//		ARRAY_SIZE(blaze_uart2_pads), &blaze_uart_info);
-//	omap_serial_init_port_pads(2, blaze_uart3_pads,
-//		ARRAY_SIZE(blaze_uart3_pads), &blaze_uart_info);
-//	omap_serial_init_port_pads(3, blaze_uart4_pads,
-//				   ARRAY_SIZE(blaze_uart4_pads), &blaze_uart_info_uncon);
+	omap_serial_init_port_pads(1, blaze_uart2_pads,
+		ARRAY_SIZE(blaze_uart2_pads), &blaze_uart_info);
+	omap_serial_init_port_pads(2, blaze_uart3_pads,
+		ARRAY_SIZE(blaze_uart3_pads), &blaze_uart_info);
+	omap_serial_init_port_pads(3, blaze_uart4_pads,
+				   ARRAY_SIZE(blaze_uart4_pads), &blaze_uart_info_uncon);
 }
 
 static void omap4_sdp4430_wifi_mux_init(void)
@@ -1628,8 +1631,8 @@ static void omap4_sdp4430_wifi_mux_init(void)
 
 static struct wl12xx_platform_data omap4_sdp4430_wlan_data __initdata = {
 	.irq = OMAP_GPIO_IRQ(GPIO_WIFI_IRQ),
-	.board_ref_clock = WL12XX_REFCLOCK_26,
-	.board_tcxo_clock = 1,// WL12XX_TCXOCLOCK_26,
+	.board_ref_clock = WL12XX_REFCLOCK_38,
+// 	.board_tcxo_clock = 1,// WL12XX_TCXOCLOCK_26,
 };
 
 void config_wlan_mux(void)
@@ -1641,64 +1644,62 @@ void config_wlan_mux(void)
 
 static void omap4_sdp4430_wifi_init(void)
 {
-  struct device *dev;
-  struct omap_mmc_platform_data *pdata;
-  int ret;
+//   struct device *dev;
+//   struct omap_mmc_platform_data *pdata;
+//   int ret;
+// 
 
-  dev = mmc[2].dev;
-  if (!dev) {
-    pr_err("wl12xx mmc device initialization failed\n");
-    goto out;
-  }
+      struct device *dev;
+      struct omap_mmc_platform_data *pdata;
+      int ret;
+      printk(KERN_WARNING"%s: start\n", __func__);
 
-  pdata = dev->platform_data;
-  if (!pdata) {
-    pr_err("Platfrom data of wl12xx device not set\n");
+      ret = gpio_request(GPIO_WIFI_PMENA, "wifi_pmena");
+	if (ret < 0) {
+		pr_err("%s: can't reserve GPIO: %d\n", __func__,
+			GPIO_WIFI_PMENA);
 		goto out;
-  }
+	}
+	gpio_direction_output(GPIO_WIFI_PMENA, 0);
   
-  pdata->slots[0].set_power = wifi_set_power;
-
-  printk(KERN_WARNING"%s: start\n", __func__);
-
-  ret = gpio_request(GPIO_WIFI_PMENA, "wifi_pmena");
-  if (ret < 0) {
-    pr_err("%s: can't reserve GPIO: %d\n", __func__,
-	   GPIO_WIFI_PMENA);
-    goto out;
-  }
-  gpio_direction_output(GPIO_WIFI_PMENA, 0);
+	ret = gpio_request(GPIO_WIFI_PWEN, "wifi_pwen");
+	if (ret < 0) {
+		pr_err("%s: can't reserve GPIO: %d\n", __func__,
+			GPIO_WIFI_PWEN);
+	goto out;
+	}
+	gpio_direction_output(GPIO_WIFI_PWEN, 0);
   
-  ret = gpio_request(GPIO_WIFI_PWEN, "wifi_pwen");
-  if (ret < 0) {
-    pr_err("%s: can't reserve GPIO: %d\n", __func__,
-	   GPIO_WIFI_PWEN);
-    goto out;
-  }
-  gpio_direction_output(GPIO_WIFI_PWEN, 0);
-  
-  ret = gpio_request(GPIO_WIFI_IRQ, "wifi_irq");
-  if (ret < 0) {
-    printk(KERN_ERR "%s: can't reserve GPIO: %d\n", __func__,
-	   GPIO_WIFI_IRQ);
-    goto out;
-  }
-  gpio_direction_input(GPIO_WIFI_IRQ);
+	ret = gpio_request(GPIO_WIFI_IRQ, "wifi_irq");
+	if (ret < 0) {
+		printk(KERN_ERR "%s: can't reserve GPIO: %d\n", __func__,
+			GPIO_WIFI_IRQ);
+	goto out;
+	}
+	gpio_direction_input(GPIO_WIFI_IRQ);
 
-  config_wlan_mux ();
-//   omap4_sdp4430_wifi_mux_init();
+	dev = mmc[2].dev;
+	if (!dev) {
+		pr_err("wl12xx mmc device initialization failed\n");
+		goto out;
+	}
+ 
+	pdata = dev->platform_data;
+	if (!pdata) {
+		pr_err("Platfrom data of wl12xx device not set\n");
+		goto out;
+	}
+   
+	pdata->slots[0].set_power = wl12xx_set_power;
+	config_wlan_mux ();
 
-  if (wl12xx_set_platform_data(&omap4_sdp4430_wlan_data))
-    pr_err("Error setting wl12xx data\n");
-  platform_device_register(&omap_vwlan_device);
+	if (wl12xx_set_platform_data(&omap4_sdp4430_wlan_data))
+		pr_err("Error setting wl12xx data\n");
+//	platform_device_register(&omap_vwlan_device);
 
  out:
 	return;
-  
-// 	omap4_sdp4430_wifi_mux_init();
-// 	if (wl12xx_set_platform_data(&omap4_sdp4430_wlan_data))
-// 		pr_err("Error setting wl12xx data\n");
-// 	platform_device_register(&omap_vwlan_device);
+
 }
 
 // #if defined(CONFIG_USB_EHCI_HCD_OMAP) || defined(CONFIG_USB_OHCI_HCD_OMAP3)
