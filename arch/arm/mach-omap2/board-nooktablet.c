@@ -38,15 +38,8 @@
 #include <linux/memblock.h>
 #include <linux/mfd/twl6040-codec.h>
 
-#include <linux/input/cyttsp.h>
-#ifdef CONFIG_TOUCHSCREEN_FT5X06
 #include <linux/input/ft5x06.h>
-#endif
-#ifdef CONFIG_TOUCHSCREEN_EDT_FT5X06
-#include <linux/input/edt-ft5x06.h>
-#define FT_NAME      "edt_ft5x06"
-#define FT_I2C_NAME  "edt_ft5x06_i2c"
-#endif
+
 #include <linux/input/kxtf9.h>
 #include <linux/power/max17042.h>
 #include <linux/power/max8903.h>
@@ -103,10 +96,6 @@
 #define GPIO_WIFI_PWEN                  114
 #define GPIO_WIFI_PMENA			118
 #define GPIO_WIFI_IRQ			115
-
-// #define CYTTSP_I2C_SLAVEADDRESS 	34
-// #define OMAP_CYTTSP_GPIO        	37 /*99*/
-// #define OMAP_CYTTSP_RESET_GPIO 		39 /*46*/
 
 #define FT5x06_I2C_SLAVEADDRESS  	(0x70 >> 1)
 #define OMAP_FT5x06_GPIO         	37 /*99*/
@@ -197,31 +186,31 @@ int ft5x06_dev_init(int resource)
 			printk(KERN_ERR "can't get ft5x06 xreset GPIO\n");
 			return -1;
 		}
-
+ 
 		if (gpio_request(OMAP_FT5x06_GPIO, "ft5x06_touch") < 0) {
 			printk(KERN_ERR "can't get ft5x06 interrupt GPIO\n");
 			return -1;
 		}
-
+ 
 		gpio_direction_input(OMAP_FT5x06_GPIO);
 	} else {
 		gpio_free(OMAP_FT5x06_GPIO);
 		gpio_free(OMAP_FT5x06_RESET_GPIO);
 	}
-
+ 
 	return 0;
 }
-
+ 
 static void ft5x06_platform_suspend(void)
 {
 	omap_mux_init_signal("gpmc_ad13.gpio_37", OMAP_PIN_INPUT );
 }
-
+ 
 static void ft5x06_platform_resume(void)
 {
 	omap_mux_init_signal("gpmc_ad13.gpio_37", OMAP_PIN_INPUT | OMAP_PIN_OFF_WAKEUPENABLE);
 }
-
+ 
 static struct ft5x06_platform_data ft5x06_platform_data = {
 	.maxx = 1024,
 	.maxy = 600,
@@ -235,62 +224,6 @@ static struct ft5x06_platform_data ft5x06_platform_data = {
 	.platform_suspend = ft5x06_platform_suspend,
 	.platform_resume = ft5x06_platform_resume,
 };
-
-// int cyttsp_dev_init(int resource)
-// {
-// 	if (resource) {
-// 		omap_mux_init_signal("gpmc_ad13.gpio_37", OMAP_PIN_INPUT | OMAP_PIN_OFF_WAKEUPENABLE);
-// 		omap_mux_init_signal("gpmc_ad15.gpio_39", OMAP_PIN_OUTPUT );
-// 
-// 
-// 		if (gpio_request(OMAP_CYTTSP_RESET_GPIO, "tma340_reset") < 0) {
-// 			printk(KERN_ERR "can't get tma340 xreset GPIO\n");
-// 			return -1;
-// 		}
-// 
-// 		if (gpio_request(OMAP_CYTTSP_GPIO, "cyttsp_touch") < 0) {
-// 			printk(KERN_ERR "can't get cyttsp interrupt GPIO\n");
-// 			return -1;
-// 		}
-// 
-// 		gpio_direction_input(OMAP_CYTTSP_GPIO);
-// 		/* omap_set_gpio_debounce(OMAP_CYTTSP_GPIO, 0); */
-// 	} else {
-// 		printk ("\n%s: Free resources",__FUNCTION__);
-// 		gpio_free(OMAP_CYTTSP_GPIO);
-// 		gpio_free(OMAP_CYTTSP_RESET_GPIO);
-// 	}
-// 	return 0;
-// }
-
-// static struct cyttsp_platform_data cyttsp_platform_data = {
-// 	.maxx = 480,
-// 	.maxy = 800,
-// 	.flags = 0,
-// 	.gen = CY_GEN3,
-// 	.use_st = CY_USE_ST,
-// 	.use_mt = CY_USE_MT,
-// 	.use_hndshk = CY_SEND_HNDSHK,
-// 	.use_trk_id = CY_USE_TRACKING_ID,
-// 	.use_sleep = CY_USE_SLEEP,
-// 	.use_gestures = CY_USE_GESTURES,
-// 	/* activate up to 4 groups
-// 	 * and set active distance
-// 	 */
-// 	.gest_set = CY_GEST_GRP1 | CY_GEST_GRP2 | CY_GEST_GRP3 | CY_GEST_GRP4 | CY_ACT_DIST,
-// 	/* change act_intrvl to customize the Active power state.
-// 	 * scanning/processing refresh interval for Operating mode
-// 	 */
-// 	.act_intrvl = CY_ACT_INTRVL_DFLT,
-// 	/* change tch_tmout to customize the touch timeout for the
-// 	 * Active power state for Operating mode
-// 	 */
-// 	.tch_tmout = CY_TCH_TMOUT_DFLT,
-// 	/* change lp_intrvl to customize the Low Power power state.
-// 	 * scanning/processing refresh interval for Operating mode
-// 	 */
-// 	.lp_intrvl = CY_LP_INTRVL_DFLT,
-// };
 
 #ifdef CONFIG_CHARGER_MAX8903
 
@@ -470,25 +403,8 @@ void keypad_pad_wkup(int enable)
  		set_wkup_fcn = omap_mux_disable_wkup;
  
  	set_wkup_fcn("kpd_col0.kpd_col0");
-// 	set_wkup_fcn("kpd_col1.kpd_col1");
-// 	set_wkup_fcn("kpd_col2.kpd_col2");
-// 	set_wkup_fcn("kpd_col0.kpd_col0");
-// 	set_wkup_fcn("kpd_col1.kpd_col1");
-// 	set_wkup_fcn("kpd_col2.kpd_col2");
-// 	set_wkup_fcn("kpd_col3.kpd_col3");
-// 	set_wkup_fcn("kpd_col4.kpd_col4");
-// 	set_wkup_fcn("kpd_col5.kpd_col5");
-// 	set_wkup_fcn("gpmc_a23.kpd_col7");
-// 	set_wkup_fcn("gpmc_a22.kpd_col6");
  	set_wkup_fcn("kpd_row0.kpd_row0");
  	set_wkup_fcn("kpd_row1.kpd_row1");
-// 	set_wkup_fcn("kpd_row2.kpd_row2");
-// 	set_wkup_fcn("kpd_row3.kpd_row3");
-// 	set_wkup_fcn("kpd_row4.kpd_row4");
-// 	set_wkup_fcn("kpd_row5.kpd_row5");
-// 	set_wkup_fcn("gpmc_a18.kpd_row6");
-// 	set_wkup_fcn("gpmc_a19.kpd_row7");
-
 }
 
 void keyboard_mux_init(void)
@@ -506,23 +422,6 @@ void keyboard_mux_init(void)
 			OMAP_WAKEUP_EN | OMAP_MUX_MODE0 |
 			OMAP_INPUT_EN);
 }
-
-// static struct omap_device_pad keypad_pads[] = {
-// 	{	.name   = "kpd_col0.kpd_col0",
-// 		.enable = OMAP_WAKEUP_EN | OMAP_MUX_MODE0,
-// 	},
-// 	{	.name   = "kpd_row0.kpd_row0",
-// 		.enable = OMAP_PULL_ENA | OMAP_PULL_UP | OMAP_WAKEUP_EN | OMAP_MUX_MODE0 | OMAP_INPUT_EN,
-// 	},
-// 	{	.name   = "kpd_row1.kpd_row1",
-// 		.enable = OMAP_PULL_ENA | OMAP_PULL_UP | OMAP_WAKEUP_EN | OMAP_MUX_MODE0 | OMAP_INPUT_EN,
-// 	},
-// };
-// static struct omap_board_data keypad_data = {
-// 	.id	    		= 1,
-// 	.pads	 		= keypad_pads,
-// 	.pads_cnt       	= ARRAY_SIZE(keypad_pads),
-// };
 
 static struct omap4_keypad_platform_data sdp4430_keypad_data = {
 	.keymap_data		= &sdp4430_keymap_data,
@@ -649,24 +548,7 @@ static struct spi_board_info sdp4430_spi_board_info[] __initdata = {
 		.max_speed_hz		= 375000,
 	},
 };
-// static struct gpio sdp4430_eth_gpios[] __initdata = {
-// 	{ ETH_KS8851_POWER_ON,	GPIOF_OUT_INIT_HIGH,	"eth_power"	},
-// 	{ ETH_KS8851_QUART,	GPIOF_OUT_INIT_HIGH,	"quart"		},
-// 	{ ETH_KS8851_IRQ,	GPIOF_IN,		"eth_irq"	},
-// };
 
-// static int __init omap_ethernet_init(void)
-// {
-// 	int status;
-// 
-// 	/* Request of GPIO lines */
-// 	status = gpio_request_array(sdp4430_eth_gpios,
-// 				    ARRAY_SIZE(sdp4430_eth_gpios));
-// 	if (status)
-// 		pr_err("Cannot request ETH GPIOs\n");
-// 
-// 	return status;
-// }
 
 /* TODO: handle suspend/resume here.
  * Upon every suspend, make sure the wilink chip is capable enough to wake-up the
@@ -875,34 +757,6 @@ static struct regulator_consumer_supply sdp4430_vmmc_supply[] = {
 	},
 };
 
-// static struct regulator_consumer_supply omap4_sdp4430_vmmc3_supply = {
-// 	.supply = "wlan",
-// 	.dev_name = "omap_hsmmc.2",
-// };
-// static struct regulator_init_data sdp4430_vmmc3 = {
-// 	.constraints = {
-// 		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
-// 	},
-// 	.num_consumer_supplies = 1,
-// 	.consumer_supplies = &omap4_sdp4430_vmmc3_supply,
-// };
-// static struct fixed_voltage_config sdp4430_vwlan = {
-// 	.supply_name = "vwl1271",
-// 	.microvolts = 1800000, /* 1.8V */
-// 	.gpio = GPIO_WIFI_PMENA,
-// 	.startup_delay = 70000, /* 70msec */
-// 	.enable_high = 1,
-// 	.enabled_at_boot = 0,
-// 	.init_data = &sdp4430_vmmc3,
-// };
-// static struct platform_device omap_vwlan_device = {
-// 	.name		= "reg-fixed-voltage",
-// 	.id		= 1,
-// 	.dev = {
-// 		.platform_data = &sdp4430_vwlan,
-//                }
-// };
-
 static int wl12xx_set_power(struct device *dev, int slot, int on, int vdd)
 {
 	printk(KERN_WARNING"%s: %d\n", __func__, on);
@@ -934,14 +788,6 @@ static int omap4_twl6030_hsmmc_late_init(struct device *dev)
 						MMCDETECT_INTR_OFFSET;
 		pdata->slots[0].card_detect = twl6030_mmc_card_detect;
 	}
-// // #ifndef CONFIG_TIWLAN_SDIO
-//  	/* Set the MMC5 (wlan) power function */
-//  	if (pdev->id == 4)
-//  	{
-// 		pr_info("Set MMC5 power function\n");
-// 		pdata->slots[0].set_power = wifi_set_power;
-//  	}
-// // #endif
 	return ret;
 }
 
@@ -1179,107 +1025,6 @@ static struct twl4030_bci_platform_data sdp4430_bci_data = {
 	.battery_tmp_tbl		= sdp4430_batt_table,
 	.tblsize			= ARRAY_SIZE(sdp4430_batt_table),
 };
-// static void omap4_audio_conf(void)
-// {
-// 	/* twl6040 naudint */
-// 	omap_mux_init_signal("sys_nirq2.sys_nirq2", OMAP_PIN_INPUT_PULLUP);
-// }
-
-// static int tps6130x_enable(int on)
-// {
-// 	u8 val = 0;
-// 	int ret;
-// 
-// 	ret = twl_i2c_read_u8(TWL_MODULE_AUDIO_VOICE, &val, TWL6040_REG_GPOCTL);
-// 	if (ret < 0) {
-// 		pr_err("%s: failed to read GPOCTL %d\n", __func__, ret);
-// 		return ret;
-// 	}
-// 
-// 	/* TWL6040 GPO2 connected to TPS6130X NRESET */
-// 	if (on)
-// 		val |= TWL6040_GPO2;
-// 	else
-// 		val &= ~TWL6040_GPO2;
-// 
-// 	ret = twl_i2c_write_u8(TWL_MODULE_AUDIO_VOICE, val, TWL6040_REG_GPOCTL);
-// 	if (ret < 0)
-// 		pr_err("%s: failed to write GPOCTL %d\n", __func__, ret);
-// 
-// 	return ret;
-// }
-
-// static struct tps6130x_platform_data tps6130x_pdata = {
-// 	.chip_enable	= tps6130x_enable,
-// };
-// 
-// static struct regulator_consumer_supply twl6040_vddhf_supply[] = {
-// 	REGULATOR_SUPPLY("vddhf", "twl6040-codec"),
-// };
-// 
-// static struct regulator_init_data twl6040_vddhf = {
-// 	.constraints = {
-// 		.min_uV			= 4075000,
-// 		.max_uV			= 4950000,
-// 		.apply_uV		= true,
-// 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
-// 					| REGULATOR_MODE_STANDBY,
-// 		.valid_ops_mask		= REGULATOR_CHANGE_VOLTAGE
-// 					| REGULATOR_CHANGE_MODE
-// 					| REGULATOR_CHANGE_STATUS,
-// 	},
-// 	.num_consumer_supplies	= ARRAY_SIZE(twl6040_vddhf_supply),
-// 	.consumer_supplies	= twl6040_vddhf_supply,
-// 	.driver_data		= &tps6130x_pdata,
-// };
-
-// static int twl6040_init(void)
-// {
-// 	u8 rev = 0;
-// 	int ret;
-// 
-// 	ret = twl_i2c_read_u8(TWL_MODULE_AUDIO_VOICE,
-// 				&rev, TWL6040_REG_ASICREV);
-// 	if (ret)
-// 		return ret;
-// 
-// 	/*
-// 	 * ERRATA: Reset value of PDM_UL buffer logic is 1 (VDDVIO)
-// 	 * when AUDPWRON = 0, which causes current drain on this pin's
-// 	 * pull-down on OMAP side. The workaround consists of disabling
-// 	 * pull-down resistor of ABE_PDM_UL_DATA pin
-// 	 * Impacted revisions: ES1.1 and ES1.2 (both share same ASICREV value)
-// 	 */
-// 	if (rev == TWL6040_REV_1_1)
-// 		omap_mux_init_signal("abe_pdm_ul_data.abe_pdm_ul_data",
-// 			OMAP_PIN_INPUT);
-// 
-// 	return 0;
-// }
-
-// static struct twl4030_codec_audio_data twl6040_audio = {
-// 	/* single-step ramp for headset and handsfree */
-// 	.hs_left_step	= 0x0f,
-// 	.hs_right_step	= 0x0f,
-// 	.hf_left_step	= 0x1d,
-// 	.hf_right_step	= 0x1d,
-// 	.vddhf_uV	= 4075000,
-// };
-// 
-// static struct twl4030_codec_vibra_data twl6040_vibra = {
-// 	.max_timeout	= 15000,
-// 	.initial_vibrate = 0,
-// 	.voltage_raise_speed = 0x26,
-// };
-// 
-// static struct twl4030_codec_data twl6040_codec = {
-// 	.audio		= &twl6040_audio,
-// 	.vibra		= &twl6040_vibra,
-// 	.audpwron_gpio	= 127,
-// 	.naudint_irq	= OMAP44XX_IRQ_SYS_2N,
-// 	.irq_base	= TWL6040_CODEC_IRQ_BASE,
-// 	.init		= twl6040_init,
-// };
 
 
 static struct twl4030_platform_data sdp4430_twldata = {
@@ -1309,12 +1054,6 @@ static struct twl4030_platform_data sdp4430_twldata = {
 
 
 static struct i2c_board_info __initdata sdp4430_i2c_1_boardinfo[] = {
-// 	{
-// /*		I2C_BOARD_INFO("twl6030", 0x48),
-// 		.flags = I2C_CLIENT_WAKE,
-// 		.irq = OMAP44XX_IRQ_SYS_1N,
-// 		.platform_data = &sdp4430_twldata,*/
-// 	},
 	{
 		I2C_BOARD_INFO(KXTF9_DEVICE_ID, KXTF9_I2C_SLAVE_ADDRESS),
 		.platform_data = &kxtf9_platform_data_here,
@@ -1326,20 +1065,12 @@ static struct i2c_board_info __initdata sdp4430_i2c_1_boardinfo[] = {
 		.irq = OMAP_GPIO_IRQ(65),
 	},
 };
-// static struct bq2415x_platform_data sdp4430_bqdata = {
-// 	.max_charger_voltagemV = 4200,
-// 	.max_charger_currentmA = 1550,
-// };
+
 
 static struct i2c_board_info __initdata sdp4430_i2c_2_boardinfo[] = {
-// 	{
-// 		I2C_BOARD_INFO(CY_I2C_NAME, CYTTSP_I2C_SLAVEADDRESS),
-// 		.platform_data = &cyttsp_platform_data,
-// 		.irq = OMAP_GPIO_IRQ(OMAP_CYTTSP_GPIO),
-// 	},
 	{
-		I2C_BOARD_INFO(FT_I2C_NAME, FT5x06_I2C_SLAVEADDRESS),
-		.platform_data = &ft5x06_platform_data,
+ 		I2C_BOARD_INFO(FT_I2C_NAME, FT5x06_I2C_SLAVEADDRESS),
+ 		.platform_data = &ft5x06_platform_data,
 		.irq = OMAP_GPIO_IRQ(OMAP_FT5x06_GPIO),
 	},
  	{
@@ -1382,18 +1113,6 @@ void __init acclaim_board_init(void)
 	const int board_type = acclaim_board_type();
 	show_acclaim_board_revision(board_type);
 
-// 	if ( board_type == EVT1A ){
-// 		max17042_gpio_for_irq = 98;
-// 		kxtf9_gpio_for_irq = 99;
-// 	} else if ( board_type >= EVT1B ) {
-// 		max17042_gpio_for_irq = 65;
-// 		kxtf9_gpio_for_irq = 66;
-// 	}
-// 
-// 	max17042_platform_data_here.gpio = max17042_gpio_for_irq;
-// 	sdp4430_i2c_1_boardinfo[1].irq = OMAP_GPIO_IRQ(max17042_gpio_for_irq);
-// 	kxtf9_platform_data_here.gpio = kxtf9_gpio_for_irq;
-// 	sdp4430_i2c_1_boardinfo[0].irq = OMAP_GPIO_IRQ(kxtf9_gpio_for_irq);
 	omap_mux_init_signal("sys_pwron_reset_out", OMAP_MUX_MODE3);
 	omap_mux_init_signal("fref_clk3_req", OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLDOWN);
 }
@@ -1601,12 +1320,12 @@ static inline void board_serial_init(void)
 	pr_info(KERN_INFO "Board serial init\n");
 	omap_serial_init_port_pads(0, blaze_uart1_pads,
 		ARRAY_SIZE(blaze_uart1_pads), &blaze_uart_info_uncon);
-	omap_serial_init_port_pads(1, blaze_uart2_pads,
+/*	omap_serial_init_port_pads(1, blaze_uart2_pads,
 		ARRAY_SIZE(blaze_uart2_pads), &blaze_uart_info);
 	omap_serial_init_port_pads(2, blaze_uart3_pads,
 		ARRAY_SIZE(blaze_uart3_pads), &blaze_uart_info);
 	omap_serial_init_port_pads(3, blaze_uart4_pads,
-				   ARRAY_SIZE(blaze_uart4_pads), &blaze_uart_info_uncon);
+	*///	ARRAY_SIZE(blaze_uart4_pads), &blaze_uart_info_uncon);
 }
 
 static void omap4_sdp4430_wifi_mux_init(void)
@@ -1632,7 +1351,6 @@ static void omap4_sdp4430_wifi_mux_init(void)
 static struct wl12xx_platform_data omap4_sdp4430_wlan_data __initdata = {
 	.irq = OMAP_GPIO_IRQ(GPIO_WIFI_IRQ),
 	.board_ref_clock = WL12XX_REFCLOCK_38,
-// 	.board_tcxo_clock = 1,// WL12XX_TCXOCLOCK_26,
 };
 
 void config_wlan_mux(void)
@@ -1778,7 +1496,7 @@ static void __init omap_4430sdp_init(void)
 #endif
 	
 	wake_lock_init(&st_wk_lock, WAKE_LOCK_SUSPEND, "st_wake_lock");
- 	board_serial_init();
+	board_serial_init();
 	
 	omap4_twl6030_hsmmc_init(mmc);
 	

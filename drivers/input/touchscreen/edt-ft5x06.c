@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Simon Budig, &lt;simon.budig@xxxxxxxxxxxxxxxxx>
+ * Copyright (C) 2011 Simon Budig, <simon.budig@xxxxxxxxxxxxxxxxx>
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -20,11 +20,11 @@
  * based on the FocalTech FT5x06 line of chips.
  *
  * Development of this driver has been sponsored by Glyn:
- *    <a rel="nofollow" href="http://www.glyn.com/Products/Displays">http://www.glyn.com/Products/Displays</a>
+ *    http://www.glyn.com/Products/Displays
  */
 
-#include <linux/module.h>;
-#include <linux/interrupt.h>;
+#include <linux/module.h>
+#include <linux/interrupt.h>
 #include <linux/input.h>
 #include <linux/i2c.h>
 #include <linux/uaccess.h>
@@ -38,6 +38,7 @@
 #define DRIVER_VERSION "v0.5"
 
 #define WORK_REGISTER_THRESHOLD   0x00
+#define WORK_REGISTER_REPORT_RATE 0x08
 #define WORK_REGISTER_GAIN        0x30
 #define WORK_REGISTER_OFFSET      0x31
 #define WORK_REGISTER_NUM_X       0x33
@@ -60,6 +61,7 @@ struct edt_ft5x06_i2c_ts_data {
 	int threshold;
 	int gain;
 	int offset;
+	int report_rate;
 };
 
 static int edt_ft5x06_ts_readwrite(struct i2c_client *client,
@@ -87,7 +89,7 @@ static int edt_ft5x06_ts_readwrite(struct i2c_client *client,
 
 	ret = i2c_transfer(client->adapter, wrmsg, i);
 	if (ret < 0) {
-		dev_err(&amp;client->dev, "i2c_transfer failed: %d\n", ret);
+		dev_err(&client->dev, "i2c_transfer failed: %d\n", ret);
 		return ret;
 	}
 
@@ -107,19 +109,19 @@ static irqreturn_t edt_ft5x06_ts_isr(int irq, void *dev_id)
 
 	wrbuf[0] = 0xf9;
 
-	mutex_lock(&amp;tsdata->mutex);
+	mutex_lock(&tsdata->mutex);
 	ret = edt_ft5x06_ts_readwrite(tsdata->client,
 	                              1, wrbuf,
 	                              sizeof(rdbuf), rdbuf);
-	mutex_unlock(&amp;tsdata->mutex);
+	mutex_unlock(&tsdata->mutex);
 	if (ret < 0) {
-		dev_err(&amp;tsdata->client->dev,
+		dev_err(&tsdata->client->dev,
 		        "Unable to write to i2c touchscreen!\n");
 		goto out;
 	}
 
 	if (rdbuf[0] != 0xaa || rdbuf[1] != 0xaa || rdbuf[2] != 26) {
-		dev_err(&amp;tsdata->client->dev,
+		dev_err(&tsdata->client->dev,
 		        "Unexpected header: %02x%02x%02x!\n",
 		        rdbuf[0], rdbuf[1], rdbuf[2]);
 	}
@@ -137,18 +139,18 @@ static irqreturn_t edt_ft5x06_ts_isr(int irq, void *dev_id)
 			input_report_abs(tsdata->input, ABS_PRESSURE, 1);
 			input_report_abs(tsdata->input, ABS_X,
 			                 ((rdbuf[i*4+5] << 8) |
-			                  rdbuf[i*4+6]) &amp; 0x0fff);
+			                  rdbuf[i*4+6]) & 0x0fff);
 			input_report_abs(tsdata->input, ABS_Y,
 			                 ((rdbuf[i*4+7] << 8) |
-			                  rdbuf[i*4+8]) &amp; 0x0fff);
+			                  rdbuf[i*4+8]) & 0x0fff);
 			have_abs = 1;
 		}
 		input_report_abs(tsdata->input, ABS_MT_POSITION_X,
-		                 ((rdbuf[i*4+5] << 8) | rdbuf[i*4+6]) &amp; 0x0fff);
+		                 ((rdbuf[i*4+5] << 8) | rdbuf[i*4+6]) & 0x0fff);
 		input_report_abs(tsdata->input, ABS_MT_POSITION_Y,
-		                 ((rdbuf[i*4+7] << 8) | rdbuf[i*4+8]) &amp; 0x0fff);
+		                 ((rdbuf[i*4+7] << 8) | rdbuf[i*4+8]) & 0x0fff);
 		input_report_abs(tsdata->input, ABS_MT_TRACKING_ID,
-		                 (rdbuf[i*4+7] >> 4) &amp; 0x0f);
+		                 (rdbuf[i*4+7] >> 4) & 0x0f);
 		input_mt_sync(tsdata->input);
 	}
 	if (!have_abs) {
@@ -169,7 +171,7 @@ static int edt_ft5x06_i2c_register_write(struct edt_ft5x06_i2c_ts_data *tsdata,
 	int ret;
 
 	wrbuf[0]  = tsdata->factory_mode ? 0xf3 : 0xfc;
-	wrbuf[1]  = tsdata->factory_mode ? addr &amp; 0x7f : addr &amp; 0x3f;
+	wrbuf[1]  = tsdata->factory_mode ? addr & 0x7f : addr & 0x3f;
 	wrbuf[2]  = value;
 	wrbuf[3]  = wrbuf[0] ^ wrbuf[1] ^ wrbuf[2];
 
@@ -191,7 +193,7 @@ static int edt_ft5x06_i2c_register_read(struct edt_ft5x06_i2c_ts_data *tsdata,
 	int ret;
 
 	wrbuf[0]  = tsdata->factory_mode ? 0xf3 : 0xfc;
-	wrbuf[1]  = tsdata->factory_mode ? addr &amp; 0x7f : addr &amp; 0x3f;
+	wrbuf[1]  = tsdata->factory_mode ? addr & 0x7f : addr & 0x3f;
 	wrbuf[1] |= tsdata->factory_mode ? 0x80 : 0x40;
 
 	disable_irq(tsdata->irq);
@@ -203,7 +205,7 @@ static int edt_ft5x06_i2c_register_read(struct edt_ft5x06_i2c_ts_data *tsdata,
 	enable_irq(tsdata->irq);
 
 	if ((wrbuf[0] ^ wrbuf[1] ^ rdbuf[0]) != rdbuf[1])
-		dev_err(&amp;tsdata->client->dev,
+		dev_err(&tsdata->client->dev,
 		        "crc error: 0x%02x expected, got 0x%02x\n",
 		        (wrbuf[0] ^ wrbuf[1] ^ rdbuf[0]), rdbuf[1]);
 
@@ -223,43 +225,47 @@ static ssize_t edt_ft5x06_i2c_setting_show(struct device *dev,
 	switch (attr->attr.name[0]) {
 	case 't':    /* threshold */
 		addr = WORK_REGISTER_THRESHOLD;
-		value = &amp;tsdata->threshold;
+		value = &tsdata->threshold;
 		break;
 	case 'g':    /* gain */
 		addr = WORK_REGISTER_GAIN;
-		value = &amp;tsdata->gain;
+		value = &tsdata->gain;
 		break;
 	case 'o':    /* offset */
 		addr = WORK_REGISTER_OFFSET;
-		value = &amp;tsdata->offset;
+		value = &tsdata->offset;
+		break;
+	case 'r':    /* report rate */
+		addr = WORK_REGISTER_REPORT_RATE;
+		value = &tsdata->report_rate;
 		break;
 	default:
-		dev_err(&amp;client->dev,
+		dev_err(&client->dev,
 		        "unknown attribute for edt_ft5x06_i2c_setting_show: %s\n",
 		        attr->attr.name);
 		return -EINVAL;
 	}
 
-	mutex_lock(&amp;tsdata->mutex);
+	mutex_lock(&tsdata->mutex);
 
 	if (tsdata->factory_mode) {
 		dev_err(dev,
 		        "setting register not available in factory mode\n");
-		mutex_unlock(&amp;tsdata->mutex);
+		mutex_unlock(&tsdata->mutex);
 		return -EIO;
 	}
 
 	ret = edt_ft5x06_i2c_register_read(tsdata, addr);
 	if (ret < 0) {
-		dev_err(&amp;tsdata->client->dev,
+		dev_err(&tsdata->client->dev,
 		        "Unable to write to i2c touchscreen!\n");
-		mutex_unlock(&amp;tsdata->mutex);
+		mutex_unlock(&tsdata->mutex);
 		return ret;
 	}
-	mutex_unlock(&amp;tsdata->mutex);
+	mutex_unlock(&tsdata->mutex);
 
 	if (ret != *value) {
-		dev_info(&amp;tsdata->client->dev,
+		dev_info(&tsdata->client->dev,
 		         "i2c read (%d) and stored value (%d) differ. Huh?\n",
 		         ret, *value);
 		*value = ret;
@@ -278,7 +284,7 @@ static ssize_t edt_ft5x06_i2c_setting_store(struct device *dev,
 	u8 addr;
 	unsigned int val;
 
-	mutex_lock(&amp;tsdata->mutex);
+	mutex_lock(&tsdata->mutex);
 
 	if (tsdata->factory_mode) {
 		dev_err(dev,
@@ -287,7 +293,7 @@ static ssize_t edt_ft5x06_i2c_setting_store(struct device *dev,
 		goto out;
 	}
 
-	if (sscanf(buf, "%u", &amp;val) != 1) {
+	if (sscanf(buf, "%u", &val) != 1) {
 		dev_err(dev, "Invalid value for attribute %s\n",
 		        attr->attr.name);
 		ret = -EINVAL;
@@ -310,8 +316,13 @@ static ssize_t edt_ft5x06_i2c_setting_store(struct device *dev,
 		val = val < 0 ? 0 : val > 31 ? 31 : val;
 		tsdata->offset = val;
 		break;
+	case 'r':    /* report rate */
+		addr = WORK_REGISTER_REPORT_RATE;
+		val = val < 3 ? 3 : val > 14 ? 14 : val;
+		tsdata->report_rate = val;
+		break;
 	default:
-		dev_err(&amp;client->dev,
+		dev_err(&client->dev,
 		        "unknown attribute for edt_ft5x06_i2c_setting_show: %s\n",
 		        attr->attr.name);
 		ret = -EINVAL;
@@ -321,13 +332,13 @@ static ssize_t edt_ft5x06_i2c_setting_store(struct device *dev,
 	ret = edt_ft5x06_i2c_register_write(tsdata, addr, val);
 
 	if (ret < 0) {
-		dev_err(&amp;tsdata->client->dev,
+		dev_err(&tsdata->client->dev,
 		        "Unable to write to i2c touchscreen!\n");
 		goto out;
 	}
 
 out:
-	mutex_unlock(&amp;tsdata->mutex);
+	mutex_unlock(&tsdata->mutex);
 	return ret < 0 ? ret : count;
 }
 
@@ -348,7 +359,7 @@ static ssize_t edt_ft5x06_i2c_mode_store(struct device *dev,
 	int i, ret = 0;
 	unsigned int mode;
 
-	if (sscanf(buf, "%u", &amp;mode) != 1 || (mode | 1) != 1) {
+	if (sscanf(buf, "%u", &mode) != 1 || (mode | 1) != 1) {
 		dev_err(dev, "Invalid value for operation mode\n");
 		return -EINVAL;
 	}
@@ -357,7 +368,7 @@ static ssize_t edt_ft5x06_i2c_mode_store(struct device *dev,
 	if (mode == tsdata->factory_mode)
 		return count;
 
-	mutex_lock(&amp;tsdata->mutex);
+	mutex_lock(&tsdata->mutex);
 	if (!tsdata->factory_mode) { /* switch to factory mode */
 		disable_irq(tsdata->irq);
 		/* mode register is 0x3c when in the work mode */
@@ -411,12 +422,15 @@ static ssize_t edt_ft5x06_i2c_mode_store(struct device *dev,
 			edt_ft5x06_i2c_register_write(tsdata,
 			                              WORK_REGISTER_OFFSET,
 			                              tsdata->offset);
+			edt_ft5x06_i2c_register_write(tsdata,
+			                              WORK_REGISTER_REPORT_RATE,
+			                              tsdata->report_rate);
 
 			enable_irq(tsdata->irq);
 		}
 	}
 
-	mutex_unlock(&amp;tsdata->mutex);
+	mutex_unlock(&tsdata->mutex);
 	return count;
 }
 
@@ -434,7 +448,7 @@ static ssize_t edt_ft5x06_i2c_raw_data_show(struct device *dev,
 		return -EIO;
 	}
 
-	mutex_lock(&amp;tsdata->mutex);
+	mutex_lock(&tsdata->mutex);
 	ret = edt_ft5x06_i2c_register_write(tsdata, 0x08, 0x01);
 	for (i = 0; i < 100; i++) {
 		ret = edt_ft5x06_i2c_register_read(tsdata, 0x08);
@@ -445,7 +459,7 @@ static ssize_t edt_ft5x06_i2c_raw_data_show(struct device *dev,
 
 	if (i == 100 || ret < 0) {
 		dev_err(dev, "waiting time exceeded or error: %d\n", ret);
-		mutex_unlock(&amp;tsdata->mutex);
+		mutex_unlock(&tsdata->mutex);
 		return ret < 0 ? ret : -ETIMEDOUT;
 	}
 
@@ -458,14 +472,14 @@ static ssize_t edt_ft5x06_i2c_raw_data_show(struct device *dev,
 		                               3, wrbuf,
 		                               tsdata->num_y * 2, ptr);
 		if (ret < 0) {
-			mutex_unlock(&amp;tsdata->mutex);
+			mutex_unlock(&tsdata->mutex);
 			return ret;
 		}
 
 		ptr += tsdata->num_y * 2;
 	}
 
-	mutex_unlock(&amp;tsdata->mutex);
+	mutex_unlock(&tsdata->mutex);
 	return ptr - buf;
 }
 
@@ -476,17 +490,20 @@ static DEVICE_ATTR(offset,    0664,
                    edt_ft5x06_i2c_setting_show, edt_ft5x06_i2c_setting_store);
 static DEVICE_ATTR(threshold, 0664,
                    edt_ft5x06_i2c_setting_show, edt_ft5x06_i2c_setting_store);
+static DEVICE_ATTR(report_rate, 0664,
+                   edt_ft5x06_i2c_setting_show, edt_ft5x06_i2c_setting_store);
 static DEVICE_ATTR(mode,      0664,
                    edt_ft5x06_i2c_mode_show, edt_ft5x06_i2c_mode_store);
 static DEVICE_ATTR(raw_data,  0444,
                    edt_ft5x06_i2c_raw_data_show, NULL);
 
 static struct attribute *edt_ft5x06_i2c_attrs[] = {
-	&amp;dev_attr_gain.attr,
-	&amp;dev_attr_offset.attr,
-	&amp;dev_attr_threshold.attr,
-	&amp;dev_attr_mode.attr,
-	&amp;dev_attr_raw_data.attr,
+	&dev_attr_gain.attr,
+	&dev_attr_offset.attr,
+	&dev_attr_threshold.attr,
+	&dev_attr_report_rate.attr,
+	&dev_attr_mode.attr,
+	&dev_attr_raw_data.attr,
 	NULL
 };
 
@@ -505,36 +522,31 @@ static int edt_ft5x06_i2c_ts_probe(struct i2c_client *client,
 	u8 rdbuf[23];
 	char *model_name, *fw_version;
 
-	dev_dbg(&amp;client->dev, "probing for EDT FT5x06 I2C\n");
-
-	if (!client->irq) {
-		dev_err(&amp;client->dev, "no IRQ?\n");
-		return -ENODEV;
-	}
+	dev_dbg(&client->dev, "probing for EDT FT5x06 I2C\n");
 
 	if (!client->dev.platform_data) {
-		dev_err(&amp;client->dev, "no platform data?\n");
+		dev_err(&client->dev, "no platform data?\n");
 		return -ENODEV;
 	}
 
 	tsdata = kzalloc(sizeof(*tsdata), GFP_KERNEL);
 	if (!tsdata) {
-		dev_err(&amp;client->dev, "failed to allocate driver data!\n");
-		dev_set_drvdata(&amp;client->dev, NULL);
+		dev_err(&client->dev, "failed to allocate driver data!\n");
+		dev_set_drvdata(&client->dev, NULL);
 		return -ENOMEM;
 	}
 
-	dev_set_drvdata(&amp;client->dev, tsdata);
+	dev_set_drvdata(&client->dev, tsdata);
 	tsdata->client = client;
 	pdata = client->dev.platform_data;
 
 	tsdata->reset_pin = pdata->reset_pin;
-	mutex_init(&amp;tsdata->mutex);
+	mutex_init(&tsdata->mutex);
 
 	if (tsdata->reset_pin >= 0) {
 		error = gpio_request(tsdata->reset_pin, NULL);
 		if (error < 0) {
-			dev_err(&amp;client->dev,
+			dev_err(&client->dev,
 			        "Failed to request GPIO %d as reset pin, error %d\n",
 			         tsdata->reset_pin, error);
 			error = -ENOMEM;
@@ -543,7 +555,7 @@ static int edt_ft5x06_i2c_ts_probe(struct i2c_client *client,
 
 		/* this pulls reset down, enabling the low active reset */
 		if (gpio_direction_output(tsdata->reset_pin, 0) < 0) {
-			dev_info(&amp;client->dev, "switching to output failed\n");
+			dev_info(&client->dev, "switching to output failed\n");
 			goto err_free_reset_pin;
 		}
 	}
@@ -554,7 +566,7 @@ static int edt_ft5x06_i2c_ts_probe(struct i2c_client *client,
 
 	error = gpio_request(tsdata->irq_pin, NULL);
 	if (error < 0) {
-		dev_err(&amp;client->dev,
+		dev_err(&client->dev,
 		        "Failed to request GPIO %d for IRQ %d, error %d\n",
 		        tsdata->irq_pin, tsdata->irq, error);
 		goto err_free_reset_pin;
@@ -568,12 +580,12 @@ static int edt_ft5x06_i2c_ts_probe(struct i2c_client *client,
 		mdelay(100);
 	}
 
-	mutex_lock(&amp;tsdata->mutex);
+	mutex_lock(&tsdata->mutex);
 
 	tsdata->factory_mode = 0;
 
 	if (edt_ft5x06_ts_readwrite(client, 1, "\xbb", 22, rdbuf) < 0) {
-		dev_err(&amp;client->dev, "probing failed\n");
+		dev_err(&client->dev, "probing failed\n");
 		error = -ENODEV;
 		goto err_free_irq_pin;
 	}
@@ -584,12 +596,14 @@ static int edt_ft5x06_i2c_ts_probe(struct i2c_client *client,
 	                                                 WORK_REGISTER_GAIN);
 	tsdata->offset    = edt_ft5x06_i2c_register_read(tsdata,
 	                                                 WORK_REGISTER_OFFSET);
+	tsdata->report_rate = edt_ft5x06_i2c_register_read(tsdata,
+	                                                 WORK_REGISTER_REPORT_RATE);
 	tsdata->num_x     = edt_ft5x06_i2c_register_read(tsdata,
 	                                                 WORK_REGISTER_NUM_X);
 	tsdata->num_y     = edt_ft5x06_i2c_register_read(tsdata,
 	                                                 WORK_REGISTER_NUM_Y);
 
-	mutex_unlock(&amp;tsdata->mutex);
+	mutex_unlock(&tsdata->mutex);
 
 	/* remove last '$' end marker */
 	rdbuf[22] = '\0';
@@ -603,16 +617,16 @@ static int edt_ft5x06_i2c_ts_probe(struct i2c_client *client,
 	if (fw_version) {
 		fw_version[0] = '\0';
 		fw_version++;
-		dev_info(&amp;client->dev,
+		dev_info(&client->dev,
 		         "Model \"%s\", Rev. \"%s\", %dx%d sensors\n",
 		         model_name, fw_version, tsdata->num_x, tsdata->num_y);
 	} else {
-		dev_info(&amp;client->dev, "Product ID \"%s\"\n", model_name);
+		dev_info(&client->dev, "Product ID \"%s\"\n", model_name);
 	}
 
 	input = input_allocate_device();
 	if (!input) {
-		dev_err(&amp;client->dev, "failed to allocate input device!\n");
+		dev_err(&client->dev, "failed to allocate input device!\n");
 		error = -ENOMEM;
 		goto err_free_irq_pin;
 	}
@@ -632,7 +646,7 @@ static int edt_ft5x06_i2c_ts_probe(struct i2c_client *client,
 
 	input->name = kstrdup(model_name, GFP_NOIO);
 	input->id.bustype = BUS_I2C;
-	input->dev.parent = &amp;client->dev;
+	input->dev.parent = &client->dev;
 
 	input_set_drvdata(input, tsdata);
 
@@ -643,22 +657,22 @@ static int edt_ft5x06_i2c_ts_probe(struct i2c_client *client,
 		goto err_free_input_device;
 
 	if (request_threaded_irq(tsdata->irq, NULL, edt_ft5x06_ts_isr,
-	                         IRQF_TRIGGER_LOW | IRQF_ONESHOT,
+	                         IRQF_TRIGGER_FALLING | IRQF_ONESHOT,
 	                         client->name, tsdata)) {
-		dev_err(&amp;client->dev, "Unable to request touchscreen IRQ.\n");
+		dev_err(&client->dev, "Unable to request touchscreen IRQ.\n");
 		input = NULL;
 		error = -ENOMEM;
 		goto err_unregister_device;
 	}
 
-	error = sysfs_create_group(&amp;client->dev.kobj,
-	                           &amp;edt_ft5x06_i2c_attr_group);
+	error = sysfs_create_group(&client->dev.kobj,
+	                           &edt_ft5x06_i2c_attr_group);
 	if (error)
 		goto err_free_irq;
 
-	device_init_wakeup(&amp;client->dev, 1);
+	device_init_wakeup(&client->dev, 1);
 
-	dev_dbg(&amp;tsdata->client->dev,
+	dev_dbg(&tsdata->client->dev,
 	        "EDT FT5x06 initialized: IRQ pin %d, Reset pin %d.\n",
 	        tsdata->irq_pin, tsdata->reset_pin);
 
@@ -686,9 +700,9 @@ err_free_tsdata:
 
 static int edt_ft5x06_i2c_ts_remove(struct i2c_client *client)
 {
-	struct edt_ft5x06_i2c_ts_data *tsdata = dev_get_drvdata(&amp;client->dev);
+	struct edt_ft5x06_i2c_ts_data *tsdata = dev_get_drvdata(&client->dev);
 
-	sysfs_remove_group(&amp;client->dev.kobj, &amp;edt_ft5x06_i2c_attr_group);
+	sysfs_remove_group(&client->dev.kobj, &edt_ft5x06_i2c_attr_group);
 
 	free_irq(client->irq, tsdata);
 	kfree(tsdata->input->name);
@@ -704,9 +718,9 @@ static int edt_ft5x06_i2c_ts_remove(struct i2c_client *client)
 static int edt_ft5x06_i2c_ts_suspend(struct i2c_client *client,
                                      pm_message_t mesg)
 {
-	struct edt_ft5x06_i2c_ts_data *tsdata = dev_get_drvdata(&amp;client->dev);
+	struct edt_ft5x06_i2c_ts_data *tsdata = dev_get_drvdata(&client->dev);
 
-	if (device_may_wakeup(&amp;client->dev))
+	if (device_may_wakeup(&client->dev))
 		enable_irq_wake(tsdata->irq);
 
 	return 0;
@@ -714,9 +728,9 @@ static int edt_ft5x06_i2c_ts_suspend(struct i2c_client *client,
 
 static int edt_ft5x06_i2c_ts_resume(struct i2c_client *client)
 {
-	struct edt_ft5x06_i2c_ts_data *tsdata = dev_get_drvdata(&amp;client->dev);
+	struct edt_ft5x06_i2c_ts_data *tsdata = dev_get_drvdata(&client->dev);
 
-	if (device_may_wakeup(&amp;client->dev))
+	if (device_may_wakeup(&client->dev))
 		disable_irq_wake(tsdata->irq);
 
 	return 0;
@@ -742,13 +756,13 @@ static struct i2c_driver edt_ft5x06_i2c_ts_driver = {
 
 static int __init edt_ft5x06_i2c_ts_init(void)
 {
-	return i2c_add_driver(&amp;edt_ft5x06_i2c_ts_driver);
+	return i2c_add_driver(&edt_ft5x06_i2c_ts_driver);
 }
 module_init(edt_ft5x06_i2c_ts_init);
 
 static void __exit edt_ft5x06_i2c_ts_exit(void)
 {
-	i2c_del_driver(&amp;edt_ft5x06_i2c_ts_driver);
+	i2c_del_driver(&edt_ft5x06_i2c_ts_driver);
 }
 module_exit(edt_ft5x06_i2c_ts_exit);
 

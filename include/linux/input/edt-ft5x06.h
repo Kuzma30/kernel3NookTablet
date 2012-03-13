@@ -2,7 +2,7 @@
 #define _EDT_FT5X06_H
 
 /*
- * Copyright (c) 2011 Simon Budig, &lt;simon.budig@xxxxxxxxxxxxxxxxx&gt;
+ * Copyright (c) 2011 Simon Budig, <simon.budig@xxxxxxxxxxxxxxxxx>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published by
