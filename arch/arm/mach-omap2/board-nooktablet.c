@@ -1320,12 +1320,12 @@ static inline void board_serial_init(void)
 	pr_info(KERN_INFO "Board serial init\n");
 	omap_serial_init_port_pads(0, blaze_uart1_pads,
 		ARRAY_SIZE(blaze_uart1_pads), &blaze_uart_info_uncon);
-/*	omap_serial_init_port_pads(1, blaze_uart2_pads,
+	omap_serial_init_port_pads(1, blaze_uart2_pads,
 		ARRAY_SIZE(blaze_uart2_pads), &blaze_uart_info);
 	omap_serial_init_port_pads(2, blaze_uart3_pads,
 		ARRAY_SIZE(blaze_uart3_pads), &blaze_uart_info);
 	omap_serial_init_port_pads(3, blaze_uart4_pads,
-	*///	ARRAY_SIZE(blaze_uart4_pads), &blaze_uart_info_uncon);
+		ARRAY_SIZE(blaze_uart4_pads), &blaze_uart_info_uncon);
 }
 
 static void omap4_sdp4430_wifi_mux_init(void)

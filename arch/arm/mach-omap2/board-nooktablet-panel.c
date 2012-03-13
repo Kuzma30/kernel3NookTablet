@@ -165,10 +165,12 @@ static int nooktablet_panel_enable_lcd(struct omap_dss_device *dssdev)
 
 static void nooktablet_panel_disable_lcd(struct omap_dss_device *dssdev)
 {
+	acclaim4430_disp_backlight_data.def_on = 1; // change the PWM polarity
   	pr_info("NookTablet LCD disable!\n");
 }
 static int nooktablet_set_bl_intensity(struct omap_dss_device *dssdev, int level)
 {
+	pr_info("NookTablet LCD set bl intensity!\n");
 	return 0;
 }
 static struct omap_dss_device sdp4430_boxer_device = {
@@ -178,9 +180,9 @@ static struct omap_dss_device sdp4430_boxer_device = {
 	.phy.dpi.data_lines		= 24,
 	.channel			= OMAP_DSS_CHANNEL_LCD2,
 	.data				= &boxer_panel,
-//  	.platform_enable		= nooktablet_panel_enable_lcd,
-//  	.platform_disable		= nooktablet_panel_disable_lcd,
-// 	.set_backlight			= nooktablet_set_bl_intensity,
+  	.platform_enable		= nooktablet_panel_enable_lcd,
+  	.platform_disable		= nooktablet_panel_disable_lcd,
+ 	.set_backlight			= nooktablet_set_bl_intensity,
 };
 
 
