@@ -803,6 +803,23 @@ int omap_dm_timer_set_match(struct omap_dm_timer *timer, int enable,
 }
 EXPORT_SYMBOL_GPL(omap_dm_timer_set_match);
 
+unsigned int omap_dm_timer_get_match(struct omap_dm_timer *timer)
+{
+	u32 return_val;
+	unsigned long flags;
+  	if (!timer)
+		return -EINVAL;
+
+	spin_lock_irqsave(&timer->lock, flags);
+	__timer_enable(timer);
+	
+	return_val=omap_dm_timer_read_reg(timer, OMAP_TIMER_MATCH_REG);
+	__timer_disable(timer);
+	spin_unlock_irqrestore(&timer->lock, flags);	
+	return return_val;
+}
+EXPORT_SYMBOL_GPL(omap_dm_timer_get_match);
+
 int omap_dm_timer_set_pwm(struct omap_dm_timer *timer, int def_on,
 			   int toggle, int trigger)
 {
@@ -879,6 +896,37 @@ int omap_dm_timer_set_int_enable(struct omap_dm_timer *timer,
 	return 0;
 }
 EXPORT_SYMBOL_GPL(omap_dm_timer_set_int_enable);
+
+int omap_dm_timer_set_int_disable(struct omap_dm_timer *timer,
+					unsigned int value)
+{
+	u32 l;
+	unsigned long flags;
+	struct dmtimer_platform_data *pdata = timer->pdev->dev.platform_data;
+	pr_debug("%s%s: \n", PASS1,__func__);
+	
+	if (!timer)
+		return -EINVAL;
+	spin_lock_irqsave(&timer->lock, flags);
+	if (!timer->is_early_init)
+	__timer_enable(timer);
+//  	omap_dm_timer_enable(timer);
+
+	l = omap_dm_timer_read_reg(timer, OMAP_TIMER_WAKEUP_EN_REG);
+	if (pdata->timer_ip_type == OMAP_TIMER_IP_VERSION_2) {
+		l |= value;
+		omap_dm_timer_write_reg(timer, OMAP_TIMER_INT_CLR_REG, value);
+	} else {
+		l &= ~value;
+		omap_dm_timer_write_reg(timer, OMAP_TIMER_INT_EN_REG, l);
+	}
+	omap_dm_timer_write_reg(timer, OMAP_TIMER_WAKEUP_EN_REG, l);
+	if (!timer->is_early_init)
+	__timer_disable(timer);
+	spin_unlock_irqrestore(&timer->lock, flags);
+	return 0;
+}
+EXPORT_SYMBOL_GPL(omap_dm_timer_set_int_disable);
 
 unsigned int omap_dm_timer_read_status(struct omap_dm_timer *timer)
 {

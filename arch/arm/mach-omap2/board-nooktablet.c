@@ -681,15 +681,6 @@ static void __init omap_4430sdp_init_early(void)
 #endif
 }
 
-// static struct omap_musb_board_data musb_board_data = {
-// 	.interface_type		= MUSB_INTERFACE_UTMI,
-// #ifdef CONFIG_USB_MUSB_OTG
-// 	.mode			= MUSB_OTG,
-// #else
-// 	.mode			= MUSB_PERIPHERAL,
-// #endif
-// 	.power			= 200,
-// };
 static struct omap_musb_board_data musb_board_data = {
 	.interface_type		= MUSB_INTERFACE_UTMI,
 #ifdef CONFIG_USB_MUSB_OTG
@@ -735,7 +726,7 @@ static struct omap2_hsmmc_info mmc[] = {
 	},
 	{
 		.mmc		= 3,
-		.caps		= MMC_CAP_4_BIT_DATA | MMC_CAP_POWER_OFF_CARD | MMC_PM_KEEP_POWER,
+		.caps		= MMC_CAP_4_BIT_DATA, //| MMC_CAP_POWER_OFF_CARD | MMC_PM_KEEP_POWER,
 		.gpio_cd	= -EINVAL,
  		.gpio_wp        = -EINVAL,
 		.ocr_mask	= MMC_VDD_165_195,
@@ -1320,12 +1311,12 @@ static inline void board_serial_init(void)
 	pr_info(KERN_INFO "Board serial init\n");
 	omap_serial_init_port_pads(0, blaze_uart1_pads,
 		ARRAY_SIZE(blaze_uart1_pads), &blaze_uart_info_uncon);
-	omap_serial_init_port_pads(1, blaze_uart2_pads,
-		ARRAY_SIZE(blaze_uart2_pads), &blaze_uart_info);
-	omap_serial_init_port_pads(2, blaze_uart3_pads,
-		ARRAY_SIZE(blaze_uart3_pads), &blaze_uart_info);
-	omap_serial_init_port_pads(3, blaze_uart4_pads,
-		ARRAY_SIZE(blaze_uart4_pads), &blaze_uart_info_uncon);
+// 	omap_serial_init_port_pads(1, blaze_uart2_pads,
+// 		ARRAY_SIZE(blaze_uart2_pads), &blaze_uart_info);
+// 	omap_serial_init_port_pads(2, blaze_uart3_pads,
+// 		ARRAY_SIZE(blaze_uart3_pads), &blaze_uart_info);
+// 	omap_serial_init_port_pads(3, blaze_uart4_pads,
+// 		ARRAY_SIZE(blaze_uart4_pads), &blaze_uart_info_uncon);
 }
 
 static void omap4_sdp4430_wifi_mux_init(void)
