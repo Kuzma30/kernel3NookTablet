@@ -30,6 +30,10 @@ ccflags-$(CONFIG_PVR_SGXCORE_540) += \
 	-DSGX540 -DSUPPORT_SGX540 \
 	-DSGX_CORE_REV=120
 
+ccflags-$(CONFIG_PVR_SGXCORE_544) += \
+	-DSGX544 -DSUPPORT_SGX544 \
+	-DSGX_CORE_REV=112
+
 ccflags-$(CONFIG_PVR_BUILD_RELEASE) += \
 	-DPVR_BUILD_TYPE="\"release\"" -DRELEASE
 
@@ -104,10 +108,12 @@ pvrsrvkm-y := \
 	sgx/pb.o
 
 pvrsrvkm-$(CONFIG_ION_OMAP) += ion.o
+pvrsrvkm-$(CONFIG_GCCORE) += gc_bvmapping.o
 
 omaplfb-y := \
 	omaplfb/omaplfb_displayclass.o \
 	omaplfb/omaplfb_linux.o
+omaplfb-$(CONFIG_GCBV) += omaplfb/omaplfb_bv.o
 
 obj-$(CONFIG_PVR_SGX) += pvrsrvkm.o
 obj-$(CONFIG_PVR_SGX) += omaplfb.o

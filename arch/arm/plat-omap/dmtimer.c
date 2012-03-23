@@ -287,7 +287,8 @@ static void omap_timer_restore_context(struct omap_dm_timer *timer)
 static void __timer_enable(struct omap_dm_timer *timer)
 {
 	if (!timer->enabled) {
-		pm_runtime_get_sync(&timer->pdev->dev);
+		if (timer->loses_context)
+			pm_runtime_get_sync(&timer->pdev->dev);
 		timer->enabled = 1;
 	}
 }
@@ -295,7 +296,8 @@ static void __timer_enable(struct omap_dm_timer *timer)
 static void __timer_disable(struct omap_dm_timer *timer)
 {
 	if (timer->enabled) {
-		pm_runtime_put_sync_suspend(&timer->pdev->dev);
+		if (timer->loses_context)
+			pm_runtime_put_sync_suspend(&timer->pdev->dev);
 		timer->enabled = 0;
 	}
 }
@@ -576,8 +578,8 @@ int omap_dm_timer_start(struct omap_dm_timer *timer)
 		return -EINVAL;
 
 	spin_lock_irqsave(&timer->lock, flags);
+	__timer_enable(timer);
 	if (timer->loses_context) {
-		__timer_enable(timer);
 		if (omap_pm_was_context_lost(&timer->pdev->dev) &&
 			timer->context_saved) {
 			omap_timer_restore_context(timer);
@@ -633,8 +635,8 @@ int omap_dm_timer_stop(struct omap_dm_timer *timer)
 	if (timer->loses_context) {
 		omap_timer_save_context(timer);
 		timer->context_saved = true;
-		__timer_disable(timer);
 	}
+	__timer_disable(timer);
 	spin_unlock_irqrestore(&timer->lock, flags);
 	return 0;
 }
@@ -706,9 +708,14 @@ int omap_dm_timer_set_load_start(struct omap_dm_timer *timer, int autoreload,
 		return -EINVAL;
 
 	spin_lock_irqsave(&timer->lock, flags);
+<<<<<<< HEAD
 	__timer_enable(timer); //MY
 	if (timer->loses_context) {
 // 		__timer_enable(timer); //MY
+=======
+	__timer_enable(timer);
+	if (timer->loses_context) {
+>>>>>>> remotes/omapzoom/p-android-omap-3.0
 		if (omap_pm_was_context_lost(&timer->pdev->dev) &&
 			timer->context_saved) {
 			omap_timer_restore_context(timer);

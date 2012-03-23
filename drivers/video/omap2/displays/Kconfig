@@ -55,6 +55,7 @@ config PANEL_TC358765
 	select BACKLIGHT_CLASS_DEVICE
 	help
 	  Toshiba TC358765 DSI-2-LVDS chip with 1024x768 panel
+<<<<<<< HEAD
 	  
 config PANEL_BOXER
 	tristate "BOXER Panel - B&N"
@@ -62,4 +63,11 @@ config PANEL_BOXER
 	help
 	  This is the LCD panel used on OMAP3 Boxer board
 
+=======
+config TC358765_DEBUG
+	bool "Toshiba TC358765 DSI-2-LVDS chip debug"
+	depends on PANEL_TC358765 && DEBUG_FS
+	help
+	  Support of TC358765 DSI-2-LVDS chip register access via debugfs
+>>>>>>> remotes/omapzoom/p-android-omap-3.0
 endmenu

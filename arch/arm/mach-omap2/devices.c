@@ -16,6 +16,7 @@
 #include <linux/clk.h>
 #include <linux/err.h>
 #include <linux/slab.h>
+#include <linux/mm.h>
 
 #include <mach/hardware.h>
 #include <mach/irqs.h>
@@ -410,12 +411,18 @@ static struct platform_device omap_abe_dai = {
 	.id	= -1,
 };
 
+static struct platform_device omap_abe_vxrec = {
+	.name	= "omap-abe-vxrec-dai",
+	.id	= -1,
+};
+
 static inline void omap_init_abe(void)
 {
 	platform_device_register(&codec_dmic0);
 	platform_device_register(&codec_dmic1);
 	platform_device_register(&codec_dmic2);
 	platform_device_register(&omap_abe_dai);
+	platform_device_register(&omap_abe_vxrec);
 }
 #else
 static inline void omap_init_abe(void) {}
@@ -915,6 +922,9 @@ static void omap_init_gpu(void)
 	pdata->device_enable = omap_device_enable;
 	pdata->device_idle = omap_device_idle;
 	pdata->device_shutdown = omap_device_shutdown;
+	pdata->opp_get_opp_count = opp_get_opp_count;
+	pdata->opp_find_freq_ceil = opp_find_freq_ceil;
+	pdata->access_process_vm = access_process_vm;
 
 	pdata->ovfreqs = 0;
 	if (cpu_is_omap446x())

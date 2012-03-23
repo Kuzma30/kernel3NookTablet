@@ -83,6 +83,7 @@
 #define TWL6040_REV_1_0			0x00
 #define TWL6040_REV_1_1			0x01
 #define TWL6040_REV_1_3			0x02
+#define TWL6041_REV_2_0			0x10
 
 /* INTID (0x03) fields */
 
@@ -140,13 +141,19 @@
 
 /* HSLCTL (0x10) fields */
 
+#define TWL6040_HSDACENAL		0x01
 #define TWL6040_HSDACMODEL		0x02
 #define TWL6040_HSDRVMODEL		0x08
 
 /* HSRCTL (0x11) fields */
 
+#define TWL6040_HSDACENAR		0x01
 #define TWL6040_HSDACMODER		0x02
 #define TWL6040_HSDRVMODER		0x08
+
+/* EARCTL (0x13) fields */
+
+#define TWL6040_EARENA			0x01
 
 /* VIBCTLL (0x18) fields */
 
@@ -186,9 +193,6 @@
 #define TWL6040_RESETSPLIT		0x04
 #define TWL6040_INTCLRMODE		0x08
 #define TWL6040_CLK32KSEL		0x40
-
-#define TWL6040_SYSCLK_SEL_LPPLL	1
-#define TWL6040_SYSCLK_SEL_HPPLL	2
 
 /* STATUS (0x2E) fields */
 

@@ -199,6 +199,9 @@ static void dispc_save_context(void)
 		SR(CONFIG2);
 	}
 
+	if (dss_has_feature(FEAT_GLOBAL_MFLAG))
+		SR(GLOBAL_MFLAG);
+
 	SR(OVL_BA0(OMAP_DSS_GFX));
 	SR(OVL_BA1(OMAP_DSS_GFX));
 	SR(OVL_POSITION(OMAP_DSS_GFX));
@@ -209,6 +212,9 @@ static void dispc_save_context(void)
 	SR(OVL_PIXEL_INC(OMAP_DSS_GFX));
 	SR(OVL_WINDOW_SKIP(OMAP_DSS_GFX));
 	SR(OVL_TABLE_BA(OMAP_DSS_GFX));
+
+	if (dss_has_feature(FEAT_GLOBAL_MFLAG))
+		SR(OVL_MFLAG_THRESHOLD(OMAP_DSS_GFX));
 
 	SR(DATA_CYCLE1(OMAP_DSS_CHANNEL_LCD));
 	SR(DATA_CYCLE2(OMAP_DSS_CHANNEL_LCD));
@@ -287,6 +293,9 @@ static void dispc_save_context(void)
 
 		if (dss_has_feature(FEAT_PRELOAD))
 			SR(OVL_PRELOAD(o));
+
+		if (dss_has_feature(FEAT_GLOBAL_MFLAG))
+			SR(OVL_MFLAG_THRESHOLD(o));
 	}
 
 	if (dss_has_feature(FEAT_CORE_CLK_DIV))
@@ -343,6 +352,9 @@ static void dispc_restore_context(void)
 		RR(CONFIG2);
 	}
 
+	if (dss_has_feature(FEAT_GLOBAL_MFLAG))
+		RR(GLOBAL_MFLAG);
+
 	RR(OVL_BA0(OMAP_DSS_GFX));
 	RR(OVL_BA1(OMAP_DSS_GFX));
 	RR(OVL_POSITION(OMAP_DSS_GFX));
@@ -354,6 +366,8 @@ static void dispc_restore_context(void)
 	RR(OVL_WINDOW_SKIP(OMAP_DSS_GFX));
 	RR(OVL_TABLE_BA(OMAP_DSS_GFX));
 
+	if (dss_has_feature(FEAT_GLOBAL_MFLAG))
+			RR(OVL_MFLAG_THRESHOLD(OMAP_DSS_GFX));
 
 	RR(DATA_CYCLE1(OMAP_DSS_CHANNEL_LCD));
 	RR(DATA_CYCLE2(OMAP_DSS_CHANNEL_LCD));
@@ -433,6 +447,9 @@ static void dispc_restore_context(void)
 
 		if (dss_has_feature(FEAT_PRELOAD))
 			RR(OVL_PRELOAD(o));
+
+		if (dss_has_feature(FEAT_GLOBAL_MFLAG))
+			RR(OVL_MFLAG_THRESHOLD(o));
 	}
 
 	if (dss_has_feature(FEAT_CORE_CLK_DIV))
@@ -530,14 +547,33 @@ int dispc_runtime_get(void)
 		DSSDBG("dispc_runtime_get\n");
 
 		/*
-		 * With the DSS FIFO optimizations, ramdom lockups and reboots
-		 * are seen. It has been identified that L3_1 CD amd L3_2 is
-		 * idling and not responding to the traffic initiated by DSS.
-		 * The Workaround suggested by Hardware team is to keep the L3_1
-		 * and L3_2 CD in NO_SLEEP mode, when DSS is active.
+		 * OMAP4 ERRATUM xxxx: Mstandby and disconnect protocol issue
+		 * Impacts: all OMAP4 devices
+		 * Simplfied Description:
+		 * issue #1: The handshake between IP modules on L3_1 and L3_2
+		 * peripherals with PRCM has a limitation in a certain time
+		 * window of L4 clock cycle. Due to the fact that a wrong
+		 * variant of stall signal was used in circuit of PRCM, the
+		 * intitator-interconnect protocol is broken when the time
+		 * window is hit where the PRCM requires the interconnect to go
+		 * to idle while intitator asks to wakeup.
+		 * Issue #2: DISPC asserts a sub-mstandby signal for a short
+		 * period. In this time interval, IP block requests
+		 * disconnection of Master port, and results in Mstandby and
+		 * wait request to PRCM. In parallel, if mstandby is de-asserted
+		 * by DISPC simultaneously, interconnect requests for a
+		 * reconnect for one cycle alone resulting in a disconnect
+		 * protocol violation and a deadlock of the system.
+		 *
+		 * Workaround:
+		 * L3_1 clock domain must not be programmed in HW_AUTO if
+		 * Static dependency with DSS is enabled and DSS clock domain
+		 * is ON. Same for L3_2.
 		 */
-		clkdm_deny_idle(l3_1_clkdm);
-		clkdm_deny_idle(l3_2_clkdm);
+		if (cpu_is_omap44xx()) {
+			clkdm_deny_idle(l3_1_clkdm);
+			clkdm_deny_idle(l3_2_clkdm);
+		}
 
 		r = dss_runtime_get();
 		if (r)
@@ -595,11 +631,14 @@ void dispc_runtime_put(void)
 		dss_runtime_put();
 
 		/*
+		 * OMAP4 ERRATUM xxxx: Mstandby and disconnect protocol issue
+		 * Workaround:
 		 * Restore L3_1 amd L3_2 CD to HW_AUTO, when DSS module idles.
-		 * When DSS is idle, we can allow L3_1 and L3_2 to idle.
 		 */
-		clkdm_allow_idle(l3_1_clkdm);
-		clkdm_allow_idle(l3_2_clkdm);
+		if (cpu_is_omap44xx()) {
+			clkdm_allow_idle(l3_1_clkdm);
+			clkdm_allow_idle(l3_2_clkdm);
+		}
 
 	}
 
@@ -1363,6 +1402,10 @@ void dispc_setup_plane_fifo(enum omap_plane plane, u32 low, u32 high)
 	dispc_write_reg(DISPC_OVL_FIFO_THRESHOLD(plane),
 			FLD_VAL(high, hi_start, hi_end) |
 			FLD_VAL(low, lo_start, lo_end));
+
+	if (dss_has_feature(FEAT_GLOBAL_MFLAG))
+		dispc_write_reg(DISPC_OVL_MFLAG_THRESHOLD(plane),
+			FLD_VAL(high, 31, 16) | FLD_VAL(low, 15, 0));
 }
 
 void dispc_enable_fifomerge(bool enable)
@@ -1468,9 +1511,8 @@ static void _dispc_set_scaling_common(enum omap_plane plane,
 	int accu0 = 0;
 	int accu1 = 0;
 	u32 l;
-	u16 y_adjust = color_mode == OMAP_DSS_COLOR_NV12 ? 2 : 0;
 
-	_dispc_set_scale_param(plane, orig_width, orig_height - y_adjust,
+	_dispc_set_scale_param(plane, orig_width, orig_height,
 				out_width, out_height, five_taps,
 				rotation, DISPC_COLOR_COMPONENT_RGB_Y);
 	l = dispc_read_reg(DISPC_OVL_ATTRIBUTES(plane));
@@ -1522,7 +1564,6 @@ static void _dispc_set_scaling_uv(enum omap_plane plane,
 {
 	int scale_x = out_width != orig_width;
 	int scale_y = out_height != orig_height;
-	u16 y_adjust = 0;
 
 	if (!dss_has_feature(FEAT_HANDLE_UV_SEPARATE))
 		return;
@@ -1539,7 +1580,6 @@ static void _dispc_set_scaling_uv(enum omap_plane plane,
 		orig_height >>= 1;
 		/* UV is subsampled by 2 horz.*/
 		orig_width >>= 1;
-		y_adjust = 1;
 		break;
 	case OMAP_DSS_COLOR_YUV2:
 	case OMAP_DSS_COLOR_UYVY:
@@ -1563,7 +1603,7 @@ static void _dispc_set_scaling_uv(enum omap_plane plane,
 	if (out_height != orig_height)
 		scale_y = true;
 
-	_dispc_set_scale_param(plane, orig_width, orig_height - y_adjust,
+	_dispc_set_scale_param(plane, orig_width, orig_height,
 			out_width, out_height, five_taps,
 				rotation, DISPC_COLOR_COMPONENT_UV);
 
@@ -1648,6 +1688,9 @@ static void _dispc_set_rotation_attrs(enum omap_plane plane, u8 rotation,
 			row_repeat = true;
 		else
 			row_repeat = false;
+	} else if (color_mode == OMAP_DSS_COLOR_NV12) {
+		/* WA for OMAP4+ UV plane overread HW bug */
+		vidrot = 1;
 	}
 
 	REG_FLD_MOD(DISPC_OVL_ATTRIBUTES(plane), vidrot, 13, 12);
@@ -3995,8 +4038,11 @@ static void _omap_dispc_initial_config(void)
 		dispc_write_reg(DISPC_DIVISOR, l);
 	}
 
-	l3_1_clkdm = clkdm_lookup("l3_1_clkdm");
-	l3_2_clkdm = clkdm_lookup("l3_2_clkdm");
+	/* for OMAP4 ERRATUM xxxx: Mstandby and disconnect protocol issue */
+	if (cpu_is_omap44xx()) {
+		l3_1_clkdm = clkdm_lookup("l3_1_clkdm");
+		l3_2_clkdm = clkdm_lookup("l3_2_clkdm");
+	}
 
 	/* FUNCGATED */
 	if (dss_has_feature(FEAT_FUNCGATED))
@@ -4012,6 +4058,9 @@ static void _omap_dispc_initial_config(void)
 	dispc_set_loadmode(OMAP_DSS_LOAD_FRAME_ONLY);
 
 	dispc_read_plane_fifo_sizes();
+
+	if (dss_has_feature(FEAT_GLOBAL_MFLAG))
+		dispc_write_reg(DISPC_GLOBAL_MFLAG, 2);
 }
 
 /* DISPC HW IP initialisation */
