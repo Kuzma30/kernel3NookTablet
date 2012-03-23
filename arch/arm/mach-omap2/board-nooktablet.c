@@ -883,21 +883,26 @@ static struct regulator_init_data sdp4430_vdac = {
 	},
 };
 
+static struct regulator_consumer_supply vusb_supply[] = {
+	REGULATOR_SUPPLY("vusb", "twl6030_usb"),
+};
 
 static struct regulator_init_data sdp4430_vusb = {
 	.constraints = {
 		.min_uV			= 3300000,
 		.max_uV			= 3300000,
-		.apply_uV		= true,
+		//.apply_uV		= true,
 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
-			| REGULATOR_MODE_STANDBY,
+					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask	 =	REGULATOR_CHANGE_MODE
-			| REGULATOR_CHANGE_STATUS,
+					| REGULATOR_CHANGE_STATUS,
 		.state_mem = {
-			.enabled	= false,
 			.disabled	= true,
 		},
+		.initial_state          = PM_SUSPEND_MEM,
 	},
+	.num_consumer_supplies  = ARRAY_SIZE(vusb_supply),
+	.consumer_supplies      = vusb_supply,
 };
 
 static struct regulator_init_data sdp4430_clk32kg = {
@@ -1428,14 +1433,6 @@ static void __init omap_4430sdp_init(void)
 
 	usb_musb_init(&musb_board_data);
 
-// 	status = omap_ethernet_init();
-// 	if (status) {
-// 		pr_err("Ethernet initialization failed: %d\n", status);
-// 	} else {
-// 		sdp4430_spi_board_info[0].irq = gpio_to_irq(ETH_KS8851_IRQ);
-// 		spi_register_board_info(sdp4430_spi_board_info,
-// 				ARRAY_SIZE(sdp4430_spi_board_info));
-// 	}
  	keyboard_mux_init();
 	status = omap4_keyboard_init(&sdp4430_keypad_data);
 	if (status)
@@ -1445,21 +1442,7 @@ static void __init omap_4430sdp_init(void)
 			ARRAY_SIZE(sdp4430_spi_board_info));
 	
 	omap_dmm_init();
-	printk("Acclaim panel init\n");
 	acclaim_panel_init();
-	printk("Acclaim panel init finish\n");
-	
-//	blaze_panel_init();
-//	blaze_keypad_init();
-
-// 	if (cpu_is_omap446x()) {
-// 		/* Vsel0 = gpio, vsel1 = gnd */
-// 		status = omap_tps6236x_board_setup(true, TPS62361_GPIO, -1,
-// 					OMAP_PIN_OFF_OUTPUT_HIGH, -1);
-// 		if (status)
-// 			pr_err("TPS62361 initialization failed: %d\n", status);
-// 	}
-
 	omap_enable_smartreflex_on_init();
         if (enable_suspend_off)
                 omap_pm_enable_off_mode();
@@ -1478,13 +1461,13 @@ static inline void ramconsole_reserve_sdram(void) {}
 
 static void __init omap_4430sdp_map_io(void)
 {
-//	ramconsole_reserve_sdram();
 	omap2_set_globals_443x();
 	omap44xx_map_common_io();
 }
 static void __init omap_4430sdp_reserve(void)
 {
-	omap_ram_console_init(ACCLAIM_RAM_CONSOLE_START, (1 << CONFIG_LOG_BUF_SHIFT));
+	omap_ram_console_init(OMAP_RAM_CONSOLE_START_DEFAULT,
+			OMAP_RAM_CONSOLE_SIZE_DEFAULT);
 
 	/* do the static reservations first */
 	memblock_remove(PHYS_ADDR_SMC_MEM, PHYS_ADDR_SMC_SIZE);
@@ -1492,6 +1475,12 @@ static void __init omap_4430sdp_reserve(void)
 	/* ipu needs to recognize secure input buffer area as well */
 	omap_ipu_set_static_mempool(PHYS_ADDR_DUCATI_MEM, PHYS_ADDR_DUCATI_SIZE +
 					OMAP4_ION_HEAP_SECURE_INPUT_SIZE);
+#ifdef CONFIG_OMAP_REMOTE_PROC_DSP
+	memblock_remove(PHYS_ADDR_TESLA_MEM, PHYS_ADDR_TESLA_SIZE);
+	omap_dsp_set_static_mempool(PHYS_ADDR_TESLA_MEM,
+					PHYS_ADDR_TESLA_SIZE);
+#endif
+
 #ifdef CONFIG_ION_OMAP
 	omap_ion_init();
 #endif
