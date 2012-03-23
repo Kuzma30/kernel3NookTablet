@@ -99,7 +99,7 @@ static void acclaim4430_disp_backlight_setpower(struct omap_pwm_led_platform_dat
 static struct omap_pwm_led_platform_data acclaim4430_disp_backlight_data = {
 	.name 		 = "lcd-backlight",
 	.intensity_timer = 11,
-	.def_on		 = 0,
+	.def_on		 = 1,
 	.def_brightness	 = DEFAULT_BACKLIGHT_BRIGHTNESS,
 	.set_power	 = acclaim4430_disp_backlight_setpower,
 };
@@ -149,7 +149,7 @@ static int nooktablet_panel_enable_lcd(struct omap_dss_device *dssdev)
 {
 	  pr_info("NookTablet LCD enable!\n");
 	  printk("Enabling backlight PWM for LCD\n");
-	  acclaim4430_disp_backlight_data.def_on = 1; // change the PWM polarity
+//	  acclaim4430_disp_backlight_data.def_on = 1; // change the PWM polarity
 // 
 //         //gpio_request(38, "lcd backlight evt2");
 // 
@@ -165,7 +165,7 @@ static int nooktablet_panel_enable_lcd(struct omap_dss_device *dssdev)
 
 static void nooktablet_panel_disable_lcd(struct omap_dss_device *dssdev)
 {
-	acclaim4430_disp_backlight_data.def_on = 1; // change the PWM polarity
+//	acclaim4430_disp_backlight_data.def_on = 0; // change the PWM polarity
   	pr_info("NookTablet LCD disable!\n");
 }
 static int nooktablet_set_bl_intensity(struct omap_dss_device *dssdev, int level)

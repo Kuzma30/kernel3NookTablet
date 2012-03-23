@@ -58,21 +58,6 @@
 #define OMAP_TIMER_IP_VERSION_1                        0x1
 #define OMAP_TIMER_IP_VERSION_2			0x2
 
-#define _OMAP_TIMER_INT_EN_OFFSET      0x1c
-#define _OMAP_TIMER_INT_CLR_OFFSET     0x30
-#define _OMAP_TIMER_WAKEUP_EN_OFFSET   0x20
-
-#define        WPSHIFT 16
-#define        WP_NONE 0/* no write pending bit */
-#define OMAP_TIMER_INT_EN_REG          (_OMAP_TIMER_INT_EN_OFFSET \
-                                   | (WP_NONE << WPSHIFT))
-
-#define        OMAP_TIMER_INT_CLR_REG          (_OMAP_TIMER_INT_CLR_OFFSET \
-                                   | (WP_NONE << WPSHIFT))
-
-#define OMAP_TIMER_WAKEUP_EN_REG       (_OMAP_TIMER_WAKEUP_EN_OFFSET \
-                                   | (WP_NONE << WPSHIFT))
-
 struct omap_secure_timer_dev_attr {
 	bool is_secure_timer;
 };
@@ -156,11 +141,15 @@ int omap_dm_timer_set_load_start(struct omap_dm_timer *timer,
 	int autoreload, unsigned int value);
 int omap_dm_timer_set_match(struct omap_dm_timer *timer, int enable,
 	unsigned int match);
+unsigned int omap_dm_timer_get_match(struct omap_dm_timer *timer);
+
 int omap_dm_timer_set_pwm(struct omap_dm_timer *timer, int def_on,
 	int toggle, int trigger);
 int omap_dm_timer_set_prescaler(struct omap_dm_timer *timer, int prescaler);
 
 int omap_dm_timer_set_int_enable(struct omap_dm_timer *timer,
+	unsigned int value);
+void omap_dm_timer_set_int_disable(struct omap_dm_timer *timer,
 	unsigned int value);
 
 unsigned int omap_dm_timer_read_status(struct omap_dm_timer *timer);
@@ -171,7 +160,5 @@ int omap_dm_timer_write_counter(struct omap_dm_timer *timer,
 
 int omap_dm_timers_active(void);
 
-int omap_dm_timer_set_int_disable(struct omap_dm_timer *, unsigned int);
-unsigned int omap_dm_timer_get_match(struct omap_dm_timer *timer);
 
 #endif /* __ASM_ARCH_DMTIMER_H */

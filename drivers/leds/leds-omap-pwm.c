@@ -24,6 +24,8 @@
 #include <linux/clk.h>
 #include <plat/board.h>
 #include <plat/dmtimer.h>
+#include <plat/omap-pm.h>
+#include <linux/pm_runtime.h>
 #include "leds-omap-pwm.h"
 
 /* 38400000 / (1 << (COUNTER_DEVIDER + 1)) */
@@ -128,7 +130,7 @@ static irqreturn_t intensity_timer_match_interrupt(int irq, void *arg)
 
 	/* disable interrupts */
 	local_irq_disable();
-
+		
 	/* get int status */
 	status = omap_dm_timer_read_status(timer);
 
@@ -146,8 +148,8 @@ static irqreturn_t intensity_timer_match_interrupt(int irq, void *arg)
 	* match value is lower than counter. This will result in missing
 	* the match event for this period.
 	*/
+	
 	counter = omap_dm_timer_read_counter(timer);
-
 	if ((counter + COUNTER_TO_MATCH_GUARD) < match_val)
 		omap_pwm_set_match(timer, match_val);
 	else if (counter > current_match_val)
@@ -158,7 +160,7 @@ static irqreturn_t intensity_timer_match_interrupt(int irq, void *arg)
 
 	/* enable interrupts */
 	local_irq_enable();
-
+	
 	return IRQ_HANDLED;
 }
 

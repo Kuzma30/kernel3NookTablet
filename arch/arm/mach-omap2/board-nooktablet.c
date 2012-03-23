@@ -461,85 +461,6 @@ static struct platform_device acclaim_keys_gpio = {
 	},
 };
 
-// static struct gpio_led sdp4430_gpio_leds[] = {
-// 	{
-// 		.name	= "omap4:green:debug0",
-// 		.gpio	= 61,
-// 	},
-// 	{
-// 		.name	= "omap4:green:debug1",
-// 		.gpio	= 30,
-// 	},
-// 	{
-// 		.name	= "omap4:green:debug2",
-// 		.gpio	= 7,
-// 	},
-// 	{
-// 		.name	= "omap4:green:debug3",
-// 		.gpio	= 8,
-// 	},
-// 	{
-// 		.name	= "omap4:green:debug4",
-// 		.gpio	= 50,
-// 	},
-// 	{
-// 		.name	= "omap4:blue:user",
-// 		.gpio	= 169,
-// 	},
-// 	{
-// 		.name	= "omap4:red:user",
-// 		.gpio	= 170,
-// 	},
-// 	{
-// 		.name	= "omap4:green:user",
-// 		.gpio	= 139,
-// 	},
-// 
-// };
-
-// static struct gpio_led_platform_data sdp4430_led_data = {
-// 	.leds	= sdp4430_gpio_leds,
-// 	.num_leds	= ARRAY_SIZE(sdp4430_gpio_leds),
-// };
-
-// static struct led_pwm sdp4430_pwm_leds[] = {
-// 	{
-// 		.name		= "omap4:green:chrg",
-// 		.pwm_id		= 1,
-// 		.max_brightness	= 255,
-// 		.pwm_period_ns	= 7812500,
-// 	},
-// };
-
-// static struct led_pwm_platform_data sdp4430_pwm_data = {
-// 	.num_leds	= ARRAY_SIZE(sdp4430_pwm_leds),
-// 	.leds		= sdp4430_pwm_leds,
-// };
-
-// static struct platform_device sdp4430_leds_pwm = {
-// 	.name	= "leds_pwm",
-// 	.id	= -1,
-// 	.dev	= {
-// 		.platform_data = &sdp4430_pwm_data,
-// 	},
-// };
-
-// static struct platform_device sdp4430_leds_gpio = {
-// 	.name	= "leds-gpio",
-// 	.id	= -1,
-// 	.dev	= {
-// 		.platform_data = &sdp4430_led_data,
-// 	},
-// };
-// static struct spi_board_info sdp4430_spi_board_info[] __initdata = {
-// 	{
-// 		.modalias               = "ks8851",
-// 		.bus_num                = 1,
-// 		.chip_select            = 0,
-// 		.max_speed_hz           = 24000000,
-// 		.irq                    = ETH_KS8851_IRQ,
-// 	},
-// };
 static struct spi_board_info sdp4430_spi_board_info[] __initdata = {
 	{
 		.modalias		= "boxer_disp_spi",
@@ -606,10 +527,10 @@ static struct ti_st_plat_data wilink_pdata = {
 	.baud_rate = 3000000,//3686400,
 	.suspend = plat_wlink_kim_suspend,
 	.resume = plat_wlink_kim_resume,
-	.chip_asleep = plat_uart_disable,
-	.chip_awake  = plat_uart_enable,
-	.chip_enable = plat_uart_enable,
-	.chip_disable = plat_uart_disable,
+// 	.chip_asleep = plat_uart_disable,
+// 	.chip_awake  = plat_uart_enable,
+// 	.chip_enable = plat_uart_enable,
+// 	.chip_disable = plat_uart_disable,
 };
 
 static struct platform_device wl128x_device = {
@@ -622,10 +543,6 @@ static struct platform_device btwilink_device = {
 	.name = "btwilink",
 	.id = -1,
 };
-
-// static struct twl4030_madc_platform_data twl6030_gpadc = {
-// 	.irq_line = -1,
-// };
 
 static struct regulator_consumer_supply acclaim_lcd_tp_supply[] = {
 	{ .supply = "vtp" },
@@ -1069,13 +986,13 @@ static struct i2c_board_info __initdata sdp4430_i2c_2_boardinfo[] = {
  	},
 };
 
-static struct i2c_board_info __initdata sdp4430_i2c_3_boardinfo[] = {
-
-};
-
-static struct i2c_board_info __initdata sdp4430_i2c_4_boardinfo[] = {
-
-};
+// static struct i2c_board_info __initdata sdp4430_i2c_3_boardinfo[] = {
+// 
+// };
+// 
+// static struct i2c_board_info __initdata sdp4430_i2c_4_boardinfo[] = {
+// 
+// };
 static void __init show_acclaim_board_revision(int revision)
 {
 	switch (revision) {
@@ -1135,8 +1052,8 @@ static void __init omap_i2c_hwspinlock_init(int bus_id, int spinlock_id,
 
 static struct omap_i2c_bus_board_data __initdata sdp4430_i2c_1_bus_pdata;
 static struct omap_i2c_bus_board_data __initdata sdp4430_i2c_2_bus_pdata;
-static struct omap_i2c_bus_board_data __initdata sdp4430_i2c_3_bus_pdata;
-static struct omap_i2c_bus_board_data __initdata sdp4430_i2c_4_bus_pdata;
+// static struct omap_i2c_bus_board_data __initdata sdp4430_i2c_3_bus_pdata;
+// static struct omap_i2c_bus_board_data __initdata sdp4430_i2c_4_bus_pdata;
 
 static int __init omap4_i2c_init(void)
 {
@@ -1144,13 +1061,13 @@ static int __init omap4_i2c_init(void)
 
 	omap_i2c_hwspinlock_init(1, 0, &sdp4430_i2c_1_bus_pdata);
 	omap_i2c_hwspinlock_init(2, 1, &sdp4430_i2c_2_bus_pdata);
-	omap_i2c_hwspinlock_init(3, 2, &sdp4430_i2c_3_bus_pdata);
-	omap_i2c_hwspinlock_init(4, 3, &sdp4430_i2c_4_bus_pdata);
+// 	omap_i2c_hwspinlock_init(3, 2, &sdp4430_i2c_3_bus_pdata);
+// 	omap_i2c_hwspinlock_init(4, 3, &sdp4430_i2c_4_bus_pdata);
 
 	omap_register_i2c_bus_board_data(1, &sdp4430_i2c_1_bus_pdata);
 	omap_register_i2c_bus_board_data(2, &sdp4430_i2c_2_bus_pdata);
-	omap_register_i2c_bus_board_data(3, &sdp4430_i2c_3_bus_pdata);
-	omap_register_i2c_bus_board_data(4, &sdp4430_i2c_4_bus_pdata);
+// 	omap_register_i2c_bus_board_data(3, &sdp4430_i2c_3_bus_pdata);
+// 	omap_register_i2c_bus_board_data(4, &sdp4430_i2c_4_bus_pdata);
 
 	omap4_pmic_init("twl6030", &sdp4430_twldata);
 	
@@ -1161,10 +1078,10 @@ static int __init omap4_i2c_init(void)
 // 				ARRAY_SIZE(sdp4430_i2c_boardinfo));
 	omap_register_i2c_bus(2, 400, sdp4430_i2c_2_boardinfo,
 				ARRAY_SIZE(sdp4430_i2c_2_boardinfo));
-	omap_register_i2c_bus(3, 400, NULL, 0);// sdp4430_i2c_3_boardinfo,
-				//ARRAY_SIZE(sdp4430_i2c_3_boardinfo));
-	omap_register_i2c_bus(4, 400, NULL, 0); // sdp4430_i2c_4_boardinfo,
-				//ARRAY_SIZE(sdp4430_i2c_4_boardinfo));
+// 	omap_register_i2c_bus(3, 400, sdp4430_i2c_3_boardinfo,
+// 				ARRAY_SIZE(sdp4430_i2c_3_boardinfo));
+// 	omap_register_i2c_bus(4, 400, sdp4430_i2c_4_boardinfo,
+// 				ARRAY_SIZE(sdp4430_i2c_4_boardinfo));
 
 	/*
 	 * This will allow unused regulator to be shutdown. This flag
@@ -1230,8 +1147,8 @@ static struct omap_device_pad blaze_uart1_pads[] __initdata = {
 	{
 		.name	= "uart1_rx.uart1_rx",
 		.flags	= OMAP_DEVICE_PAD_REMUX | OMAP_DEVICE_PAD_WAKEUP,
-		.enable	= OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE0,
-		.idle	= OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE0,
+		.enable	= OMAP_PIN_INPUT_PULLUP | OMAP_PIN_OFF_WAKEUPENABLE | OMAP_MUX_MODE0,
+		.idle	= OMAP_PIN_INPUT_PULLUP | OMAP_PIN_OFF_WAKEUPENABLE | OMAP_MUX_MODE0,
 	},
 };
 
@@ -1275,7 +1192,7 @@ static struct omap_device_pad blaze_uart3_pads[] __initdata = {
 	},
 	{
 		.name	= "uart3_rx_irrx.uart3_rx_irrx",
-		.flags	= OMAP_DEVICE_PAD_REMUX | OMAP_DEVICE_PAD_WAKEUP,
+//		.flags	= OMAP_DEVICE_PAD_REMUX,// | OMAP_DEVICE_PAD_WAKEUP,
 		.enable	= OMAP_PIN_INPUT | OMAP_MUX_MODE0,
 		.idle	= OMAP_PIN_INPUT | OMAP_MUX_MODE0,
 	},
@@ -1288,7 +1205,7 @@ static struct omap_device_pad blaze_uart4_pads[] __initdata = {
 	},
 	{
 		.name	= "uart4_rx.uart4_rx",
-		.flags	= OMAP_DEVICE_PAD_REMUX | OMAP_DEVICE_PAD_WAKEUP,
+//		.flags	= OMAP_DEVICE_PAD_REMUX | OMAP_DEVICE_PAD_WAKEUP,
 		.enable	= OMAP_PIN_INPUT | OMAP_MUX_MODE0,
 		.idle	= OMAP_PIN_INPUT | OMAP_MUX_MODE0,
 	},

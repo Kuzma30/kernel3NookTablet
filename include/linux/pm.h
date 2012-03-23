@@ -462,6 +462,9 @@ struct dev_pm_info {
 	unsigned long		suspended_jiffies;
 	unsigned long		accounting_timestamp;
 	void			*subsys_data;  /* Owned by the subsystem. */
+#else
+	unsigned int 		runtime_auto:1;
+	unsigned int 		timer_autosuspends:1;
 #endif
 };
 
