@@ -79,7 +79,6 @@ static struct clockdomain *tesla_clkdm;
 static struct powerdomain *tesla_pwrdm;
 
 static struct clockdomain *emif_clkdm, *mpuss_clkdm;
-
 /* Yet un-named erratum which requires AUTORET to be disabled for IVA PD */
 #define OMAP4_PM_ERRATUM_IVA_AUTO_RET_iXXX	BIT(1)
 /*
@@ -621,8 +620,9 @@ static inline u8 get_achievable_state(u8 available_states, u8 req_min_state,
  * This takes pointer to power_state struct as the function parameter.
  * Program pwrst and logic state of the requested pwrdm.
  */
-static int _set_pwrdm_state(struct power_state *pwrst, u32 state,
-			    u32 logic_state)
+
+
+static int _set_pwrdm_state(struct power_state *pwrst, u32 state, u32 logic_state)
 {
 	u32 als;
 	bool parent_power_domain = false;
