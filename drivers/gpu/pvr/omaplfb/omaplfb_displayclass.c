@@ -1329,20 +1329,7 @@ static OMAPLFB_ERROR OMAPLFBInitFBDev(OMAPLFB_DEVINFO *psDevInfo)
 	eError = OMAPLFBInitIonOmap(psDevInfo, psLINFBInfo, psPVRFBInfo);
 	if (eError != OMAPLFB_OK)
 	{
-<<<<<<< HEAD
-		psPVRFBInfo->sSysAddr.uiAddr = psLINFBInfo->fix.smem_start;
-		psPVRFBInfo->sCPUVAddr = psLINFBInfo->screen_base;
-
-		psPVRFBInfo->ulWidth = psLINFBInfo->var.xres;
-		psPVRFBInfo->ulHeight = psLINFBInfo->var.yres;
-		psPVRFBInfo->ulByteStride =  psLINFBInfo->fix.line_length;
-		psPVRFBInfo->ulFBSize = FBSize;
-		psPVRFBInfo->bIs2D = OMAPLFB_FALSE;
-		psPVRFBInfo->psPageList = IMG_NULL;
-		psPVRFBInfo->psIONHandle = IMG_NULL;
-=======
 		goto ErrorModPut;
->>>>>>> remotes/omapzoom/p-android-omap-3.0
 	}
 #else
 	/* This code path cannot handle integration with DSSCOMP, ION, Tiler2D or GC320 */
@@ -1434,9 +1421,6 @@ static void OMAPLFBDeInitFBDev(OMAPLFB_DEVINFO *psDevInfo)
 	{
 		ion_free(gpsIONClient, psPVRFBInfo->psIONHandle);
 	}
-<<<<<<< HEAD
-
-=======
 	if (psPVRFBInfo->psBltFBsIonHndl)
 	{
 		ion_free(gpsIONClient, psPVRFBInfo->psBltFBsIonHndl);
@@ -1455,7 +1439,6 @@ static void OMAPLFBDeInitFBDev(OMAPLFB_DEVINFO *psDevInfo)
 		kfree(psPVRFBInfo->psBltFBsBvPhys);
 	}
 #endif
->>>>>>> remotes/omapzoom/p-android-omap-3.0
 	if (psLINFBInfo->fbops->fb_release != NULL) 
 	{
 		(void) psLINFBInfo->fbops->fb_release(psLINFBInfo, 0);

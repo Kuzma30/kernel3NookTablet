@@ -708,14 +708,8 @@ int omap_dm_timer_set_load_start(struct omap_dm_timer *timer, int autoreload,
 		return -EINVAL;
 
 	spin_lock_irqsave(&timer->lock, flags);
-<<<<<<< HEAD
 	__timer_enable(timer); //MY
 	if (timer->loses_context) {
-// 		__timer_enable(timer); //MY
-=======
-	__timer_enable(timer);
-	if (timer->loses_context) {
->>>>>>> remotes/omapzoom/p-android-omap-3.0
 		if (omap_pm_was_context_lost(&timer->pdev->dev) &&
 			timer->context_saved) {
 			omap_timer_restore_context(timer);
