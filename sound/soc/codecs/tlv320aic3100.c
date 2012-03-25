@@ -563,6 +563,7 @@ int aic3100_change_page(struct snd_soc_codec *codec, u8 new_page)
 static inline void aic3100_write_reg_cache (struct snd_soc_codec *codec,
                                             u16 reg, u8 value)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	u8 *cache = codec->reg_cache;
 
 	if (reg >= AIC3100_CACHEREGNUM) {
@@ -578,6 +579,7 @@ static inline void aic3100_write_reg_cache (struct snd_soc_codec *codec,
 static unsigned char
 aic3100_read_reg_cache(struct snd_soc_codec *codec, unsigned int reg)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	u8 *cache = codec->reg_cache;
 
 	/* Confirm the Register Offset is within the Array bounds */
@@ -599,6 +601,7 @@ int aic3100_write (struct snd_soc_codec *codec, unsigned int reg,
 	u8 data[2];
 	u8 page;
 
+	DBG(KERN_INFO "%s: started\n", __func__);
 	page = reg / 128;
 	data[AIC3100_REG_OFFSET_INDEX] = reg % 128;
 
@@ -635,6 +638,7 @@ int aic3100_write (struct snd_soc_codec *codec, unsigned int reg,
  */
 unsigned int aic3100_read (struct snd_soc_codec *codec, unsigned int reg)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	struct aic3100_priv *aic3100 = snd_soc_codec_get_drvdata(codec);
 	u8 value;
 	u8 page = reg / 128;
@@ -670,7 +674,7 @@ void debug_print_registers (struct snd_soc_codec *codec)
 	int i;
 	u8 data;
 
-    	printk( "### Page 0 Regs from 0 to 95\n");
+	printk( "### Page 0 Regs from 0 to 95\n");
 
 	for (i = 0; i < 95; i++) {
 		data = (u8) aic3100_read(codec, i);
@@ -724,6 +728,7 @@ void debug_print_registers (struct snd_soc_codec *codec)
 static int __new_control_get (struct snd_kcontrol *kcontrol,
                               struct snd_ctl_elem_value *ucontrol)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	struct snd_soc_codec *codec = snd_kcontrol_chip(kcontrol);
 	u32 val;
 
@@ -740,6 +745,7 @@ static int __new_control_get (struct snd_kcontrol *kcontrol,
 static int __new_control_put (struct snd_kcontrol *kcontrol,
                               struct snd_ctl_elem_value *ucontrol)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	struct snd_soc_codec *codec = snd_kcontrol_chip(kcontrol);
 	struct aic3100_priv *aic3100 = snd_soc_codec_get_drvdata(codec);
 
@@ -768,6 +774,7 @@ static int __new_control_put (struct snd_kcontrol *kcontrol,
 static int snd_soc_info_volsw_2r_aic3100 (struct snd_kcontrol *kcontrol,
                                           struct snd_ctl_elem_info *uinfo)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	int mask = (kcontrol->private_value >> 12) & 0xff;
 
 	uinfo->type = mask == 1 ? SNDRV_CTL_ELEM_TYPE_BOOLEAN :
@@ -785,6 +792,7 @@ static int snd_soc_info_volsw_2r_aic3100 (struct snd_kcontrol *kcontrol,
 static int snd_soc_get_volsw_2r_aic3100 (struct snd_kcontrol *kcontrol,
 					 struct snd_ctl_elem_value *ucontrol)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	struct snd_soc_codec *codec = snd_kcontrol_chip(kcontrol);
 	int reg = kcontrol->private_value & AIC3100_8BITS_MASK;
 	int reg2 = (kcontrol->private_value >> 24) & AIC3100_8BITS_MASK;
@@ -868,6 +876,7 @@ static int snd_soc_get_volsw_2r_aic3100 (struct snd_kcontrol *kcontrol,
 static int snd_soc_put_volsw_2r_aic3100 (struct snd_kcontrol *kcontrol,
 					 struct snd_ctl_elem_value *ucontrol)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	struct snd_soc_codec *codec = snd_kcontrol_chip(kcontrol);
 	int reg = kcontrol->private_value & AIC3100_8BITS_MASK;
 	int reg2 = (kcontrol->private_value >> 24) & AIC3100_8BITS_MASK;
@@ -922,7 +931,7 @@ static int snd_soc_put_volsw_2r_aic3100 (struct snd_kcontrol *kcontrol,
 static int __new_control_info (struct snd_kcontrol *kcontrol,
                                struct snd_ctl_elem_info *uinfo)
 {
-
+	DBG(KERN_INFO "%s: started\n", __func__);
 	uinfo->type = SNDRV_CTL_ELEM_TYPE_INTEGER;
 	uinfo->count = 1;
 	uinfo->value.integer.min = 0;
@@ -937,7 +946,7 @@ static int __new_control_info (struct snd_kcontrol *kcontrol,
 static inline int aic3100_get_divs (int mclk, int rate)
 {
 	int i;
-
+	DBG(KERN_INFO "%s: started\n", __func__);
 	DBG("###+ aic3100_get_divs mclk(%d) rate(%d)\n", mclk, rate);
 
 	for (i = 0; i < ARRAY_SIZE(aic3100_divs); i++) {
@@ -960,6 +969,7 @@ static inline int aic3100_get_divs (int mclk, int rate)
  */
 static int aic3100_add_widgets(struct snd_soc_codec *codec)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	DBG("+ aic3100_add_widgets num_widgets(%d) num_routes(%d)\n",
             ARRAY_SIZE(aic3100_dapm_widgets), AIC3100_DAPM_ROUTE_NUM);
 	snd_soc_dapm_new_controls(codec->dapm, aic3100_dapm_widgets,
@@ -983,6 +993,7 @@ static int aic3100_add_widgets(struct snd_soc_codec *codec)
  */
 static int aic3100_hp_power_up (struct snd_soc_codec *codec)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	struct aic3100_priv *aic3100 = snd_soc_codec_get_drvdata(codec);
 	u8 value;
 	volatile u16 counter;
@@ -1054,6 +1065,8 @@ static int aic3100_hp_power_up (struct snd_soc_codec *codec)
  */
 static int aic3100_hp_power_down(struct snd_soc_codec *codec)
 {
+
+	DBG(KERN_INFO "%s: started\n", __func__);
 	struct aic3100_priv *aic3100 = snd_soc_codec_get_drvdata(codec);
 	u8 value;
 	volatile u16 counter;
@@ -1092,6 +1105,7 @@ static int aic3100_hp_power_down(struct snd_soc_codec *codec)
  */
 static int aic3100_power_up (struct snd_soc_codec *codec)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	struct aic3100_priv *aic3100 = snd_soc_codec_get_drvdata(codec);
 	u8 value;
 	volatile u16 counter;
@@ -1249,6 +1263,7 @@ static int aic3100_power_up (struct snd_soc_codec *codec)
  */
 static int aic3100_adc_mute (struct snd_soc_codec *codec, int mute)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	u8 value;
 	int retval = 0;
 	struct aic3100_priv *aic3100 = snd_soc_codec_get_drvdata(codec);
@@ -1280,6 +1295,7 @@ static int aic3100_adc_mute (struct snd_soc_codec *codec, int mute)
  */
 static int aic3100_power_down (struct snd_soc_codec *codec)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	struct aic3100_priv *aic3100 = snd_soc_codec_get_drvdata(codec);
 	volatile u8 value;
         volatile u32 counter;
@@ -1384,7 +1400,7 @@ static int aic3100_power_down (struct snd_soc_codec *codec)
  */
 int aic3100_startup (struct snd_pcm_substream *substream, struct snd_soc_codec *codec)
 {
-
+	DBG(KERN_INFO "%s: started\n", __func__);
 	struct aic3100_priv *aic3100 = snd_soc_codec_get_drvdata(codec);
 
 	/* Check if the previous Playback/session was incomplete */
@@ -1409,6 +1425,7 @@ static int aic3100_hw_params (struct snd_pcm_substream *substream,
                               struct snd_pcm_hw_params *params,
                               struct snd_soc_dai *tmp)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	struct snd_soc_pcm_runtime *rtd = substream->private_data;
 	struct snd_soc_codec *codec = rtd->codec;
 	struct aic3100_priv *aic3100 = snd_soc_codec_get_drvdata(codec);
@@ -1550,6 +1567,7 @@ static int aic3100_hw_params (struct snd_pcm_substream *substream,
  */
 void aic3100_config_hp_volume (struct snd_soc_codec *codec, int mute)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	struct i2c_client *client = codec->control_data;
 	struct aic3100_priv *aic3100 = snd_soc_codec_get_drvdata(codec);
 
@@ -1648,6 +1666,7 @@ void aic3100_config_hp_volume (struct snd_soc_codec *codec, int mute)
  */
 static int aic3100_dac_mute (struct snd_soc_codec *codec, int mute)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	u8 dac_reg;
 	volatile u8 value;
 	struct aic3100_priv *aic3100 = snd_soc_codec_get_drvdata(codec);
@@ -1861,6 +1880,7 @@ static int aic3100_dac_mute (struct snd_soc_codec *codec, int mute)
  */
 static int aic3100_mute (struct snd_soc_dai *dai, int mute)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	int result;
 	struct aic3100_priv *aic3100 = snd_soc_codec_get_drvdata(dai->codec);
 
@@ -1888,6 +1908,7 @@ static int aic3100_mute (struct snd_soc_dai *dai, int mute)
 static int aic3100_set_dai_sysclk (struct snd_soc_dai *codec_dai,
 				   int clk_id, unsigned int freq, int dir)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	struct snd_soc_codec *codec = codec_dai->codec;
 	struct aic3100_priv *aic3100 = snd_soc_codec_get_drvdata(codec);
 
@@ -1908,6 +1929,7 @@ static int aic3100_set_dai_sysclk (struct snd_soc_dai *codec_dai,
 static int aic3100_set_dai_fmt (struct snd_soc_dai *codec_dai,
 				unsigned int fmt)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	struct snd_soc_codec *codec = codec_dai->codec;
 	struct aic3100_priv *aic3100 = snd_soc_codec_get_drvdata(codec);
 	u8 iface_reg;
@@ -1961,6 +1983,7 @@ static int aic3100_set_dai_fmt (struct snd_soc_dai *codec_dai,
 static int aic3100_set_bias_level (struct snd_soc_codec *codec,
                                    enum snd_soc_bias_level level)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	struct aic3100_priv *aic3100 = snd_soc_codec_get_drvdata(codec);
 	int result = 0;
 	u8 value;
@@ -2040,7 +2063,7 @@ static int aic3100_set_bias_level (struct snd_soc_codec *codec,
 static int aic3100_suspend (struct snd_soc_codec *codec, pm_message_t state)
 {
 	u8 val;
-
+	DBG(KERN_INFO "%s: started\n", __func__);
 	printk(KERN_INFO "+ aic3100_suspend\n");
 
 	aic3100_set_bias_level(codec, SND_SOC_BIAS_OFF);
@@ -2069,7 +2092,7 @@ static int aic3100_suspend (struct snd_soc_codec *codec, pm_message_t state)
 static int aic3100_resume (struct snd_soc_codec *codec)
 {
 	u8 val;
-
+	DBG(KERN_INFO "%s: started\n", __func__);
 	printk(KERN_INFO "+ aic3100_resume\n");
 
 #ifdef CODEC_POWER_OFF
@@ -2112,6 +2135,7 @@ static irqreturn_t aic3100_codec_irq_handler (int irq, void* data)
  */
 static int tlv320aic3100_init (struct snd_soc_codec * codec)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	struct aic3100_priv *aic3100 = snd_soc_codec_get_drvdata(codec);
 	int ret = 0;
 	int i = 0;
@@ -2236,6 +2260,7 @@ static int tlv320aic3100_init (struct snd_soc_codec * codec)
  */
 int aic3100_headset_speaker_path (struct snd_soc_codec *codec, int gpio_status)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	struct aic3100_priv *aic3100 = snd_soc_codec_get_drvdata(codec);
 	int headset_present = 0;
 
@@ -2299,6 +2324,7 @@ static struct snd_soc_dai_ops aic3100_dai_ops = {
  */
 int aic3100_get_record_status(void)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	/* Check the global Codec Priv Struct */
 	if (unlikely(aic3100 == 0))
 		return 0;
@@ -2322,6 +2348,7 @@ EXPORT_SYMBOL_GPL(aic3100_get_record_status);
  */
 static void aic3100_codec_access_work (struct work_struct *work)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	/* place holder for any code related to GPIO 103 interrrupt
 	 * its a generic configurable interrupt from the codec.
 	 * Enable AIC3100_GPIO_INTR_SUPPORT to enable the interrupt routines
@@ -2346,6 +2373,7 @@ static void codec_int_gpio_bh (struct work_struct *work)
 static ssize_t aic3100_netflix_mode_show(struct device *dev,
                                    struct device_attribute *attr, char *buf)
 {
+    DBG(KERN_INFO "%s: started\n", __func__);
     struct aic3100_priv *aic3100 = dev_get_drvdata(dev);
 
     printk (KERN_INFO "#%s: Function Entered..\n", __func__);
@@ -2358,6 +2386,7 @@ static ssize_t aic3100_netflix_mode_set(struct device *dev,
                                   struct device_attribute *attr,
                                   const char *buf, size_t count)
 {
+    DBG(KERN_INFO "%s: started\n", __func__);
     struct aic3100_priv *aic3100 = dev_get_drvdata(dev);
     int mode;
 
@@ -2391,6 +2420,7 @@ typedef unsigned int (*hw_read_t)(struct snd_soc_codec *, unsigned int);
  */
 static int aic3100_probe (struct snd_soc_codec *codec)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	int ret = 0, gpio = AUDIO_CODEC_PWR_ON_GPIO;
 	struct aic3100_priv *aic3100 = snd_soc_codec_get_drvdata(codec);
 
@@ -2425,7 +2455,6 @@ static int aic3100_probe (struct snd_soc_codec *codec)
 
 	snd_soc_add_controls(codec, aic3100_snd_controls,
 			     ARRAY_SIZE(aic3100_snd_controls));
-
 #ifdef CONFIG_ADAPTIVE_FILTER
 	aic3100_add_biquads_controls (codec);
 
@@ -2433,7 +2462,6 @@ static int aic3100_probe (struct snd_soc_codec *codec)
 
         aic3100_parse_biquad_array (codec);
 #endif
-
         DBG("-aic3100_probe function exited..\r\n");
 
 	return ret;
@@ -2444,6 +2472,7 @@ static int aic3100_probe (struct snd_soc_codec *codec)
  */
 static int aic3100_remove (struct snd_soc_codec *codec)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	/* power down chip */
 	if (codec->control_data)
 		aic3100_set_bias_level(codec, SND_SOC_BIAS_OFF);
@@ -2529,6 +2558,7 @@ static int tlv320aic3100_i2c_probe (struct i2c_client *i2c,
  */
 static int __exit tlv320aic3100_i2c_remove (struct i2c_client *i2c)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	snd_soc_unregister_codec(&i2c->dev);
 	kfree(i2c_get_clientdata(i2c));
 
@@ -2557,6 +2587,7 @@ static struct i2c_driver tlv320aic3100_i2c_driver = {
 /* I2C Init Routine */
 static int __init aic3100_i2c_init (void)
 {
+        DBG(KERN_INFO "%s: started\n", __func__);
         int ret;
 	DBG(KERN_INFO "%s: mod init\n", __func__);
         ret = i2c_add_driver(&tlv320aic3100_i2c_driver);
@@ -2570,6 +2601,7 @@ static int __init aic3100_i2c_init (void)
 /* I2C Exit Routine */
 static void __exit aic3100_i2c_exit (void)
 {
+        DBG(KERN_INFO "%s: started\n", __func__);
         i2c_del_driver(&tlv320aic3100_i2c_driver);
 }
 

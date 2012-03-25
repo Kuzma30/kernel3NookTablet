@@ -38,6 +38,7 @@
 #include <sound/pcm.h>
 #include <sound/soc.h>
 #include <sound/soc-dapm.h>
+#include <sound/soc-dsp.h>
 #include <sound/jack.h>
 #include <sound/pcm_params.h>
 #include <asm/mach-types.h>
@@ -52,7 +53,7 @@
 
 #include "../codecs/tlv320aic3100.h"
 
-#undef DEBUG
+#define DEBUG
 #ifdef DEBUG
 #define DBG(x...)	printk(x)
 #else
@@ -381,6 +382,10 @@ t_port_config mm_ext0_config = {
 	.bit_reorder_dl = 0,
 };
 
+struct snd_soc_dsp_link fe_lp_media = {
+	.playback	= true,
+	.trigger	= {SND_SOC_DSP_TRIGGER_BESPOKE, SND_SOC_DSP_TRIGGER_BESPOKE},
+};
 /* DAI_LINK Structure definition with both Front-End and
  * Back-end DAI Declarations.
  */
@@ -394,9 +399,10 @@ static struct snd_soc_dai_link acclaim_dai_link_abe[] = {
 		.platform_name = "aess",
 
 		.dynamic = 1, /* BE is dynamic */
-		.supported_be = mm_lp_be,
-		.num_be = ARRAY_SIZE(mm_lp_be),
-		.fe_playback_channels = 2,
+//		.supported_be = mm_lp_be,
+//		.num_be = ARRAY_SIZE(mm_lp_be),
+//		.fe_playback_channels = 2,
+		.dsp_link = &fe_lp_media,
 		.no_host_mode = SND_SOC_DAI_LINK_OPT_HOST,
 	},
 	{

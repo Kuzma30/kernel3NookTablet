@@ -2357,14 +2357,17 @@ static int soc_new_pcm(struct snd_soc_pcm_runtime *rtd, int num)
 	char new_name[64];
 	int ret = 0, playback = 0, capture = 0;
 
+	printk("Check client and interface hw capabilities start\n");
 	/* check client and interface hw capabilities */
 	snprintf(new_name, sizeof(new_name), "%s %s-%d",
 			rtd->dai_link->stream_name, codec_dai->name, num);
-
+	
 	if (rtd->dai_link->dynamic) {
+	printk("Check client and interface hw capabilities if branch\n");
 		playback = rtd->dai_link->dsp_link->playback;
 		capture = rtd->dai_link->dsp_link->capture;
 	} else {
+	  printk("Check client and interface hw capabilities else branch\n");
 		if (codec_dai->driver->playback.channels_min)
 			playback = 1;
 		if (codec_dai->driver->capture.channels_min)
@@ -2395,6 +2398,8 @@ static int soc_new_pcm(struct snd_soc_pcm_runtime *rtd, int num)
 		goto out;
 	}
 
+	printk("Check client and interface hw capabilities end\n");
+	printk("setup any hostless PCMs - i.e. no host IO is performed start \n");
 	/* setup any hostless PCMs - i.e. no host IO is performed */
 	if (rtd->dai_link->no_host_mode) {
 		substream[SNDRV_PCM_STREAM_PLAYBACK]->hw_no_buffer = 1;
@@ -2404,7 +2409,8 @@ static int soc_new_pcm(struct snd_soc_pcm_runtime *rtd, int num)
 		snd_soc_set_runtime_hwparams(substream[SNDRV_PCM_STREAM_CAPTURE],
 				&no_host_hardware);
 	}
-
+	printk("setup any hostless PCMs - i.e. no host IO is performed end\n");
+	printk("ASoC PCM operations start\n");
 	/* ASoC PCM operations */
 	if (rtd->dai_link->dynamic) {
 		rtd->ops.open		= soc_dsp_fe_dai_open;
@@ -2425,7 +2431,7 @@ static int soc_new_pcm(struct snd_soc_pcm_runtime *rtd, int num)
 		rtd->ops.pointer	= soc_pcm_pointer;
 		rtd->ops.ioctl		= soc_pcm_ioctl;
 	}
-
+	printk("ASoC PCM operations end\n");
 	if (platform->driver->ops) {
 		rtd->ops.ack		= platform->driver->ops->ack;
 		rtd->ops.copy		= platform->driver->ops->copy;

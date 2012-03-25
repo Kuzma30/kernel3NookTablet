@@ -98,6 +98,7 @@ static int
 __new_control_info_biquad_adaptive (struct snd_kcontrol *kcontrol,
 				    struct snd_ctl_elem_info *uinfo)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	uinfo->type = SNDRV_CTL_ELEM_TYPE_INTEGER;
 	uinfo->count = 1;
 	uinfo->value.integer.min = 0;
@@ -117,6 +118,7 @@ static int
 __new_control_get_biquad_adaptive (struct snd_kcontrol *kcontrol,
 				   struct snd_ctl_elem_value *ucontrol)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	struct snd_soc_codec *codec = snd_kcontrol_chip (kcontrol);
 	struct i2c_client *i2c;
 	char data[2];
@@ -180,7 +182,7 @@ static int
 __new_control_put_biquad_adaptive (struct snd_kcontrol *kcontrol,
 				   struct snd_ctl_elem_value *ucontrol)
 {
-
+	DBG(KERN_INFO "%s: started\n", __func__);
 	struct snd_soc_codec *codec = snd_kcontrol_chip (kcontrol);
 	int user_value = ucontrol->value.integer.value[0];
 	struct i2c_client *i2c;
@@ -270,6 +272,7 @@ static struct snd_kcontrol_new snd_adaptive_controls[] = {
 static int
 biquad_adaptive_filter_mixer_controls (struct snd_soc_codec *codec)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	int err = 0;
 
 	err = snd_soc_add_controls(codec, snd_adaptive_controls,
@@ -290,7 +293,7 @@ biquad_adaptive_filter_mixer_controls (struct snd_soc_codec *codec)
 void
 aic3100_add_biquads_controls (struct snd_soc_codec *codec)
 {
-
+	DBG(KERN_INFO "%s: started\n", __func__);
 	if (biquad_adaptive_filter_mixer_controls (codec))
 	{
 		printk ("Biquad Adaptive filter mixer control registration failed\n");
@@ -312,6 +315,7 @@ static int
 aic3100_get_EQ_Select (struct snd_kcontrol *kcontrol,
 		       struct snd_ctl_elem_value *ucontrol)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	ucontrol->value.integer.value[0] = aic3100_eq_select;
 	return 0;
 }
@@ -328,6 +332,7 @@ static int
 aic3100_put_EQ_Select (struct snd_kcontrol *kcontrol,
 		       struct snd_ctl_elem_value *ucontrol)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	u8 data[MUX_CTRL_REG_SIZE + 1];
 	struct snd_soc_codec *codec = snd_kcontrol_chip (kcontrol);
 	static int index = -1;
@@ -458,6 +463,7 @@ static const struct soc_enum miniDSP_EQ_Select_enum[] = {
 static int
 aic3100_EQ_Select_mixer_controls (struct snd_soc_codec *codec)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	int err;
 
 	snd_mode_controls.name = "AIC3100 EQ Selection";
@@ -494,6 +500,8 @@ aic3100_EQ_Select_mixer_controls (struct snd_soc_codec *codec)
 int
 aic3100_add_EQ_mixer_controls (struct snd_soc_codec *codec)
 {
+
+	DBG(KERN_INFO "%s: started\n", __func__);
 	int err;
 
 	err = aic3100_EQ_Select_mixer_controls (codec);
@@ -515,6 +523,7 @@ aic3100_add_EQ_mixer_controls (struct snd_soc_codec *codec)
 int
 aic3100_parse_biquad_array (struct snd_soc_codec *codec)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	u16 index = 0;
 	u16 count = 0;
 	u16 jump;
@@ -637,6 +646,7 @@ int
 aic3100_update_biquad_array (struct snd_soc_codec *codec, int speaker_active,
 			     int playback_active)
 {
+	DBG(KERN_INFO "%s: started\n", __func__);
 	char data[2];
 	struct i2c_client *i2c = codec->control_data;
 	u8 dac_ram_value;
