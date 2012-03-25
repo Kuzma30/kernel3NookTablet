@@ -42,15 +42,6 @@
 
 #include <linux/mm.h>
 
-#define TILER_PAGE 0x1000
-#define TILER_WIDTH    256
-#define TILER_HEIGHT   128
-#define TILER_BLOCK_WIDTH  64
-#define TILER_BLOCK_HEIGHT 64
-#define TILER_LENGTH (TILER_WIDTH * TILER_HEIGHT * TILER_PAGE)
-
-#define TILER_MAX_NUM_BLOCKS 16
-
 /*
  * ----------------------------- API Definitions -----------------------------
  */
@@ -562,14 +553,5 @@ struct tiler_buf_info {
 	u32 offset;
 	u32 length;	/* also used as number of buffers for reservation */
 };
-
-
-void tiler_alloc_packed(s32 *count, enum tiler_fmt fmt, u32 width, u32 height,
-                        void **sysptr, void **allocptr, s32 aligned);
-
-void tiler_alloc_packed_nv12(s32 *count, u32 width, u32 height, void **y_sysptr,
-                                void **uv_sysptr, void **y_allocptr,
-                                void **uv_allocptr, s32 aligned);
-
 
 #endif

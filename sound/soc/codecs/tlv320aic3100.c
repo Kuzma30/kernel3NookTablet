@@ -544,10 +544,10 @@ int aic3100_change_page(struct snd_soc_codec *codec, u8 new_page)
 	data[0] = 0;
 	data[1] = new_page;
 	aic3100->page_no = new_page;
-	/* DBG("##aic3100_change_page => %d\nw 30 %02x %02x\n", new_page, data[0],
+	DBG("##aic3100_change_page => %d\nw 30 %02x %02x\n", new_page, data[0],
 	    data[1]);
 
-	DBG("w 30 %02x %02x\n", data[0], data[1]); */
+	DBG("w 30 %02x %02x\n", data[0], data[1]);
 
 	if (codec->hw_write(codec->control_data, data, 2) != 2) {
 		printk(KERN_ERR "Error in changing page to %d\n", new_page);
@@ -2087,8 +2087,8 @@ static int aic3100_resume (struct snd_soc_codec *codec)
 	aic3100_write(codec, MICBIAS_CTRL, val & ~BIT7);
 
         DBG("aic3100_resume: Suspend_bias_level %d\r\n",
-	    codec->dapm->suspend_bias_level);
-        DBG("aic3100_resume: codec_bias_level %d\r\n", codec->dapm->bias_level);
+	    codec->dapm.suspend_bias_level);
+        DBG("aic3100_resume: codec_bias_level %d\r\n", codec->dapm.bias_level);
 
 	DBG("- aic3100_resume\n");
 

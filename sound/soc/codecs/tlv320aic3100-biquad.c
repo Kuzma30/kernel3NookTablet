@@ -50,8 +50,8 @@
 #include "tlv320aic3100_eq_coeff.h" 		/* Eq Coefficient Header file */
 
 /* enable debug prints in the driver */
-//#define DEBUG
-#undef DEBUG
+#define DEBUG
+//#undef DEBUG
 
 #ifdef DEBUG
 #define dprintk(x...) 	printk(x)
@@ -274,7 +274,7 @@ biquad_adaptive_filter_mixer_controls (struct snd_soc_codec *codec)
 
 	err = snd_soc_add_controls(codec, snd_adaptive_controls,
 			     ARRAY_SIZE(snd_adaptive_controls));
-	dprintk("Adding controls\n",);
+	dprintk("Adding controls\n");
 	return err;
 }
 

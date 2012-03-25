@@ -391,7 +391,7 @@ static struct snd_soc_dai_link acclaim_dai_link_abe[] = {
 
 		/* ABE components - MM-DL (mmap) */
 		.cpu_dai_name = "MultiMedia1 LP",
-		.platform_name = "omap-aess-audio",
+		.platform_name = "aess",
 
 		.dynamic = 1, /* BE is dynamic */
 		.supported_be = mm_lp_be,
@@ -437,7 +437,7 @@ static struct snd_soc_dai_link acclaim_dai_link_abe[] = {
 
 		/* ABE components - MCBSP3 - MM-EXT */
 		.cpu_dai_name = "omap-mcbsp-dai.1",
-		.platform_name = "omap-aess-audio",
+		.platform_name = "aess",
 
 		/* FM */
 		.codec_dai_name = "tlv320aic3100-dai",
