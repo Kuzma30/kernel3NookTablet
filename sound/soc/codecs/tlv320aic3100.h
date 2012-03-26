@@ -47,8 +47,8 @@
 #undef CONFIG_TILOAD
 
 /* Build Macro for enabling/disabling the Adaptive Filtering */
-//#define CONFIG_ADAPTIVE_FILTER
-#undef CONFIG_ADAPTIVE_FILTER
+#define CONFIG_ADAPTIVE_FILTER
+//#undef CONFIG_ADAPTIVE_FILTER
 
 /* DAPM Support enable */
 /*#define DAPM_SUPPORT*/
