@@ -47,6 +47,7 @@
 
 #define OMAP_ABE_FORMATS (SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S32_LE)
 
+#define DEBUG
 struct omap_abe_data {
 	/* MODEM FE*/
 	struct snd_pcm_substream *modem_substream[2];

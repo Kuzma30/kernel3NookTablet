@@ -332,14 +332,14 @@ static struct snd_soc_dai_driver mach_dai[] = {
 	{
 		.name = "FM Digital",
 		.playback = {
-			.stream_name = "Playback",
+			.stream_name = "FM Playback",
 			.channels_min = 1,
 			.channels_max = 2,
 			.rates = SNDRV_PCM_RATE_48000,
 			.formats = SNDRV_PCM_FMTBIT_S16_LE,
 		},
 		.capture = {
-			.stream_name = "Capture",
+			.stream_name = "FM Capture",
 			.channels_min = 1,
 			.channels_max = 2,
 			.rates = SNDRV_PCM_RATE_48000,
@@ -347,13 +347,13 @@ static struct snd_soc_dai_driver mach_dai[] = {
 		},
 	},
 };
-static const char *mm1_be[] = {
+/*static const char *mm1_be[] = {
 	OMAP_ABE_BE_MM_EXT0,
 };
 
 static const char *mm_lp_be[] = {
 	OMAP_ABE_BE_MM_EXT0,
-};
+};*/
 
 /* ABE Port configuration structure introduced within the
  * DAI_LINK Structure as private_data void pointer member
@@ -445,7 +445,7 @@ static struct snd_soc_dai_link acclaim_dai_link_abe[] = {
 
 	{
 		.name = OMAP_ABE_BE_MM_EXT0,
-		.stream_name = "FM",
+		.stream_name = "FM Playback",
 
 		/* ABE components - MCBSP3 - MM-EXT */
 		.cpu_dai_name = "omap-mcbsp-dai.1",
@@ -482,6 +482,7 @@ static struct snd_soc_card snd_soc_card_acclaim = {
 	.long_name = "OMAP4 Acclaim AIC3100",
 	.dai_link = acclaim_dai_link,
 	.num_links = ARRAY_SIZE(acclaim_dai_link),
+//	.stream_event = sdp4430_stream_event,
 };
 
 static struct snd_soc_card snd_soc_card_acclaim_abe = {
@@ -489,6 +490,7 @@ static struct snd_soc_card snd_soc_card_acclaim_abe = {
 	.long_name = "OMAP4 Acclaim AIC3100 ABE",
 	.dai_link = acclaim_dai_link_abe,
 	.num_links = ARRAY_SIZE(acclaim_dai_link_abe),
+//	.stream_event = sdp4430_stream_event,
 };
 
 static struct platform_device *acclaim_snd_device;
@@ -498,13 +500,13 @@ static struct platform_device *acclaim_snd_device;
  */
 static int __init acclaim_soc_init (void)
 {
-	int ret = 0;
+	int ret;
 	struct device *dev;
 	unsigned char board_ver = 3;
 	void __iomem *phymux_base = NULL;
 	u32 val;
 
-	printk(KERN_INFO "omap3epd-sound: Audio SoC init\n");
+	printk(KERN_INFO "Audio SoC init\n");
 	acclaim_snd_device = platform_device_alloc("soc-audio", -1);
 	if (!acclaim_snd_device) {
 		printk(KERN_INFO "Platform device allocation failed\n");
@@ -523,9 +525,11 @@ static int __init acclaim_soc_init (void)
 	ret = platform_device_add(acclaim_snd_device);
 	if (ret){
 		printk(KERN_INFO "%s: platform device allocation failed\n", __func__);
-		goto err1;
+		goto err_dev;
 	}
-	snd_soc_register_dais(&acclaim_snd_device->dev, mach_dai, ARRAY_SIZE(mach_dai));
+	ret=snd_soc_register_dais(&acclaim_snd_device->dev, mach_dai, ARRAY_SIZE(mach_dai));
+       if (ret < 0)
+               goto err;
 	dev = &acclaim_snd_device->dev;
 
 	/*
@@ -539,8 +543,10 @@ static int __init acclaim_soc_init (void)
 	__raw_writel (val, phymux_base + 0x90);
 	iounmap(phymux_base);
 	return 0;
+err_dev:
+       snd_soc_unregister_dais(&acclaim_snd_device->dev, ARRAY_SIZE(mach_dai));
 
-err1:
+err:
 	platform_device_put(acclaim_snd_device);
 
 	return ret;
