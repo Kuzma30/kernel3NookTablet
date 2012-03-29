@@ -898,6 +898,7 @@ static void playback_trigger(struct snd_pcm_substream *substream,
 static int omap_abe_dai_startup(struct snd_pcm_substream *substream,
 			struct snd_soc_dai *dai)
 {
+	printk("omap_abe_dai_startup start\n");
 	struct omap_abe_data *abe_priv = snd_soc_dai_get_drvdata(dai);
 	int ret = 0;
 
@@ -905,10 +906,12 @@ static int omap_abe_dai_startup(struct snd_pcm_substream *substream,
 
 	abe_priv->active_dais++;
 
+	printk("abe dsp pm get start\n");
 	abe_dsp_pm_get();
+	printk("abe dsp pm get end\n");
 
 	if (dai->id == ABE_FRONTEND_DAI_MODEM) {
-
+		printk("Modem get DAI\n");
 		ret = modem_get_dai(substream, dai);
 		if (ret < 0) {
 			dev_err(dai->dev, "failed to get MODEM DAI\n");
@@ -917,13 +920,16 @@ static int omap_abe_dai_startup(struct snd_pcm_substream *substream,
 		dev_dbg(abe_priv->modem_dai->dev, "%s: MODEM stream %d\n",
 				__func__, substream->stream);
 
+		printk("Snd SOC DAI startup\n");
 		ret = snd_soc_dai_startup(abe_priv->modem_substream[substream->stream],
 				abe_priv->modem_dai);
 		if (ret < 0) {
 			dev_err(abe_priv->modem_dai->dev, "failed to open DAI %d\n", ret);
 			return ret;
 		}
+		printk("Modem get DAI end\n");
 	}
+	printk("omap_abe_dai_startup end\n");
 
 	return ret;
 }

@@ -216,7 +216,7 @@ void __init acclaim_panel_init(void)
 #if TEMP_HACK != 1	
 	platform_add_devices(sdp4430_devices, ARRAY_SIZE(sdp4430_devices));
 #else
-#if 0
+#if 1
 	int state = 1;
 	if (state)
 		gpio_direction_output(38, (acclaim_board_type() >= EVT2) ? 1 : 0);
