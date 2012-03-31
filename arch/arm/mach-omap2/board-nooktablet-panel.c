@@ -160,24 +160,26 @@ static inline struct boxer_panel_data * get_panel_data(struct omap_dss_device *d
 static int nooktablet_panel_enable_lcd(struct omap_dss_device *dssdev)
 {
 	  pr_info("NookTablet LCD enable!\n");
-	  printk("Enabling backlight PWM for LCD\n");
+	acclaim4430_disp_backlight_setpower(NULL,1);
+//	  printk("Enabling backlight PWM for LCD\n");
 //	  acclaim4430_disp_backlight_data.def_on = 1; // change the PWM polarity
 // 
 //         //gpio_request(38, "lcd backlight evt2");
 // 
 //         //gpio_request(44, "lcd CABC0");
-         gpio_direction_output(44,0);
-         gpio_set_value(44,0);
+//         gpio_direction_output(44,0);
+//         gpio_set_value(44,0);
 // 
 //         //gpio_request(45, "lcd CABC1");
-         gpio_direction_output(45,0);
-         gpio_set_value(45,0);
+//         gpio_direction_output(45,0);
+//         gpio_set_value(45,0);
 	return 0;
 }
 
 static void nooktablet_panel_disable_lcd(struct omap_dss_device *dssdev)
 {
 //	acclaim4430_disp_backlight_data.def_on = 0; // change the PWM polarity
+	acclaim4430_disp_backlight_setpower(NULL,0);
   	pr_info("NookTablet LCD disable!\n");
 }
 static int nooktablet_set_bl_intensity(struct omap_dss_device *dssdev, int level)
@@ -192,8 +194,8 @@ static struct omap_dss_device sdp4430_boxer_device = {
 	.phy.dpi.data_lines		= 24,
 	.channel			= OMAP_DSS_CHANNEL_LCD2,
 	.data				= &boxer_panel,
-//  	.platform_enable		= nooktablet_panel_enable_lcd,
-//  	.platform_disable		= nooktablet_panel_disable_lcd,
+	.platform_enable		= nooktablet_panel_enable_lcd,
+	.platform_disable		= nooktablet_panel_disable_lcd,
 // 	.set_backlight			= nooktablet_set_bl_intensity,
 };
 
@@ -216,7 +218,7 @@ void __init acclaim_panel_init(void)
 #if TEMP_HACK != 1	
 	platform_add_devices(sdp4430_devices, ARRAY_SIZE(sdp4430_devices));
 #else
-#if 1
+#if 0
 	int state = 1;
 	if (state)
 		gpio_direction_output(38, (acclaim_board_type() >= EVT2) ? 1 : 0);
