@@ -1395,7 +1395,7 @@ static void __init omap_4430sdp_init(void)
 //	omap_init_board_version(0);
 
 //	omap4_audio_conf();
-// 	omap4_create_board_props();
+ 	omap4_create_board_props();
 // 	blaze_pmic_mux_init();
 	blaze_set_osc_timings();
 	omap4_i2c_init();
