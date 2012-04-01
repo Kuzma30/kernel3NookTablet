@@ -2731,7 +2731,7 @@ static void omap_hsmmc_shutdown(struct platform_device *pdev)
 #ifdef CONFIG_WL12XX_SDIO
 	/* No particular shutdown delay for WLAN - only apply this to real cards */
 	/* FIXME-HASH: HARD-CODING THE WLAN MMC (WAS: CONFIG_TIWLAN_MMC_CONTROLLER) */
-	if (pdev->id == (5-1)) {
+	if (pdev->id == (3-1)) {
 		return;
 	}
 #endif
