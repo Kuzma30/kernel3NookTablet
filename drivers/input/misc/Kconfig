@@ -71,7 +71,23 @@ config INPUT_KXTF9
 
 	  This driver can also be built as a module.  If so, the module
 	  will be called kxtf9.
-	  
+config INPUT_KXTJ9
+	tristate "Kionix KXTJ9 tri-axis digital accelerometer"
+	depends on I2C
+	help
+	  Say Y here to enable support for the Kionix KXTJ9 digital tri-axis
+	  accelerometer.
+
+	  To compile this driver as a module, choose M here: the module will
+	  be called kxtj9.
+
+config INPUT_KXTJ9_POLLED_MODE
+	bool "Enable polling mode support"
+	depends on INPUT_KXTJ9
+	select INPUT_POLLDEV
+	help
+	  Say Y here if you need accelerometer to work in polling mode.
+
 config INPUT_PCSPKR
 	tristate "PC Speaker support"
 	depends on PCSPKR_PLATFORM
