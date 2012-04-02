@@ -347,13 +347,13 @@ static struct snd_soc_dai_driver mach_dai[] = {
 		},
 	},
 };
-/*static const char *mm1_be[] = {
+static const char *mm1_be[] = {
 	OMAP_ABE_BE_MM_EXT0,
 };
 
 static const char *mm_lp_be[] = {
 	OMAP_ABE_BE_MM_EXT0,
-};*/
+};
 
 /* ABE Port configuration structure introduced within the
  * DAI_LINK Structure as private_data void pointer member
@@ -397,11 +397,14 @@ struct snd_soc_dsp_link fe_media = {
 static struct snd_soc_dai_link acclaim_dai_link_abe[] = {
 	{
 		.name = "tlv320aic3100 LP",
-		.stream_name = "Multimedia",
+		.stream_name = "Multimedia1 Playback",
 
 		/* ABE components - MM-DL (mmap) */
-		.cpu_dai_name = "MultiMedia1 LP",
-		.platform_name = "aess",
+		.cpu_dai_name = "MultiMedia1",
+		.codec_dai_name = "tlv320aic3100-dai",
+		.platform_name = "omap-pcm-audio",
+		.codec_name = "tlv320aic3100-codec",
+		//.platform_name = "aess",
 
 		.dynamic = 1, /* BE is dynamic */
 //		.supported_be = mm_lp_be,
