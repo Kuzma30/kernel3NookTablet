@@ -84,6 +84,9 @@
 #define AUDIO_NAME "aic3100"
 #define AIC3100_VERSION "0.1"
 
+/* The headset jack insertion GPIO used on the Qoo Board */
+#define HEADSET_DETECT_GPIO_PIN		102
+
 /* Regulator Minimum Voltage */
 #define REGU_MIN_VOL			3000000
 

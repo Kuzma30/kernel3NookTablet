@@ -80,7 +80,7 @@
 static struct i2c_client *tlv320aic31xx_client;
 struct regulator *audio_regulator;
 static struct i2c_board_info tlv320aic31xx_hwmon_info = {
-	I2C_BOARD_INFO("tlv320aic3110", 0x18),
+	I2C_BOARD_INFO("tlv320aic3100", 0x18),
 };
 
 /* Used to maintain the Register Access control*/
@@ -2093,7 +2093,7 @@ static struct snd_soc_dai_ops tlv320aic31xx_dai_ops = {
  */
 struct snd_soc_dai_driver tlv320aic31xx_dai[] = {
 	{
-		.name = "tlv320aic3110-MM_EXT",
+		.name = "tlv320aic3100-MM_EXT",
 		.playback = {
 			.stream_name = "Playback",
 			.channels_min = 1,
@@ -2126,7 +2126,7 @@ static int __devinit tlv320aic31xx_codec_probe(struct platform_device *pdev)
 	int err;
 	DBG("Came to tlv320aic31xx_codec_probe...\n");
 
-
+#if 0
 	audio_regulator = regulator_get(NULL, "audio-pwr");
 	if (IS_ERR(audio_regulator))
 		DBG("%s: regulator_get error\n", __func__);
@@ -2137,6 +2137,7 @@ static int __devinit tlv320aic31xx_codec_probe(struct platform_device *pdev)
 		DBG("%s: regulator_set 3V error\n", __func__);
 
 	regulator_enable(audio_regulator);
+#endif
 	ret =  snd_soc_register_codec(&pdev->dev,
 		&soc_codec_dev_aic31xx, tlv320aic31xx_dai, \
 		ARRAY_SIZE(tlv320aic31xx_dai));
@@ -2152,8 +2153,10 @@ static int __devinit tlv320aic31xx_codec_probe(struct platform_device *pdev)
 static int __devexit aic31xx_codec_remove(struct platform_device *pdev)
 {
 	snd_soc_unregister_codec(&pdev->dev);
+#if 0
 	regulator_disable(audio_regulator);
 	regulator_put(audio_regulator);
+#endif
 	return 0;
 }
 
@@ -2164,7 +2167,7 @@ static int __devexit aic31xx_codec_remove(struct platform_device *pdev)
  */
 static struct platform_driver tlv320aic31xx_i2c_driver = {
 	.driver = {
-		.name = "tlv320aic3110-codec",
+		.name = "tlv320aic3100-codec",
 		.owner = THIS_MODULE,
 	},
 	.probe = tlv320aic31xx_codec_probe,

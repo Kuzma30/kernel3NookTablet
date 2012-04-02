@@ -462,6 +462,11 @@ static struct platform_device acclaim_keys_gpio = {
 	},
 };
 
+static struct platform_device sdp4430_aic3110 = {
+        .name = "tlv320aic3100-codec",
+        .id = -1,
+};
+
 static struct spi_board_info sdp4430_spi_board_info[] __initdata = {
 	{
 		.modalias		= "boxer_disp_spi",
@@ -581,9 +586,10 @@ static struct platform_device acclaim_lcd_touch_regulator_device = {
 static struct platform_device *sdp4430_devices[] __initdata = {
 	//&sdp4430_leds_gpio,
 	//&sdp4430_leds_pwm,
+	&sdp4430_aic3110,
 	&acclaim_keys_gpio,
 	&wl128x_device,
-	&btwilink_device,
+//	&btwilink_device,
 	&acclaim_lcd_touch_regulator_device,
 };
 
@@ -988,9 +994,9 @@ static struct i2c_board_info __initdata sdp4430_i2c_2_boardinfo[] = {
  		.platform_data = &ft5x06_platform_data,
 		.irq = OMAP_GPIO_IRQ(OMAP_FT5x06_GPIO),
 	},
- 	{
- 		I2C_BOARD_INFO("tlv320aic3100", 0x18),
- 	},
+//	{
+//		I2C_BOARD_INFO("tlv320aic3100", 0x18),
+//	},
 };
 
 // static struct i2c_board_info __initdata sdp4430_i2c_3_boardinfo[] = {
