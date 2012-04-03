@@ -243,6 +243,9 @@ config SND_SOC_TWL6040
 	select TWL6040_CODEC
 	tristate
 
+config SND_SOC_AIC3110
+	tristate
+
 config SND_SOC_OMAP_HDMI_CODEC
 	tristate
 
@@ -374,9 +377,6 @@ config SND_SOC_WM9712
 
 config SND_SOC_WM9713
 	tristate
-
-config SND_SOC_TLV320AIC3100
-	tristate "TI TLV320AIC3100 Codec support"
 
 # Amp
 config SND_SOC_LM4857
