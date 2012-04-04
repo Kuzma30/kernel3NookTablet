@@ -1890,7 +1890,7 @@ static int aic31xx_probe(struct snd_soc_codec *codec)
 
 	DBG("##aic31xx_probe: AIC31xx Audio Codec %s\n", AIC31XX_VERSION);
 
-	adapter = i2c_get_adapter(1);
+	adapter = i2c_get_adapter(2); //On NT we have audio codec on the second i2c line
 	if (!adapter) {
 		DBG("##Can't get i2c adapter\n");
 		ret = -ENODEV;
