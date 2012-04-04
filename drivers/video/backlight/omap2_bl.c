@@ -184,7 +184,7 @@ static int omapbl_probe(struct platform_device *pdev)
 	bl->dev = &pdev->dev;
 
 	/* get related dm timers */
-	bl->intensity_timer = omap_dm_timer_request_specific(10); // pdata->intensity_timer
+	bl->intensity_timer = omap_dm_timer_request_specific(11); // Nook Tablet use GPtimer 11
 	if (bl->intensity_timer == NULL) {
 		dev_err(&pdev->dev, "failed to request intensity pwm timer\n");
 		kfree(bl);

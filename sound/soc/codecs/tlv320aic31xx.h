@@ -86,6 +86,12 @@
 
 /* The headset jack insertion GPIO used on the Qoo Board */
 #define HEADSET_DETECT_GPIO_PIN		102
+#define    AUDIO_CODEC_HPH_DETECT_GPIO		(102)
+#define    AUDIO_CODEC_PWR_ON_GPIO		(101)
+#define    AUDIO_CODEC_INTERRUPT		(103)
+#define    AUDIO_CODEC_RESET_GPIO		(104)
+#define    AUDIO_CODEC_PWR_ON_GPIO_NAME		"audio_codec_pwron"
+#define    AUDIO_CODEC_RESET_GPIO_NAME		"audio_codec_reset"
 
 /* Regulator Minimum Voltage */
 #define REGU_MIN_VOL			3000000

@@ -82,7 +82,7 @@ struct regulator *audio_regulator;
 static struct i2c_board_info tlv320aic31xx_hwmon_info = {
 	I2C_BOARD_INFO("tlv320aic3100", 0x18),
 };
-
+void __iomem *phymuxbase = NULL;
 /* Used to maintain the Register Access control*/
 static u8 aic31xx_reg_ctl;
 
@@ -2122,9 +2122,87 @@ struct snd_soc_dai_driver tlv320aic31xx_dai[] = {
 static int __devinit tlv320aic31xx_codec_probe(struct platform_device *pdev)
 {
 
-	int ret;
-	int err;
+	int ret, gpio = AUDIO_CODEC_PWR_ON_GPIO;
+	int err, val;
+	int codec_interrupt_gpio = AUDIO_CODEC_INTERRUPT /* AUDIO_GPIO_INTERRUPT_1 */;
+	int codec_interrupt = 0;
 	DBG("Came to tlv320aic31xx_codec_probe...\n");
+	
+	/* GPIOs 101-AUD-CODEC-EN signal as per Schematics,
+	 * GPIO 102-HS-nDETECT as per Schematics */
+	phymuxbase = ioremap(0x4A100000, 0x1000);
+	val = __raw_readl(phymuxbase + 0x90);
+	val = (val & 0xFFF0FFF0) | 0x00030003;
+	__raw_writel(val, phymuxbase + 0x90);
+	/* setting clock enable register
+	phymuxbase = ioremap(0x4A30A000, 0x1000);
+	val = __raw_readl(phymuxbase + 0x0314);
+	val = (val & 0xFFF0FEFF) | (0x00020100);
+	__raw_writel(val, phymuxbase + 0x0314);*/
+	iounmap(phymuxbase);
+
+	ret = gpio_request(codec_interrupt_gpio, "Codec Interrupt");
+	if (ret < 0) {
+		printk(KERN_INFO "%s: error in gpio request. codec interrupt"
+				"failed\n", __func__);
+		return ret;
+	}
+	gpio_direction_input(codec_interrupt_gpio);
+	codec_interrupt = OMAP_GPIO_IRQ(codec_interrupt_gpio);
+	printk("Set codec interrupt\n");
+
+	ret = gpio_request(AUDIO_CODEC_PWR_ON_GPIO, AUDIO_CODEC_PWR_ON_GPIO_NAME);
+	if(ret < 0) {
+		printk(KERN_ERR "%s: Unable get gpio for CODEC POWER %d\n",
+				__func__, AUDIO_CODEC_PWR_ON_GPIO);
+	}
+	gpio_direction_output(AUDIO_CODEC_PWR_ON_GPIO, 1);
+	gpio_set_value(AUDIO_CODEC_PWR_ON_GPIO, 1);
+	mdelay(10);
+	
+	printk("POWER ON codec\n");
+	
+	ret = gpio_request(AUDIO_CODEC_RESET_GPIO, AUDIO_CODEC_RESET_GPIO_NAME);
+	if(ret < 0) {
+		printk(KERN_ERR "%s: Unable get gpio for Reset %d\n",
+				__func__, AUDIO_CODEC_RESET_GPIO);
+	}
+	gpio_direction_output(AUDIO_CODEC_RESET_GPIO, 1);
+	gpio_set_value(AUDIO_CODEC_RESET_GPIO, 1);
+	mdelay(10);
+	
+	printk("Release RESET codec pin\n");
+	phymuxbase = ioremap(0x4A100000, 0x1000);
+
+	/* GPIOs 101-AUD-CODEC-EN signal as per Schematics,
+	 * GPIO 102-HS-nDETECT as per Schematics */
+	val = __raw_readl(phymuxbase + 0x90);
+	val = (val & 0xFFF8FFF8) | 0x00030003;
+	__raw_writel(val, phymuxbase + 0x90);
+	/* setting clock enable register - AUD-CLK-19M2-OUT
+	phymuxbase = ioremap(0x4A30A000, 0x1000);
+	val = __raw_readl(phymuxbase + 0x0314);
+	val = (val & 0xFFF0FEFF) | (0x00020100);
+	__raw_writel(val, phymuxbase + 0x0314);*/
+	iounmap(phymuxbase);
+
+	/* Power-off the DAC and Headphone Drivers initially */
+// 	aic3100->power_status = 1;
+// 	aic3100->headset_connected = 1;
+// 	aic3100_power_down(codec);
+// 	aic3100->mute=0;
+// 	aic3100_dac_mute(codec, 1);
+// 	aic3100->headset_connected = 0;
+
+	/* We will power-up and Power-off the Headset Driver here.
+	 * Once the Headset Driver is powered ON and OFF, it will
+	 * continue to stay at the Common-Mode Voltage rather
+	 * than discharging completely. This helps in quick 
+	 * headset playback for future iterations.
+	*/
+// 	aic3100_hp_power_up (codec);
+// 	aic3100_hp_power_down (codec);
+
 
 #if 0
 	audio_regulator = regulator_get(NULL, "audio-pwr");
