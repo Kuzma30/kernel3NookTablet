@@ -204,12 +204,12 @@ int ft5x06_dev_init(int resource)
  
 static void ft5x06_platform_suspend(void)
 {
-	omap_mux_init_signal("gpmc_ad13.gpio_37", OMAP_PIN_INPUT );
+	//omap_mux_init_signal("gpmc_ad13.gpio_37", OMAP_PIN_INPUT );
 }
  
 static void ft5x06_platform_resume(void)
 {
-	omap_mux_init_signal("gpmc_ad13.gpio_37", OMAP_PIN_INPUT | OMAP_PIN_OFF_WAKEUPENABLE);
+	//omap_mux_init_signal("gpmc_ad13.gpio_37", OMAP_PIN_INPUT | OMAP_PIN_OFF_WAKEUPENABLE);
 }
  
 static struct ft5x06_platform_data ft5x06_platform_data = {

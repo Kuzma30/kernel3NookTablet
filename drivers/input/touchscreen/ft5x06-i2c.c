@@ -153,7 +153,7 @@ static struct i2c_driver ft5x06_driver = {
     },
     .probe = ft5x06_probe,
     .remove = __devexit_p(ft5x06_remove),
-#ifdef CONFIG_HAS_EARLYSUSPEND
+#ifndef CONFIG_HAS_EARLYSUSPEND
     .suspend = NULL,
     .resume = NULL,
 #else  /* CONFIG_HAS_EARLYSUSPEND */
@@ -2799,7 +2799,7 @@ static int ft5x06_resume(struct i2c_client *client)
     int retval = 0;
     struct ft5x06 *ts = NULL;
 
-    printk(KERN_INFO "%s() - Driver is resuming.\n", __FUNCTION__);
+    printk(KERN_INFO "%s() - Driver is resuming start function.\n", __FUNCTION__);
 
     ts = (struct ft5x06 *) i2c_get_clientdata(client);
 
@@ -2818,7 +2818,7 @@ static int ft5x06_resume(struct i2c_client *client)
 		mb();
 		enable_irq(ts->client->irq);
     }
-
+	printk(KERN_INFO "%s() - Driver is resuming end function.\n", __FUNCTION__);
     return retval;
 }
 
@@ -2831,24 +2831,28 @@ static int ft5x06_suspend(struct i2c_client *client, pm_message_t message)
 
     ts = (struct ft5x06 *) i2c_get_clientdata(client);
 
-    printk(KERN_INFO "%s() - Driver is suspending.\n", __FUNCTION__);
+    printk(KERN_INFO "%s() - Driver is suspending: start.\n", __FUNCTION__);
 
    /* Disable/enable irq call (in irq/worker function) are matched, disable here for suspend */
     disable_irq(ts->client->irq);
-
+	printk(KERN_INFO "%s() - Driver is suspending: disable IRQ.\n", __FUNCTION__);
    /* Wait for woker finish, even if worker enables irq, the irq still is disabled because of the above call */
     flush_workqueue(ft5x06_ts_wq);
-
+	printk(KERN_INFO "%s() - Driver is suspending: flash workqueue.\n", __FUNCTION__);
    /* No need to cancel since irq is disabled, there is no pending worker at this time*/
 
 	if (ts->platform_data->platform_suspend) {
+		printk(KERN_INFO "%s() - Driver is suspending: platform suspend start.\n", __FUNCTION__);
 		ts->platform_data->platform_suspend();
+		printk(KERN_INFO "%s() - Driver is suspending: platform suspend end.\n", __FUNCTION__);
 	}
 
 	// keep focaltech controller in reset after this point
 	gpio_direction_output(ts->platform_data->reset_gpio, 0);
-    regulator_disable(ts->vtp);
-
+	printk(KERN_INFO "%s() - Driver is suspending: keep focaltech controller in reset after this point.\n", __FUNCTION__);
+	regulator_disable(ts->vtp);
+	printk(KERN_INFO "%s() - Driver is suspending: regulator disable.\n", __FUNCTION__);
+	printk(KERN_INFO "%s() - Driver is suspending end.\n", __FUNCTION__);
     return 0;
 }
 
