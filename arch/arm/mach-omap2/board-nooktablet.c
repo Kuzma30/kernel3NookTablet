@@ -40,7 +40,7 @@
 
 #include <linux/input/ft5x06.h>
 
-#include <linux/input/kxtj9.h>
+#include <linux/input/kxtf9.h>
 #include <linux/power/max17042.h>
 #include <linux/power/max8903.h>
 
@@ -87,7 +87,7 @@
 
 #define WILINK_UART_DEV_NAME "/dev/ttyO1"
 
-#define KXTF9_DEVICE_ID                 "kxtj9"
+#define KXTF9_DEVICE_ID                 "kxtf9"
 #define KXTF9_I2C_SLAVE_ADDRESS         0x0F
 #define KXTF9_GPIO_FOR_PWR              34
 
@@ -142,12 +142,12 @@ static void kxtf9_dev_init(void)
 }
 
 
-struct kxtj9_platform_data kxtf9_platform_data_here = {
+struct kxtf9_platform_data kxtf9_platform_data_here = {
 	.min_interval   = 1,
-//	.poll_interval  = 1000,
+	.poll_interval  = 1000,
 
-	.g_range        = KXTJ9_G_8G,
-//	.shift_adj      = SHIFT_ADJ_2G,
+	.g_range        = KXTF9_G_8G,
+	.shift_adj      = SHIFT_ADJ_2G,
 
 	/* Map the axes from the sensor to the device */
 	/* SETTINGS FOR acclaim */
@@ -158,23 +158,23 @@ struct kxtj9_platform_data kxtf9_platform_data_here = {
 	.negate_y       = 0,
 	.negate_z       = 0,
 	.data_odr_init          = ODR12_5F,
-	.res_12bit	= 1,
-//	.ctrl_reg1_init         = KXTJ9_G_8G | RES_12BIT | TDTE | WUFE | TPE,
-//	.int_ctrl_init          = KXTJ9_IEN | KXTJ9_IEA | KXTJ9_IEL,
-//	.int_ctrl_init          = KXTJ9_IEN,
-//	.tilt_timer_init        = 0x03,
-//	.engine_odr_init        = OTP12_5 | OWUF50 | OTDT400,
-//	.wuf_timer_init         = 0x16,
-//	.wuf_thresh_init        = 0x28,
-//	.tdt_timer_init         = 0x78,
-//	.tdt_h_thresh_init      = 0xFF,
-//	.tdt_l_thresh_init      = 0x14,
-//	.tdt_tap_timer_init     = 0x53,
-//	.tdt_total_timer_init   = 0x24,
-//	.tdt_latency_timer_init = 0x10,
-//	.tdt_window_timer_init  = 0xA0,
+//	.res_12bit	= 1,
+	.ctrl_reg1_init         = KXTF9_G_8G | RES_12BIT | TDTE | WUFE | TPE,
+	.int_ctrl_init          = KXTF9_IEN | KXTF9_IEA | KXTF9_IEL,
+	.int_ctrl_init          = KXTF9_IEN,
+	.tilt_timer_init        = 0x03,
+	.engine_odr_init        = OTP12_5 | OWUF50 | OTDT400,
+	.wuf_timer_init         = 0x16,
+	.wuf_thresh_init        = 0x28,
+	.tdt_timer_init         = 0x78,
+	.tdt_h_thresh_init      = 0xFF,
+	.tdt_l_thresh_init      = 0x14,
+	.tdt_tap_timer_init     = 0x53,
+	.tdt_total_timer_init   = 0x24,
+	.tdt_latency_timer_init = 0x10,
+	.tdt_window_timer_init  = 0xA0,
 
-//	.gpio = KXTF9_GPIO_FOR_IRQ,
+	.gpio = KXTF9_GPIO_FOR_IRQ,
 };
 
 int ft5x06_dev_init(int resource)
