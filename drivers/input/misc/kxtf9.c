@@ -1083,6 +1083,7 @@ static int kxtf9_resume(struct i2c_client *client)
 	struct kxtf9_data *tf9 = i2c_get_clientdata(client);
 
 	return kxtf9_enable(tf9);
+	printk("KXTF9 resume\n");
 }
 
 static int kxtf9_suspend(struct i2c_client *client, pm_message_t mesg)
@@ -1090,6 +1091,7 @@ static int kxtf9_suspend(struct i2c_client *client, pm_message_t mesg)
 	struct kxtf9_data *tf9 = i2c_get_clientdata(client);
 
 	return kxtf9_disable(tf9);
+	printk("KXTF9 suspend\n");
 }
 #endif
 
@@ -1098,12 +1100,14 @@ static void kxtf9_late_resume(struct early_suspend *handler)
 {
 	struct kxtf9_data *tf9 = container_of(handler, struct kxtf9_data, early_suspend);
 	kxtf9_resume(tf9->client);
+	printk("KXTF9 late resume\n");
 }
 
 static void kxtf9_early_suspend(struct early_suspend *handler)
 {
 	struct kxtf9_data *tf9 = container_of(handler, struct kxtf9_data, early_suspend);
 	kxtf9_suspend(tf9->client, PMSG_SUSPEND);
+	printk("KXTF9 early suspend\n");
 }
 #endif
 
@@ -1136,6 +1140,7 @@ static int __init kxtf9_init(void)
 static void __exit kxtf9_exit(void)
 {
 	i2c_del_driver(&kxtf9_driver);
+	printk("KXTF9 exit function\n");
 }
 
 module_init(kxtf9_init);

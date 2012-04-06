@@ -657,6 +657,7 @@ static int __exit max8903_charger_remove(struct platform_device *pdev)
 	gpio_free(mc->max8903_gpio_chg_ilm);
 	if(mc)
 		kfree(mc);
+	printk("MAX8903 charger remove\n");
 	return 0;
 }
 

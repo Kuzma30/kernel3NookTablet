@@ -1454,7 +1454,7 @@ static int __devexit max17042_remove(struct i2c_client *client)
 		max17042->pdata->exit();
 	kfree(max17042->pdata);
 	kfree(max17042);
-
+	printk("MAX17042 remove function\n");
 	return 0;
 }
 
@@ -1464,7 +1464,7 @@ static int max17042_resume(struct i2c_client *client)
 
 	// re-enable temperature monitoring
 	max17042_enable_Ten(max17042, 1);
-
+	printk("MAX17042 resume function\n");
 	return max17042_enable(max17042);
 }
 
@@ -1475,7 +1475,7 @@ static int max17042_suspend(struct i2c_client *client, pm_message_t mesg)
 	// turn off temperature monitoring during suspend
 
 	max17042_enable_Ten(max17042, 0);
-
+	printk("MAX17042 suspend function\n");
 	return max17042_disable(max17042);
 }
 
@@ -1483,12 +1483,14 @@ static void max17042_shutdown(struct i2c_client *client)
 {
 	struct max17042_data *max17042 = i2c_get_clientdata(client);
 
+	printk("MAX17042 shutdown function\n");
 	disable_irq(max17042->irq);
 	cancel_work_sync(&max17042->irq_work);
 	// In case interrupts got enabled again by the irq_work
 	disable_irq(max17042->irq);
 
 	max17042_disable(max17042);
+	
 }
 
 static const struct i2c_device_id max17042_id[] = {
@@ -1518,6 +1520,7 @@ static int __init max17042_init(void)
 
 static void __exit max17042_exit(void)
 {
+	printk("MAX17042 exit function\n");
 	i2c_del_driver(&max17042_driver);
 }
 
