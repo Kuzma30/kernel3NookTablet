@@ -78,7 +78,7 @@
  *****************************************************************************/
 
 static struct i2c_client *tlv320aic31xx_client;
-struct regulator *audio_regulator;
+//struct regulator *audio_regulator;
 static struct i2c_board_info tlv320aic31xx_hwmon_info = {
 	I2C_BOARD_INFO("tlv320aic3100", 0x18),
 };
@@ -2008,10 +2008,10 @@ static int aic31xx_suspend(struct snd_soc_codec *codec,	pm_message_t state)
 		aic31xx_write(codec, MICBIAS_CTRL, val | BIT7);
 
 
-		/* Disable Audio clock from FREF_CLK2_OUT */
-		omap_writew(omap_readw(0x4a30a318) & 0xFEFF, 0x4a30a318);
+		/* Disable Audio clock from FREF_CLK1_OUT */
+		omap_writew(omap_readw(0x4a30a314) & 0xFEFF, 0x4a30a314);
 
-		regulator_disable(audio_regulator);
+		gpio_set_value(AUDIO_CODEC_PWR_ON_GPIO, 0);
 	}
 	DBG("%s: Exiting\n", __func__);
 	return 0;
@@ -2029,13 +2029,13 @@ static int aic31xx_resume(struct snd_soc_codec *codec)
 	DBG("###aic31xx_resume\n");
 	DBG("%s: Entered\n", __func__);
 
-	if (regulator_set_voltage(audio_regulator, REGU_MIN_VOL, REGU_MAX_VOL))
-		printk(KERN_INFO "%s: regulator_set 3V error\n", __func__);
+	gpio_set_value(AUDIO_CODEC_PWR_ON_GPIO, 1);
+	
+	/* sleep for 10 ms to allow the voltage to stabilize */
+	msleep(10);
 
-	regulator_enable(audio_regulator);
-
-	/* Enable Audio clock from FREF_CLK2_OUT */
-	omap_writew(omap_readw(0x4a30a318) | ~0xFEFF, 0x4a30a318);
+	/* Enable Audio clock from FREF_CLK1_OUT */
+	omap_writew(omap_readw(0x4a30a314) | ~0xFEFF, 0x4a30a314);
 
 	val = aic31xx_read(codec, MICBIAS_CTRL);
 	aic31xx_write(codec, MICBIAS_CTRL, val & ~BIT7);
