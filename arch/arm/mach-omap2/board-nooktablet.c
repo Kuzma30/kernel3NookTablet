@@ -717,7 +717,7 @@ static __init void omap4_twl6030_hsmmc_set_late_init(struct device *dev)
 		return;
 	}
 	pdata = dev->platform_data;
-	pdata->init =	omap4_twl6030_hsmmc_late_init;
+	pdata->init = omap4_twl6030_hsmmc_late_init;
 }
 
 static int __init omap4_twl6030_hsmmc_init(struct omap2_hsmmc_info *controllers)
@@ -741,10 +741,10 @@ static struct regulator_init_data sdp4430_vaux1 = {
 		.valid_ops_mask	 = REGULATOR_CHANGE_VOLTAGE
 			| REGULATOR_CHANGE_MODE
 			| REGULATOR_CHANGE_STATUS,
-// 		.state_mem = {
-// 			.enabled	= false,
-// 			.disabled	= true,
-// // 		},
+		.state_mem = {
+			.enabled	= false,
+			.disabled	= true,
+		},
 		.always_on	= true,
 	},
 	.num_consumer_supplies	= 1,
@@ -798,10 +798,10 @@ static struct regulator_init_data sdp4430_vmmc = {
 		.valid_ops_mask	 = REGULATOR_CHANGE_VOLTAGE
 			| REGULATOR_CHANGE_MODE
 			| REGULATOR_CHANGE_STATUS,
-//		.state_mem = {
-//			.enabled	= false,
-//			.disabled	= true,
-//		},
+		.state_mem = {
+			.enabled	= false,
+			.disabled	= true,
+		},
 		.always_on	= true,
 	},
 	.num_consumer_supplies  = 1,

@@ -448,7 +448,7 @@ static const char *mm_lp_be[] = {
 t_port_config mm_ext0_config = {
 	/* uplink port configuration */
 	.abe_port_id_ul = MM_EXT_IN_PORT,
-	.serial_id_ul = MCBSP3_RX,
+	.serial_id_ul = MCBSP2_RX,
 	.sample_format_ul = STEREO_RSHIFTED_16,
 #ifdef CONFIG_ABE_44100
 	.sample_rate_ul = 44100,
@@ -459,7 +459,7 @@ t_port_config mm_ext0_config = {
 
 	/* down link port configuration */
 	.abe_port_id_dl = MM_EXT_OUT_PORT,
-	.serial_id_dl = MCBSP3_TX,
+	.serial_id_dl = MCBSP2_TX,
 	.sample_format_dl = STEREO_RSHIFTED_16,
 #ifdef CONFIG_ABE_44100
 	.sample_rate_dl = 44100,
@@ -545,7 +545,7 @@ static struct snd_soc_dai_link omap4_dai_abe[] = {
 		.stream_name = "FM Playback",
 
 		/* ABE components - MCBSP3 - MM-EXT */
-		.cpu_dai_name = "omap-mcbsp-dai.2",
+		.cpu_dai_name = "omap-mcbsp-dai.1",
 		.platform_name = "aess",
 
 		/* FM */
@@ -566,7 +566,7 @@ static struct snd_soc_dai_link omap4_dai_abe[] = {
 		.stream_name = "FM Capture",
 
 		/* ABE components - MCBSP3 - MM-EXT */
-		.cpu_dai_name = "omap-mcbsp-dai.2",
+		.cpu_dai_name = "omap-mcbsp-dai.1",
 		.platform_name = "aess",
 
 		/* FM */
@@ -589,7 +589,7 @@ static struct snd_soc_dai_link omap4_dai_abe[] = {
 /* Audio machine driver with ABE Support */
 static struct snd_soc_card snd_soc_omap4_panda_abe = {
 	.name = "OMAP4_ACCLAIM-ABE",
-	.long_name = "OMAP4_NOOKTABLET_AIC3110-ABE",
+	.long_name = "OMAP4_NOOKTABLET_AIC3100-ABE",
 	.dai_link = omap4_dai_abe,
 	.num_links = ARRAY_SIZE(omap4_dai_abe),
 };
