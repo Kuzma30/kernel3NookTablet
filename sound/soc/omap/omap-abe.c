@@ -382,7 +382,7 @@ static void enable_be_port(struct snd_soc_pcm_runtime *be,
 			/* MM_EXT connection to McBSP 2 ports */
 			format.f = 48000;
 			format.samp_format = STEREO_RSHIFTED_16;
-			abe_connect_serial_port(MM_EXT_OUT_PORT, &format, MCBSP3_TX);
+			abe_connect_serial_port(MM_EXT_OUT_PORT, &format, MCBSP2_TX);
 			omap_abe_port_enable(abe_priv->abe,
 				abe_priv->port[OMAP_ABE_BE_PORT_MM_EXT_DL]);
 		} else {
@@ -395,7 +395,7 @@ static void enable_be_port(struct snd_soc_pcm_runtime *be,
 			/* MM_EXT connection to McBSP 2 ports */
 			format.f = 48000;
 			format.samp_format = STEREO_RSHIFTED_16;
-			abe_connect_serial_port(MM_EXT_IN_PORT, &format, MCBSP3_RX);
+			abe_connect_serial_port(MM_EXT_IN_PORT, &format, MCBSP2_RX);
 			omap_abe_port_enable(abe_priv->abe,
 				abe_priv->port[OMAP_ABE_BE_PORT_MM_EXT_UL]);
 		}

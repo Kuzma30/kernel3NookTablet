@@ -99,6 +99,7 @@ static int omap4_hw_params(struct snd_pcm_substream *substream,
 
 	void __iomem *phymux_base = NULL;
 	int ret, gpio_status;
+	u32 phy_val;
 	DBG("%s: Entered\n", __func__);
 
 	/* Recording will not happen if headset is not inserted */
@@ -132,16 +133,24 @@ static int omap4_hw_params(struct snd_pcm_substream *substream,
 	DBG("snd_soc_dai_set_fmt passed...\n");
 
 	/* Enabling the 19.2 Mhz Master Clock Output from OMAP4 for KC1 Board */
-	phymux_base = ioremap(0x4a30a000, 0x1000);
-	__raw_writel(0x00010100, phymux_base + 0x318);
+//	phymux_base = ioremap(0x4a30a000, 0x1000);
+//	__raw_writel(0x00010100, phymux_base + 0x318);
+
+        /* Enabling the 19.2 Mhz Master Clock Output
+                from OMAP4 for Acclaim Board */
+        phymux_base = ioremap(0x4A30A000, 0x1000);
+        phy_val = __raw_readl(phymux_base + 0x0314);
+        phy_val = (phy_val & 0xFFF0FEFF) | (0x00010100);
+        __raw_writel(phy_val, phymux_base + 0x0314);
+        iounmap(phymux_base);
 
 	/* Added the test code to configure the McBSP4 CONTROL_MCBSP_LP
 	 * register. This register ensures that the FSX and FSR on McBSP4 are
 	 * internally short and both of them see the same signal from the
 	 * External Audio Codec.
 	 */
-	phymux_base = ioremap(0x4a100000, 0x1000);
-	__raw_writel(0xC0000000, phymux_base + 0x61c);
+//	phymux_base = ioremap(0x4a100000, 0x1000);
+//	__raw_writel(0xC0000000, phymux_base + 0x61c);
 
 	/* Set the codec system clock for DAC and ADC. The
 	 * third argument is specific to the board being used.
@@ -545,7 +554,7 @@ static struct snd_soc_dai_link omap4_dai_abe[] = {
 		.stream_name = "FM Playback",
 
 		/* ABE components - MCBSP3 - MM-EXT */
-		.cpu_dai_name = "omap-mcbsp-dai.1",
+		.cpu_dai_name = "omap-mcbsp-dai.2",
 		.platform_name = "aess",
 
 		/* FM */
@@ -566,7 +575,7 @@ static struct snd_soc_dai_link omap4_dai_abe[] = {
 		.stream_name = "FM Capture",
 
 		/* ABE components - MCBSP3 - MM-EXT */
-		.cpu_dai_name = "omap-mcbsp-dai.1",
+		.cpu_dai_name = "omap-mcbsp-dai.2",
 		.platform_name = "aess",
 
 		/* FM */
@@ -604,7 +613,9 @@ static struct platform_device *omap4_snd_device;
 static int __init omap4_panda_soc_init(void)
 {
 	int ret = 0;
-
+	void __iomem  *phymux_base = NULL;
+	unsigned int val;
+	
 	printk(KERN_INFO "OMAP4 EVT SoC init\n");
 
 	omap4_snd_device = platform_device_alloc("soc-audio", -1);
@@ -622,6 +633,16 @@ static int __init omap4_panda_soc_init(void)
 		printk(KERN_INFO "platform device add failed...\n");
 		goto err1;
 	}
+        /*
+         * Enable the GPIO related code-base on the ACCLAIM Board for
+         * Headphone/MIC Detection
+         */
+        phymux_base = ioremap (0x4a100000, 0x1000);
+        val = __raw_readl(phymux_base + 0x90);
+        val =  ((val & 0xFEFCFFFE) | 0x01030003);
+        /*__raw_writel (0x01030003, phymux_base + 0x90); */
+        __raw_writel (val, phymux_base + 0x90);
+        iounmap(phymux_base);
 
 	printk(KERN_INFO "OMAP4 EVT Soc Init success..\n");
 
