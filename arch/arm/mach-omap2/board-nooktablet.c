@@ -1498,7 +1498,7 @@ static void __init omap_4430sdp_reserve(void)
 	omap_reserve();
 }
 
-MACHINE_START(OMAP4_NOOKTABLET, "OMAP4430")
+MACHINE_START(OMAP4_NOOKTABLET, "acclaim")
 	.boot_params	= 0x80000100,
 	.reserve	= omap_4430sdp_reserve,
 	.map_io		= omap_4430sdp_map_io,
