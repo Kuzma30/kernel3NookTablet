@@ -17,7 +17,7 @@
 
 #include <linux/gccore.h>
 
-#define DEV_NAME	"gccore"
+#define GC_DEV_NAME	"gccore"
 
 /*
  * Register access.
@@ -53,6 +53,7 @@ enum gcpower {
 };
 
 enum gcerror gc_set_power(enum gcpower gcpower);
+enum gcerror gc_get_power(void);
 
 /*
  * Interrupt.
