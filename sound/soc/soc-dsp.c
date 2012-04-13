@@ -28,7 +28,7 @@
 #include <sound/soc.h>
 #include <sound/soc-dapm.h>
 #include <sound/soc-dsp.h>
-#define DEBUG
+
 int soc_pcm_open(struct snd_pcm_substream *);
 void soc_pcm_close(struct snd_pcm_substream *);
 int soc_pcm_hw_params(struct snd_pcm_substream *, struct snd_pcm_hw_params *);
