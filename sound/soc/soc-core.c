@@ -1551,6 +1551,7 @@ find_platform:
 
 	/* if there's no platform we match on the empty platform */
 	platform_name = dai_link->platform_name;
+	printk("We have platform name: %s\n",platform_name);
 	if (!platform_name)
 		platform_name = "snd-soc-dummy";
 

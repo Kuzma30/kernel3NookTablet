@@ -486,7 +486,7 @@ t_port_config mm_ext0_config = {
 static struct snd_soc_dai_link omap4_dai_abe[] = {
 
 	{
-		.name = "tlv320aic3100 Media1 LP",
+		.name = "tlv320aic3110 Media1 LP",
 		.stream_name = "Multimedia",
 
 		/* ABE components - MM-DL (mmap) */
@@ -500,7 +500,7 @@ static struct snd_soc_dai_link omap4_dai_abe[] = {
 		.num_be = ARRAY_SIZE(mm_lp_be),
 	},
 	{
-		.name = "tlv320aic3100 Media",
+		.name = "tlv320aic3110 Media",
 		.stream_name = "Multimedia",
 
 		/* ABE components - MM-UL & MM_DL */
@@ -514,7 +514,7 @@ static struct snd_soc_dai_link omap4_dai_abe[] = {
 		.num_be = ARRAY_SIZE(mm1_be),
 	},
 	{
-		.name = "tlv320aic3100 Media Capture",
+		.name = "tlv320aic3110 Media Capture",
 		.stream_name = "Multimedia Capture",
 
 		/* ABE components - MM-UL2 */
@@ -537,8 +537,8 @@ static struct snd_soc_dai_link omap4_dai_abe[] = {
 
 		/* FM */
 
-		.codec_dai_name = "tlv320aic3100-MM_EXT",
-		.codec_name = "tlv320aic3100-codec",
+		.codec_dai_name = "tlv320aic3110-MM_EXT",
+		.codec_name = "tlv320aic3110-codec",
 
 		.ops = &omap4_ops,
 		.ignore_suspend = 1,
@@ -554,12 +554,12 @@ static struct snd_soc_dai_link omap4_dai_abe[] = {
 		.stream_name = "FM Playback",
 
 		/* ABE components - MCBSP3 - MM-EXT */
-		.cpu_dai_name = "omap-mcbsp-dai.2",
+		.cpu_dai_name = "omap-mcbsp-dai.1",
 		.platform_name = "aess",
 
 		/* FM */
-		.codec_dai_name = "tlv320aic3100-MM_EXT",
-		.codec_name = "tlv320aic3100-codec",
+		.codec_dai_name = "tlv320aic3110-MM_EXT",
+		.codec_name = "tlv320aic3110-codec",
 
 		/* don't create ALSA pcm for this */
 		.no_pcm = 1,
@@ -575,12 +575,12 @@ static struct snd_soc_dai_link omap4_dai_abe[] = {
 		.stream_name = "FM Capture",
 
 		/* ABE components - MCBSP3 - MM-EXT */
-		.cpu_dai_name = "omap-mcbsp-dai.2",
+		.cpu_dai_name = "omap-mcbsp-dai.1",
 		.platform_name = "aess",
 
 		/* FM */
-		.codec_dai_name = "tlv320aic3100-MM_EXT",
-		.codec_name = "tlv320aic3100-codec",
+		.codec_dai_name = "tlv320aic3110-MM_EXT",
+		.codec_name = "tlv320aic3110-codec",
 
 		.no_pcm = 1, /* don't create ALSA pcm for this */
 		.be_hw_params_fixup = mcbsp_be_hw_params_fixup,
@@ -598,7 +598,7 @@ static struct snd_soc_dai_link omap4_dai_abe[] = {
 /* Audio machine driver with ABE Support */
 static struct snd_soc_card snd_soc_omap4_panda_abe = {
 	.name = "OMAP4_ACCLAIM-ABE",
-	.long_name = "OMAP4_NOOKTABLET_AIC3100-ABE",
+	.long_name = "OMAP4_NOOKTABLET_AIC3110-ABE",
 	.dai_link = omap4_dai_abe,
 	.num_links = ARRAY_SIZE(omap4_dai_abe),
 };

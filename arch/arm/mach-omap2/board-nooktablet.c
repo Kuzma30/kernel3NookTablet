@@ -463,7 +463,7 @@ static struct platform_device acclaim_keys_gpio = {
 };
 
 static struct platform_device sdp4430_aic3110 = {
-        .name = "tlv320aic3100-codec",
+        .name = "tlv320aic3110-codec",
         .id = -1,
 };
 
@@ -732,6 +732,10 @@ static int __init omap4_twl6030_hsmmc_init(struct omap2_hsmmc_info *controllers)
 	return 0;
 }
 
+static struct regulator_consumer_supply audio_supply[] = {
+        { .supply = "audio-pwr", },
+};
+
 
 static struct regulator_init_data sdp4430_vaux1 = {
 	.constraints = {
@@ -842,6 +846,8 @@ static struct regulator_init_data sdp4430_vusim = {
 			.disabled	= true,
 		},
 	},
+	.num_consumer_supplies  = 1,
+	.consumer_supplies      = audio_supply,
 };
 
 static struct regulator_init_data sdp4430_vana = {

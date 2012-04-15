@@ -78,11 +78,12 @@
  *****************************************************************************/
 
 static struct i2c_client *tlv320aic31xx_client;
-//struct regulator *audio_regulator;
+struct regulator *audio_regulator;
 static struct i2c_board_info tlv320aic31xx_hwmon_info = {
-	I2C_BOARD_INFO("tlv320aic3100", 0x18),
+	I2C_BOARD_INFO("tlv320aic3110", 0x18),
 };
 void __iomem *phymuxbase = NULL;
+u32 phy_val;
 /* Used to maintain the Register Access control*/
 static u8 aic31xx_reg_ctl;
 
@@ -787,7 +788,22 @@ static int aic31xx_hw_params(struct snd_pcm_substream *substream,
 	}
 
 	aic31xx_write(codec, INTERFACE_SET_REG_1, data);
-	DBG("%s: Exiting\n", __func__);
+//	DBG("%s: Exiting\n", __func__);
+	/* Add the Processing blocks section as per the discussion
+	* with Design team */
+	aic31xx_write (codec, DAC_PRB_SEL_REG, 0x02);
+
+	DBG("##- SET aic3100_hw_params\n");
+	/*Enabling audio clock source from omap4 */
+	phymuxbase = ioremap(0x4A30A000, 0x1000);
+	phy_val = __raw_readl(phymuxbase + 0x0314);
+	phy_val = (phy_val & 0xFFF0FEFF) | (0x00010100);
+	__raw_writel(phy_val, phymuxbase + 0x0314);
+	iounmap(phymuxbase);
+
+	/*setting pmdown_time of pcm rtd structure to 0*/
+	rtd->pmdown_time = 0;
+
 	mutex_unlock(&aic31xx->mutex_codec);
 	return 0;
 }
@@ -2093,7 +2109,7 @@ static struct snd_soc_dai_ops tlv320aic31xx_dai_ops = {
  */
 struct snd_soc_dai_driver tlv320aic31xx_dai[] = {
 	{
-		.name = "tlv320aic3100-MM_EXT",
+		.name = "tlv320aic3110-MM_EXT",
 		.playback = {
 			.stream_name = "Playback",
 			.channels_min = 1,
@@ -2128,6 +2144,7 @@ static int __devinit tlv320aic31xx_codec_probe(struct platform_device *pdev)
 	int codec_interrupt = 0;
 	DBG("Came to tlv320aic31xx_codec_probe...\n");
 	
+#if 1
 	/* GPIOs 101-AUD-CODEC-EN signal as per Schematics,
 	 * GPIO 102-HS-nDETECT as per Schematics */
 	phymuxbase = ioremap(0x4A100000, 0x1000);
@@ -2187,12 +2204,12 @@ static int __devinit tlv320aic31xx_codec_probe(struct platform_device *pdev)
 	iounmap(phymuxbase);
 
 	/* Power-off the DAC and Headphone Drivers initially */
-// 	aic3100->power_status = 1;
-// 	aic3100->headset_connected = 1;
-// 	aic3100_power_down(codec);
-// 	aic3100->mute=0;
-// 	aic3100_dac_mute(codec, 1);
-// 	aic3100->headset_connected = 0;
+ /*	aic31xx->power_status = 1;
+ 	aic31xx->headset_connected = 1;
+ 	aic31xx_power_down(codec);
+ 	aic31xx->mute=0;
+ 	aic31xx_dac_mute(codec, 1);
+ 	aic31xx->headset_connected = 0;*/
 
 	/* We will power-up and Power-off the Headset Driver here.
 	 * Once the Headset Driver is powered ON and OFF, it will
@@ -2200,11 +2217,11 @@ static int __devinit tlv320aic31xx_codec_probe(struct platform_device *pdev)
 	 * than discharging completely. This helps in quick 
 	 * headset playback for future iterations.
 	*/
-// 	aic3100_hp_power_up (codec);
-// 	aic3100_hp_power_down (codec);
+/*	aic3100_hp_power_up (codec);
+	aic3100_hp_power_down (codec);*/
+#endif
 
-
-#if 0
+#if 1
 	audio_regulator = regulator_get(NULL, "audio-pwr");
 	if (IS_ERR(audio_regulator))
 		DBG("%s: regulator_get error\n", __func__);
@@ -2231,7 +2248,7 @@ static int __devinit tlv320aic31xx_codec_probe(struct platform_device *pdev)
 static int __devexit aic31xx_codec_remove(struct platform_device *pdev)
 {
 	snd_soc_unregister_codec(&pdev->dev);
-#if 0
+#if 1
 	regulator_disable(audio_regulator);
 	regulator_put(audio_regulator);
 #endif
@@ -2245,7 +2262,7 @@ static int __devexit aic31xx_codec_remove(struct platform_device *pdev)
  */
 static struct platform_driver tlv320aic31xx_i2c_driver = {
 	.driver = {
-		.name = "tlv320aic3100-codec",
+		.name = "tlv320aic3110-codec",
 		.owner = THIS_MODULE,
 	},
 	.probe = tlv320aic31xx_codec_probe,
@@ -2285,6 +2302,6 @@ static void __exit tlv320aic31xx_exit(void)
 
 module_exit(tlv320aic31xx_exit);
 
-MODULE_DESCRIPTION("ASoC TLV320AIC3100 codec driver");
+MODULE_DESCRIPTION("ASoC TLV320AIC31xx codec driver");
 MODULE_AUTHOR("Ravindra <ravindra@mistralsolutions.com>");
 MODULE_LICENSE("GPL");
