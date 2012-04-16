@@ -83,7 +83,6 @@
 #include <linux/skbuff.h>
 #include <linux/ti_wilink_st.h>
 #include <plat/omap-serial.h>
-#define WILINK_UART_DEV_NAME "/dev/ttyO1"
 
 #define WILINK_UART_DEV_NAME "/dev/ttyO1"
 
