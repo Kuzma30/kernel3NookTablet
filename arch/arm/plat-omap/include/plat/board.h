@@ -126,7 +126,18 @@ struct omap_pwm_led_platform_data {
 	int blink_timer;
 	int def_on;
 	void (*set_power)(struct omap_pwm_led_platform_data *self, int on_off);
+<<<<<<< HEAD
 	int def_brightness;
+=======
+	void (*set_pad)(struct omap_pwm_led_platform_data *Self, int on_off);
+#ifdef CONFIG_LEDS_OMAP_PWM
+	const char *default_trigger;
+	unsigned int bkl_freq;
+	unsigned char bkl_max;
+	unsigned char bkl_min;
+	unsigned invert;
+#endif
+>>>>>>> 5e49fc5... new backlight driver from Archos Gen9 kernel
 };
 
 struct omap_uart_config {
