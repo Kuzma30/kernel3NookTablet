@@ -727,15 +727,11 @@ int omap_dm_timer_set_load_start(struct omap_dm_timer *timer, int autoreload,
 		return -EINVAL;
 
 	spin_lock_irqsave(&timer->lock, flags);
-<<<<<<< HEAD
-	__timer_enable(timer); //MY
-=======
 	if (!timer->is_early_init)
 		__timer_enable(timer);
 /* FIXME-HASH: Removed for Archos dmtimer.c merge */
 #if 0
 	__timer_enable(timer);
->>>>>>> 5e49fc5... new backlight driver from Archos Gen9 kernel
 	if (timer->loses_context) {
 		if (omap_pm_was_context_lost(&timer->pdev->dev) &&
 			timer->context_saved) {
