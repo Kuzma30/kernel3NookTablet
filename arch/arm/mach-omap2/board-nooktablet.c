@@ -466,14 +466,14 @@ static struct platform_device sdp4430_aic3110 = {
         .id = -1,
 };
 
-static struct spi_board_info sdp4430_spi_board_info[] __initdata = {
+/*static struct spi_board_info sdp4430_spi_board_info[] __initdata = {
 	{
 		.modalias		= "boxer_disp_spi",
-		.bus_num		= 4,	/* 4: McSPI4 */
+		.bus_num		= 4,	// 4: McSPI4
 		.chip_select		= 0,
 		.max_speed_hz		= 375000,
 	},
-};
+};*/
 
 
 /* TODO: handle suspend/resume here.
@@ -551,7 +551,10 @@ static struct platform_device btwilink_device = {
 
 static struct regulator_consumer_supply acclaim_lcd_tp_supply[] = {
 	{ .supply = "vtp" },
-	{ .supply = "vlcd" },
+	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dss"),
+	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dsi1"),
+	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dsi2"),
+	//{ .supply = "vlcd" },
 };
 
 static struct regulator_init_data acclaim_lcd_tp_vinit = {
@@ -561,7 +564,7 @@ static struct regulator_init_data acclaim_lcd_tp_vinit = {
 		.valid_modes_mask = REGULATOR_MODE_NORMAL,
 		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
 	},
-	.num_consumer_supplies = 2,
+	.num_consumer_supplies = ARRAY_SIZE(acclaim_lcd_tp_supply),
 	.consumer_supplies = acclaim_lcd_tp_supply,
 };
 
@@ -579,6 +582,23 @@ static struct platform_device acclaim_lcd_touch_regulator_device = {
 	.id     = -1,
 	.dev    = {
 		.platform_data = &acclaim_lcd_touch_reg_data,
+	},
+};
+
+static struct fixed_voltage_config lcd_reg_data = {
+	.supply_name = "vdd_lcd",
+	.microvolts = 3300000,
+	.gpio = 38,
+	.enable_high = 1,
+	.enabled_at_boot = 0,
+	.init_data = &acclaim_lcd_tp_vinit,
+};
+
+static struct platform_device lcd_regulator_device = {
+	.name   = "reg-fixed-voltage",
+	.id     = -1,
+	.dev    = {
+	.platform_data = &lcd_reg_data,
 	},
 };
 
@@ -1453,8 +1473,8 @@ static void __init omap_4430sdp_init(void)
 	if (status)
 		pr_err("Keypad initialization failed: %d\n", status);
 
-	spi_register_board_info(sdp4430_spi_board_info,
-			ARRAY_SIZE(sdp4430_spi_board_info));
+/*	spi_register_board_info(sdp4430_spi_board_info,
+			ARRAY_SIZE(sdp4430_spi_board_info));*/
 	
 	omap_dmm_init();
 	acclaim_panel_init();
