@@ -15,6 +15,7 @@
 #include <linux/fb.h>
 #include <linux/slab.h>
 
+#define DEBUG
 #ifdef CONFIG_PMAC_BACKLIGHT
 #include <asm/backlight.h>
 #endif

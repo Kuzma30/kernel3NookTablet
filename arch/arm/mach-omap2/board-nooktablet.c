@@ -589,7 +589,7 @@ static struct fixed_voltage_config lcd_reg_data = {
 	.supply_name = "vdd_lcd",
 	.microvolts = 3300000,
 	.gpio = 38,
-	.enable_high = 1,
+	.enable_high = 0,
 	.enabled_at_boot = 0,
 	.init_data = &acclaim_lcd_tp_vinit,
 };

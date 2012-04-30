@@ -280,7 +280,7 @@ static void rpmsg_omx_cb(struct rpmsg_channel *rpdev, void *data, int len,
 			break;
 		}
 		rsp = (struct omx_conn_rsp *) hdr->data;
-		dev_info(&rpdev->dev, "conn rsp: status %d addr %d\n",
+		dev_dbg(&rpdev->dev, "conn rsp: status %d addr %d\n",
 			       rsp->status, rsp->addr);
 		omx->dst = rsp->addr;
 		if (rsp->status)
@@ -478,7 +478,7 @@ static int rpmsg_omx_open(struct inode *inode, struct file *filp)
 	list_add(&omx->next, &omxserv->list);
 	mutex_unlock(&omxserv->lock);
 
-	dev_info(omxserv->dev, "local addr assigned: 0x%x\n", omx->ept->addr);
+	dev_dbg(omxserv->dev, "local addr assigned: 0x%x\n", omx->ept->addr);
 
 	return 0;
 }
@@ -507,7 +507,7 @@ static int rpmsg_omx_release(struct inode *inode, struct file *filp)
 	disc_req->addr = omx->dst;
 	use = sizeof(*hdr) + hdr->len;
 
-	dev_info(omxserv->dev, "Disconnecting from OMX service at %d\n",
+	dev_dbg(omxserv->dev, "Disconnecting from OMX service at %d\n",
 		omx->dst);
 
 	/* send the msg to the remote OMX connection service */
@@ -810,7 +810,7 @@ static struct rpmsg_device_id rpmsg_omx_id_table[] = {
 	{ .name	= "rpmsg-omx2" }, /* dsp */
 	{ },
 };
-MODULE_DEVICE_TABLE(platform, rpmsg_omx_id_table);
+MODULE_DEVICE_TABLE(rpmsg, rpmsg_omx_id_table);
 
 static struct rpmsg_driver rpmsg_omx_driver = {
 	.drv.name	= KBUILD_MODNAME,
