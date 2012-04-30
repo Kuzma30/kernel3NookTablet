@@ -53,7 +53,7 @@
 
 #include "../codecs/tlv320aic3100.h"
 
-#define DEBUG
+#undef DEBUG
 #ifdef DEBUG
 #define DBG(x...)	printk(x)
 #else

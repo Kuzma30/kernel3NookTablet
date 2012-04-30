@@ -1551,7 +1551,7 @@ find_platform:
 
 	/* if there's no platform we match on the empty platform */
 	platform_name = dai_link->platform_name;
-	printk("We have platform name: %s\n",platform_name);
+	//printk("We have platform name: %s\n",platform_name);
 	if (!platform_name)
 		platform_name = "snd-soc-dummy";
 
@@ -3767,7 +3767,7 @@ int snd_soc_register_card(struct snd_soc_card *card)
 		return -ENOMEM;
 	card->rtd_aux = &card->rtd[card->num_links];
 
-        printk ("Card NumLinks %d \n", card->num_links);
+        //printk ("Card NumLinks %d \n", card->num_links);
 
 	for (i = 0; i < card->num_links; i++) {
 	        printk (KERN_INFO "DAI Create runtime %s Dynamic %d\n",
