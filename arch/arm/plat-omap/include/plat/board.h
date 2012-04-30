@@ -114,17 +114,10 @@ struct omap_fbmem_config {
 	u32 size;
 };
 
-/*struct omap_pwm_led_platform_data {
-	const char *name;
-	int intensity_timer;
-	int blink_timer;
-	void (*set_power)(struct omap_pwm_led_platform_data *self, int on_off);
-};*/
 struct omap_pwm_led_platform_data {
 	const char *name;
 	int intensity_timer;
 	int blink_timer;
-	int def_on;
 	void (*set_power)(struct omap_pwm_led_platform_data *self, int on_off);
 	void (*set_pad)(struct omap_pwm_led_platform_data *Self, int on_off);
 #ifdef CONFIG_LEDS_OMAP_PWM
@@ -181,6 +174,10 @@ extern int omap_board_config_size;
 
 /* for TI reference platforms sharing the same debug card */
 extern int debug_card_init(u32 addr, unsigned gpio);
+
+u8 quanta_get_mbid(void);
+u8 quanta_get_touchid(void);
+u8 quanta_get_panelid(void);
 
 /* OMAP3EVM revision */
 #if defined(CONFIG_MACH_OMAP3EVM)
