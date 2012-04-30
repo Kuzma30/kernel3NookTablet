@@ -66,10 +66,8 @@
 #define LCD_INIT_DELAY		200
 
 #define DEFAULT_BACKLIGHT_BRIGHTNESS	10
-#define TEMP_HACK 	0
 static void acclaim4430_init_display_led(void)
 {
-#if TEMP_HACK != 1
  	if (acclaim_board_type() >= EVT2) {
   		printk(KERN_INFO "init_display_led: evt2 hardware\n");
   		omap_mux_init_signal("abe_dmic_din2.dmtimer11_pwm_evt", OMAP_MUX_MODE5);
@@ -84,17 +82,6 @@ static void acclaim4430_init_display_led(void)
 		else
 			gpio_direction_output(92, 0);
 	}
-#else
-		printk(KERN_INFO "Temporary Hack for LCD PWM LED\n");
-		printk(KERN_INFO "WARNING: brigthness control disabled nowe\n");
-		/* mux the brightness control pin as gpio, because on EVT1 it is connected to
-		   timer8 and we cannot use timer8 because of audio conflicts causing crash */
-		omap_mux_init_signal("abe_dmic_din2.gpio_121", OMAP_MUX_MODE3);
-		if (gpio_request(121, "EVT1 BACKLIGHT"))
-			printk(KERN_ERR "ERROR: failed to request backlight gpio\n");
-		else
-			gpio_direction_output(121, 0);
-#endif
 }
 
 static void acclaim4430_disp_backlight_setpower(struct omap_pwm_led_platform_data *pdata, int on_off)
@@ -124,7 +111,6 @@ static void acclaim4430_disp_backlight_setpower(struct omap_pwm_led_platform_dat
 	msleep(500);
 	
 }
-#if TEMP_HACK != 1
 static struct omap_pwm_led_platform_data acclaim4430_disp_backlight_data = {
 	.name 		 = "lcd-backlight",
 	.default_trigger  = "backlight",
@@ -149,8 +135,6 @@ static struct platform_device sdp4430_disp_led = {
 static struct platform_device *sdp4430_panel_devices[] __initdata = {
 	&sdp4430_disp_led,
 };
-#endif
-/*--------------------------------------------------------------------------*/
 
 static void sdp4430_panel_get_resource(void)
 {
