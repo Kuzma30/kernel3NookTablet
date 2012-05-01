@@ -65,9 +65,12 @@
 #define LCD_RST_DELAY		100
 #define LCD_INIT_DELAY		200
 
+#define TEMP_HACK 1
+
 #define DEFAULT_BACKLIGHT_BRIGHTNESS	10
 static void acclaim4430_init_display_led(void)
 {
+#if TEMP_HACK != 1
  	if (acclaim_board_type() >= EVT2) {
   		printk(KERN_INFO "init_display_led: evt2 hardware\n");
   		omap_mux_init_signal("abe_dmic_din2.dmtimer11_pwm_evt", OMAP_MUX_MODE5);
@@ -82,6 +85,17 @@ static void acclaim4430_init_display_led(void)
 		else
 			gpio_direction_output(92, 0);
 	}
+#else
+	printk(KERN_INFO "Temporary Hack for LCD PWM LED\n");
+	printk(KERN_INFO "WARNING: brigthness control disabled now\n");
+	/* mux the brightness control pin as gpio, because on EVT1 it is connected to
+	   timer8 and we cannot use timer8 because of audio conflicts causing crash */
+	omap_mux_init_signal("abe_dmic_din2.gpio_121", OMAP_MUX_MODE3);
+//	if (gpio_request(121, "EVT1 BACKLIGHT"))
+//		printk(KERN_ERR "ERROR: failed to request backlight gpio\n");
+//	else
+//		gpio_direction_output(121, 0);
+#endif
 }
 
 static void acclaim4430_disp_backlight_setpower(struct omap_pwm_led_platform_data *pdata, int on_off)
@@ -99,6 +113,8 @@ static void acclaim4430_disp_backlight_setpower(struct omap_pwm_led_platform_dat
 	msleep(500);
 	printk(KERN_INFO "Backlight set power end\n");
 }
+
+#if TEMP_HACK != 1
 static struct omap_pwm_led_platform_data acclaim4430_disp_backlight_data = {
 	.name 		 = "lcd-backlight",
 	.default_trigger  = "backlight",
@@ -124,7 +140,7 @@ static struct platform_device sdp4430_disp_led = {
 static struct platform_device *sdp4430_panel_devices[] __initdata = {
 	&sdp4430_disp_led,
 };
-
+#endif
 static void sdp4430_panel_get_resource(void)
 {
 	int ret_val = 0;
@@ -154,12 +170,14 @@ static inline struct boxer_panel_data * get_panel_data(struct omap_dss_device *d
 
 static int nooktablet_panel_enable_lcd(struct omap_dss_device *dssdev)
 {
+	acclaim4430_disp_backlight_setpower(NULL,1);
 	pr_info("NookTablet LCD enable!\n");
 	return 0;
 }
 
 static void nooktablet_panel_disable_lcd(struct omap_dss_device *dssdev)
 {
+	acclaim4430_disp_backlight_setpower(NULL,0);
 	pr_info("NookTablet LCD disable!\n");
 }
 
@@ -241,12 +259,18 @@ static struct spi_board_info tablet_spi_board_info[] __initdata = {
 void __init acclaim_panel_init(void)
 {
 	sdp4430_panel_get_resource();
-/*	acclaim4430_init_display_led();	
+	acclaim4430_init_display_led();
 	omap_display_init(&sdp4430_dss_data);
+	int ret;
+	
+	spi_register_board_info(tablet_spi_board_info,ARRAY_SIZE(tablet_spi_board_info));
+
+	omap_mux_enable_wkup("sys_nirq1");
+	omap_mux_enable_wkup("sys_nirq2");
 #if TEMP_HACK != 1	
 	platform_add_devices(sdp4430_devices, ARRAY_SIZE(sdp4430_devices));
 #else
-#if 0
+	
 	int state = 1;
 	if (state)
 		gpio_direction_output(38, (acclaim_board_type() >= EVT2) ? 1 : 0);
@@ -256,17 +280,4 @@ void __init acclaim_panel_init(void)
 	gpio_direction_output(45, 0);
 	printk("[BL set power] %d\n", state);
 #endif
-#endif*/
-	int ret;
-	
-	acclaim4430_init_display_led();
-
-	spi_register_board_info(tablet_spi_board_info,ARRAY_SIZE(tablet_spi_board_info));
-
-	omap_display_init(&sdp4430_dss_data);
-
-	omap_mux_enable_wkup("sys_nirq1");
-	omap_mux_enable_wkup("sys_nirq2");
-
-	platform_add_devices(sdp4430_panel_devices, ARRAY_SIZE(sdp4430_panel_devices));
 }

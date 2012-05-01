@@ -29,6 +29,8 @@
 #include <linux/gpio.h>
 #include <linux/regulator/consumer.h>
 
+#define	OMAP_LCD_PWM_PIN	121
+#define	OMAP_LCD_ENABLE_PIN	38
 #define DEBUG
 /* Delay between Panel configuration and Panel enabling */
 #define LCD_RST_DELAY		100
@@ -264,19 +266,17 @@ int boxer_panel_power_on(void)
 {
 	printk(KERN_INFO " >>>> BOXER POWER ON");
 	// int vendor0=1, vendor1=1;
-	gpio_direction_output(36, 1); //Kuzma30
-	gpio_direction_output(121, 1);
-	gpio_direction_output(38, 0);
+	gpio_direction_output(OMAP_LCD_PWM_PIN, 1);
+	gpio_direction_output(OMAP_LCD_ENABLE_PIN, 0);
 	mdelay(LCD_RST_DELAY);
 
-	gpio_direction_output(121, 0);
+	gpio_direction_output(OMAP_LCD_PWM_PIN, 0);
 	mdelay(LCD_RST_DELAY);
 
 	boxer_init_panel();
 
 	mdelay(LCD_INIT_DELAY);
-
-	gpio_direction_output(38, 1);
+	gpio_direction_output(OMAP_LCD_ENABLE_PIN, 1);
 	return 0;
 }
 
@@ -300,7 +300,7 @@ static int boxer_panel_probe(struct omap_dss_device *dssdev)
 	gpio_direction_input(176);
 #endif
 	//gpio_request(47, "vdd_lcd");
-	gpio_request(38, "OMAP_RGB_SHTDN");
+	gpio_request(OMAP_LCD_ENABLE_PIN, "OMAP_RGB_SHTDN");
 
 	//Already done in uboot
 	boxer_panel_power_on();
@@ -389,9 +389,9 @@ extern int Light_Sensor_Exist;
 static int boxer_panel_suspend(struct omap_dss_device *dssdev)
 {
 	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
-	gpio_direction_output(38, 0);
+	gpio_direction_output(OMAP_LCD_ENABLE_PIN, 0);
 	msleep(LCD_RST_DELAY);
-	gpio_direction_output(121, 1);
+	gpio_direction_output(OMAP_LCD_PWM_PIN, 1);
 	boxer_panel_stop(dssdev);
 	dssdev->state = OMAP_DSS_DISPLAY_SUSPENDED;
 	return 0;
