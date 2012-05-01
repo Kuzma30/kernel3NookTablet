@@ -56,7 +56,7 @@ static void omap_pwm_led_set_blink(struct omap_pwm_led *led)
 		unsigned long load_reg, cmp_reg;
 
 		load_reg = 32768 * (led->on_period + led->off_period) / 1000;
-		cmp_reg = 32768 * led->on_period / 1000;
+		cmp_reg = 32768 * (led->on_period) / 1000;
 
 		omap_dm_timer_stop(led->blink_timer);
 		omap_dm_timer_set_load(led->blink_timer, 1, -load_reg);
@@ -86,6 +86,7 @@ static void omap_pwm_led_pad_disable(struct omap_pwm_led *led)
 
 static void omap_pwm_led_power_on(struct omap_pwm_led *led)
 {
+	pr_debug("%s: start \n",__func__);
 	if (led->powered)
 		return;
 	led->powered = 1;
@@ -109,10 +110,13 @@ static void omap_pwm_led_power_on(struct omap_pwm_led *led)
 					 OMAP_TIMER_SRC_32_KHZ);
 		omap_pwm_led_set_blink(led);
 	}
+	pr_debug("%s: end \n",__func__);
 }
 
 static void omap_pwm_led_power_off(struct omap_pwm_led *led)
 {
+	
+
 	if (!led->powered)
 		return;
 	led->powered = 0;
@@ -128,6 +132,7 @@ static void omap_pwm_led_power_off(struct omap_pwm_led *led)
 
 	if (led->blink_timer != NULL)
 		omap_dm_timer_stop(led->blink_timer);
+	pr_debug("%s: end \n",__func__);
 }
 
 static void pwm_set_speed(struct omap_dm_timer *gpt,

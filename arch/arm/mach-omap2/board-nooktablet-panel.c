@@ -86,6 +86,7 @@ static void acclaim4430_init_display_led(void)
 
 static void acclaim4430_disp_backlight_setpower(struct omap_pwm_led_platform_data *pdata, int on_off)
 {
+	printk(KERN_INFO "Backlight set power, on_off = %d\n",on_off);
 	if (on_off)
 		gpio_direction_output(38, (acclaim_board_type() >= EVT2) ? 1 : 0);
 	else
@@ -93,23 +94,10 @@ static void acclaim4430_disp_backlight_setpower(struct omap_pwm_led_platform_dat
 	gpio_direction_output(44, 0);
 	gpio_direction_output(45, 0);
 	pr_debug("%s: on_off:%d\n", __func__, on_off);
-
-#if 0
-	if (bkl_reg != NULL) {
-		if (on_off)
-			regulator_enable(bkl_reg);
-		else
-			regulator_disable(bkl_reg);
-	}
-
-	if (gpio_is_valid(bkl_power_gpio))
-	gpio_set_value( bkl_power_gpio, on_off );
-#endif
-
 	// enable this fixed backlight startup for A100 on low level
 	// but could generate a little white flash at start
 	msleep(500);
-	
+	printk(KERN_INFO "Backlight set power end\n");
 }
 static struct omap_pwm_led_platform_data acclaim4430_disp_backlight_data = {
 	.name 		 = "lcd-backlight",
@@ -118,9 +106,10 @@ static struct omap_pwm_led_platform_data acclaim4430_disp_backlight_data = {
 	.bkl_max    = 254,
 	.bkl_min    = 0,
 	.bkl_freq    = 30000,
+	.invert     = 1,
 /*	.def_on		 = 0,
 	.def_brightness	 = DEFAULT_BACKLIGHT_BRIGHTNESS,*/
-	//.set_power	 = acclaim4430_disp_backlight_setpower,
+	.set_power	 = acclaim4430_disp_backlight_setpower,
 	
 };
 
@@ -251,8 +240,8 @@ static struct spi_board_info tablet_spi_board_info[] __initdata = {
 
 void __init acclaim_panel_init(void)
 {
-/*	sdp4430_panel_get_resource();
-	acclaim4430_init_display_led();	
+	sdp4430_panel_get_resource();
+/*	acclaim4430_init_display_led();	
 	omap_display_init(&sdp4430_dss_data);
 #if TEMP_HACK != 1	
 	platform_add_devices(sdp4430_devices, ARRAY_SIZE(sdp4430_devices));

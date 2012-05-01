@@ -617,6 +617,7 @@ static struct platform_device lcd_regulator_device = {
 	},
 };
 
+/***************************************************************/
 static struct platform_device *sdp4430_devices[] __initdata = {
 	//&sdp4430_leds_gpio,
 	//&sdp4430_leds_pwm,
