@@ -549,49 +549,64 @@ static struct platform_device btwilink_device = {
 	.id = -1,
 };
 
-static struct regulator_consumer_supply acclaim_lcd_tp_supply[] = {
+/*******************************************************/
+static struct regulator_consumer_supply tp_supply[] = {
 	{ .supply = "vtp" },
-	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dss"),
-	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dsi1"),
-	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dsi2"),
-	//{ .supply = "vlcd" },
 };
 
-static struct regulator_init_data acclaim_lcd_tp_vinit = {
+static struct regulator_init_data tp_vinit = {
 	.constraints = {
 		.min_uV = 3300000,
 		.max_uV = 3300000,
 		.valid_modes_mask = REGULATOR_MODE_NORMAL,
 		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
 	},
-	.num_consumer_supplies = ARRAY_SIZE(acclaim_lcd_tp_supply),
-	.consumer_supplies = acclaim_lcd_tp_supply,
+	.num_consumer_supplies = ARRAY_SIZE(tp_supply),
+	.consumer_supplies = tp_supply,
 };
 
-static struct fixed_voltage_config acclaim_lcd_touch_reg_data = {
+static struct fixed_voltage_config touch_reg_data = {
 	.supply_name = "vdd_lcdtp",
 	.microvolts = 3300000,
 	.gpio = 36,
 	.enable_high = 1,
 	.enabled_at_boot = 1,
-	.init_data = &acclaim_lcd_tp_vinit,
+	.init_data = &tp_vinit,
 };
 
-static struct platform_device acclaim_lcd_touch_regulator_device = {
+static struct platform_device touch_regulator_device = {
 	.name   = "reg-fixed-voltage",
-	.id     = -1,
+	.id     = 0,
 	.dev    = {
-		.platform_data = &acclaim_lcd_touch_reg_data,
+		.platform_data = &touch_reg_data,
 	},
+};
+/*****************************************************/
+
+static struct regulator_consumer_supply lcd_supply[] = {
+	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dss"),
+	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dsi1"),
+	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dsi2"),
+};
+
+static struct regulator_init_data lcd_vinit = {
+	.constraints = {
+		.min_uV = 3300000,
+		.max_uV = 3300000,
+		.valid_modes_mask = REGULATOR_MODE_NORMAL,
+		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
+	},
+	.num_consumer_supplies = ARRAY_SIZE(lcd_supply),
+	.consumer_supplies = lcd_supply,
 };
 
 static struct fixed_voltage_config lcd_reg_data = {
 	.supply_name = "vdd_lcd",
 	.microvolts = 3300000,
-	.gpio = 38,
-	.enable_high = 0,
+	.gpio = 121,
+	.enable_high = 1,
 	.enabled_at_boot = 0,
-	.init_data = &acclaim_lcd_tp_vinit,
+	.init_data = &lcd_vinit,
 };
 
 static struct platform_device lcd_regulator_device = {
@@ -609,7 +624,8 @@ static struct platform_device *sdp4430_devices[] __initdata = {
 	&acclaim_keys_gpio,
 	&wl128x_device,
 //	&btwilink_device,
-	&acclaim_lcd_touch_regulator_device,
+	&lcd_regulator_device,
+	&touch_regulator_device,
 };
 
 static struct omap_board_config_kernel sdp4430_config[] __initdata = {
@@ -1386,7 +1402,7 @@ static void __init omap4_ehci_ohci_init(void)
 // 		OMAP_PIN_OUTPUT | \
 // 		OMAP_PIN_OFF_NONE);
 // 
-// 	/* Power on the ULPI PHY */
+// 	Power on the ULPI PHY
 // 	if (gpio_is_valid(BLAZE_MDM_PWR_EN_GPIO)) {
 // 		gpio_request(BLAZE_MDM_PWR_EN_GPIO, "USBB1 PHY VMDM_3V3");
 // 		gpio_direction_output(BLAZE_MDM_PWR_EN_GPIO, 1);

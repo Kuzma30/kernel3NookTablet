@@ -269,6 +269,8 @@ void __init acclaim_panel_init(void)
 #endif
 #endif*/
 	int ret;
+	
+	acclaim4430_init_display_led();
 
 	spi_register_board_info(tablet_spi_board_info,ARRAY_SIZE(tablet_spi_board_info));
 

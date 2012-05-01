@@ -263,13 +263,12 @@ int boxer_panel_power_on(void)
 {
 	printk(KERN_INFO " >>>> BOXER POWER ON");
 	// int vendor0=1, vendor1=1;
-	gpio_direction_output(44, 0);
-	gpio_direction_output(45, 0);
+	gpio_direction_output(121, 0);
 	gpio_direction_output(38, 0);
 	mdelay(LCD_RST_DELAY);
 
-//	gpio_direction_output(47, 1);
-//	mdelay(LCD_RST_DELAY);
+	gpio_direction_output(121, 1);
+	mdelay(LCD_RST_DELAY);
 
 	boxer_init_panel();
 
@@ -390,8 +389,7 @@ static int boxer_panel_suspend(struct omap_dss_device *dssdev)
 	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
 	gpio_direction_output(38, 0);
 	msleep(LCD_RST_DELAY);
-	gpio_direction_output(44, 0);
-	gpio_direction_output(45, 0);
+	gpio_direction_output(121, 0);
 	boxer_panel_stop(dssdev);
 	dssdev->state = OMAP_DSS_DISPLAY_SUSPENDED;
 	return 0;
