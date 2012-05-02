@@ -316,6 +316,7 @@ static int boxer_panel_start(struct omap_dss_device *dssdev)
 	int r = 0;
 
 	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
+	gpio_direction_output(36, 1); //Kuzma30
 
 	if (dssdev->state == OMAP_DSS_DISPLAY_ACTIVE)
 		return 0;
@@ -339,6 +340,8 @@ err0:
 static void boxer_panel_stop(struct omap_dss_device *dssdev)
 {
 	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
+	
+
 
 	if (dssdev->state != OMAP_DSS_DISPLAY_ACTIVE)
 		return;
@@ -348,12 +351,8 @@ static void boxer_panel_stop(struct omap_dss_device *dssdev)
 
 		if (dssdev->platform_disable){
 			dssdev->platform_disable(dssdev);
+			gpio_direction_output(36, 0); //Kuzma30
 		}
-#if 0
-		if (regulator_is_enabled(boxer_panel_regulator)){
-			//regulator_disable(boxer_panel_regulator);
-		}
-#endif
 	} else {
 		printk(KERN_WARNING "%s: attempting to disable panel twice!\n",
 		       __func__);
