@@ -269,15 +269,5 @@ void __init acclaim_panel_init(void)
 	omap_mux_enable_wkup("sys_nirq2");
 #ifndef TEMP_HACK
 	platform_add_devices(sdp4430_panel_devices, ARRAY_SIZE(sdp4430_panel_devices));
-#else
-	
-	int state = 1;
-	if (state)
-		gpio_direction_output(38, (acclaim_board_type() >= EVT2) ? 1 : 0);
-	else
-		gpio_direction_output(38, (acclaim_board_type() >= EVT2) ? 0 : 1);
-	gpio_direction_output(44, 0);
-	gpio_direction_output(45, 0);
-	printk("[BL set power] %d\n", state);
 #endif
 }
