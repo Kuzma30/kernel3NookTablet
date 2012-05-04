@@ -268,7 +268,7 @@ void __init acclaim_panel_init(void)
 	omap_mux_enable_wkup("sys_nirq1");
 	omap_mux_enable_wkup("sys_nirq2");
 #if TEMP_HACK != 1	
-	platform_add_devices(sdp4430_devices, ARRAY_SIZE(sdp4430_devices));
+	platform_add_devices(sdp4430_panel_devices, ARRAY_SIZE(sdp4430_panel_devices));
 #else
 	
 	int state = 1;

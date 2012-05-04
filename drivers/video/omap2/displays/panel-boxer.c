@@ -264,7 +264,7 @@ static DECLARE_WORK(boxer_panel_work, boxer_panel_work_func);
 
 int boxer_panel_power_on(void)
 {
-	printk(KERN_INFO " >>>> BOXER POWER ON");
+	printk(KERN_INFO " >>>> BOXER POWER ON\n");
 	// int vendor0=1, vendor1=1;
 	gpio_direction_output(OMAP_LCD_PWM_PIN, 1);
 	gpio_direction_output(OMAP_LCD_ENABLE_PIN, 0);
@@ -316,8 +316,10 @@ static int boxer_panel_start(struct omap_dss_device *dssdev)
 	int r = 0;
 
 	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
+	gpio_direction_output(OMAP_LCD_ENABLE_PIN, 0);//
 	gpio_direction_output(36, 1); //Kuzma30
-
+	msleep(LCD_RST_DELAY);//
+	gpio_direction_output(OMAP_LCD_ENABLE_PIN, 1);//
 	if (dssdev->state == OMAP_DSS_DISPLAY_ACTIVE)
 		return 0;
 
@@ -341,8 +343,6 @@ static void boxer_panel_stop(struct omap_dss_device *dssdev)
 {
 	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
 	
-
-
 	if (dssdev->state != OMAP_DSS_DISPLAY_ACTIVE)
 		return;
 
