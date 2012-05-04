@@ -1834,8 +1834,7 @@ static const struct snd_kcontrol_new aic31xx_snd_controls[] = {
 
 #ifdef AIC3100_CODEC_SUPPORT
 	/* SP Analog Gain Volume Control */
-	SOC_SINGLE("SP Analog Gain(0 = 0 dB, 127 = -78.3 dB)",
-			L_ANLOG_VOL_2_SPL, 0, 0x7F, 1),
+	SOC_SINGLE("SP Analog Gain", L_ANLOG_VOL_2_SPL, 0, 0x7F, 1),
 #endif
 	/* Program Registers */
 	SOC_SINGLE_AIC31XX("Program Registers"),
