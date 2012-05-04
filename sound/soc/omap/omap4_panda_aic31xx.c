@@ -533,7 +533,7 @@ static struct snd_soc_dai_link omap4_dai_abe[] = {
 		.stream_name = "Multimedia",
 
 		/* ABE components - MCBSP3 - MM-EXT */
-		.cpu_dai_name = "omap-mcbsp-dai.2",
+		.cpu_dai_name = "omap-mcbsp-dai.1",
 		.platform_name = "omap-pcm-audio",
 
 		/* FM */
