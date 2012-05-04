@@ -262,24 +262,6 @@ static void boxer_panel_work_func(struct work_struct *work)
 
 static DECLARE_WORK(boxer_panel_work, boxer_panel_work_func);
 
-int boxer_panel_power_on(void)
-{
-	printk(KERN_INFO " >>>> BOXER POWER ON\n");
-	// int vendor0=1, vendor1=1;
-	gpio_direction_output(OMAP_LCD_PWM_PIN, 1);
-	gpio_direction_output(OMAP_LCD_ENABLE_PIN, 0);
-	mdelay(LCD_RST_DELAY);
-
-	gpio_direction_output(OMAP_LCD_PWM_PIN, 0);
-	mdelay(LCD_RST_DELAY);
-
-	boxer_init_panel();
-
-	mdelay(LCD_INIT_DELAY);
-	gpio_direction_output(OMAP_LCD_ENABLE_PIN, 1);
-	return 0;
-}
-
 static void boxer_get_resolution(struct omap_dss_device *dssdev,
 				 u16 *xres, u16 *yres)
 {
@@ -291,19 +273,7 @@ static void boxer_get_resolution(struct omap_dss_device *dssdev,
 static int boxer_panel_probe(struct omap_dss_device *dssdev)
 {
 	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
-
 	omap_writel(0x00020000,0x4a1005cc); //PCLK impedance
-#ifndef CONFIG_MACH_OMAP4_NOOKTABLET
-	gpio_request(175, "LCD_VENDOR0");
-	gpio_request(176, "LCD_VENDOR1");
-	gpio_direction_input(175);
-	gpio_direction_input(176);
-#endif
-	//gpio_request(47, "vdd_lcd");
-	gpio_request(OMAP_LCD_ENABLE_PIN, "OMAP_RGB_SHTDN");
-
-	//Already done in uboot
-	boxer_panel_power_on();
 	return 0;
 }
 
@@ -316,23 +286,19 @@ static int boxer_panel_start(struct omap_dss_device *dssdev)
 	int r = 0;
 
 	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
-	gpio_direction_output(OMAP_LCD_ENABLE_PIN, 0);//
-	gpio_direction_output(36, 1); //Kuzma30
-	msleep(LCD_RST_DELAY);//
-	gpio_direction_output(OMAP_LCD_ENABLE_PIN, 1);//
+
 	if (dssdev->state == OMAP_DSS_DISPLAY_ACTIVE)
 		return 0;
+
+	r = omapdss_dpi_display_enable(dssdev);
+	printk(KERN_INFO " omapdss_dpi_display_enable == %d\n", r);
+	if (r)
+	  goto err0;
 
 	if (atomic_add_unless(&boxer_panel_is_enabled, 1, 1)) {
 		boxer_panel_dssdev = dssdev;
 		queue_work(boxer_panel_wq, &boxer_panel_work);
 	}
-
-	r = omapdss_dpi_display_enable(dssdev);
-	printk(KERN_INFO " omapdss_dpi_display_enable == %d", r);
-	if (r) goto err0;
-
-	msleep(LCD_RST_DELAY);
 
 	return 0;
 err0:
@@ -351,7 +317,6 @@ static void boxer_panel_stop(struct omap_dss_device *dssdev)
 
 		if (dssdev->platform_disable){
 			dssdev->platform_disable(dssdev);
-			gpio_direction_output(36, 0); //Kuzma30
 		}
 	} else {
 		printk(KERN_WARNING "%s: attempting to disable panel twice!\n",
@@ -388,9 +353,6 @@ extern int Light_Sensor_Exist;
 static int boxer_panel_suspend(struct omap_dss_device *dssdev)
 {
 	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__ , __LINE__);
-	gpio_direction_output(OMAP_LCD_ENABLE_PIN, 0);
-	msleep(LCD_RST_DELAY);
-	gpio_direction_output(OMAP_LCD_PWM_PIN, 1);
 	boxer_panel_stop(dssdev);
 	dssdev->state = OMAP_DSS_DISPLAY_SUSPENDED;
 	return 0;
@@ -403,7 +365,6 @@ static int boxer_panel_resume(struct omap_dss_device *dssdev)
 
 	boxer_panel_start(dssdev);
 	dssdev->state = OMAP_DSS_DISPLAY_ACTIVE;
-	r = boxer_panel_power_on();
 	return r;
 }
 
