@@ -1818,7 +1818,7 @@ static const struct snd_kcontrol_new aic31xx_snd_controls[] = {
 
 #ifdef AIC3100_CODEC_SUPPORT
 	/* SP Class-D driver output stage gain Control */
-	SOC_SINGLE("Class - D driver Volume(0 = 6 dB, 4 = 24 dB)",
+	SOC_SINGLE("Class-D driver Vol",
 			SPL_DRIVER, 3, 0x04, 0),
 #endif
 
