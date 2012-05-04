@@ -62,15 +62,15 @@
 #include <plat/dmtimer.h>
 #include "mux.h"
 
+#include <linux/temphack.h>
+
 #define LCD_RST_DELAY		100
 #define LCD_INIT_DELAY		200
 
-#define TEMP_HACK 1
-
-#define DEFAULT_BACKLIGHT_BRIGHTNESS	10
+//#define DEFAULT_BACKLIGHT_BRIGHTNESS	10
 static void acclaim4430_init_display_led(void)
 {
-#if TEMP_HACK != 1
+#ifndef TEMP_HACK
  	if (acclaim_board_type() >= EVT2) {
   		printk(KERN_INFO "init_display_led: evt2 hardware\n");
   		omap_mux_init_signal("abe_dmic_din2.dmtimer11_pwm_evt", OMAP_MUX_MODE5);
@@ -114,7 +114,7 @@ static void acclaim4430_disp_backlight_setpower(struct omap_pwm_led_platform_dat
 	printk(KERN_INFO "Backlight set power end\n");
 }
 
-#if TEMP_HACK != 1
+#ifndef TEMP_HACK
 static struct omap_pwm_led_platform_data acclaim4430_disp_backlight_data = {
 	.name 		 = "lcd-backlight",
 	.default_trigger  = "backlight",
@@ -267,7 +267,7 @@ void __init acclaim_panel_init(void)
 
 	omap_mux_enable_wkup("sys_nirq1");
 	omap_mux_enable_wkup("sys_nirq2");
-#if TEMP_HACK != 1	
+#ifndef TEMP_HACK
 	platform_add_devices(sdp4430_panel_devices, ARRAY_SIZE(sdp4430_panel_devices));
 #else
 	

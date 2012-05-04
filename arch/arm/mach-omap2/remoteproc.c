@@ -29,6 +29,8 @@
 #include "cm1_44xx.h"
 #include "cm-regbits-44xx.h"
 
+#include <linux/temphack.h>
+
 #define OMAP4430_CM_M3_M3_CLKCTRL (OMAP4430_CM2_BASE + OMAP4430_CM2_CORE_INST \
 		+ OMAP4_CM_DUCATI_DUCATI_CLKCTRL_OFFSET)
 
@@ -102,8 +104,8 @@ static struct omap_rproc_timers_info ipu_timers[] = {
 	{ .id = 3 },
 	{ .id = 4 },
 #ifdef CONFIG_REMOTEPROC_WATCHDOG
-	{ .id = 10 },
-	{ .id = 9 },
+	{ .id = DUCATI_WDT_TIMER_1 },
+	{ .id = DUCATI_WDT_TIMER_2 },
 #endif
 };
 
