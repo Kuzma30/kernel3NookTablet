@@ -101,6 +101,7 @@ static void acclaim4430_init_display_led(void)
 static void acclaim4430_disp_backlight_setpower(struct omap_pwm_led_platform_data *pdata, int on_off)
 {
 	printk(KERN_INFO "Backlight set power, on_off = %d\n",on_off);
+	msleep(800);
 	if (on_off)
 		gpio_direction_output(38, (acclaim_board_type() >= EVT2) ? 1 : 0);
 	else
@@ -110,7 +111,6 @@ static void acclaim4430_disp_backlight_setpower(struct omap_pwm_led_platform_dat
 	pr_debug("%s: on_off:%d\n", __func__, on_off);
 	// enable this fixed backlight startup for A100 on low level
 	// but could generate a little white flash at start
-	msleep(500);
 	printk(KERN_INFO "Backlight set power end\n");
 }
 
@@ -121,7 +121,7 @@ static struct omap_pwm_led_platform_data acclaim4430_disp_backlight_data = {
 	.intensity_timer = 11,
 	.bkl_max    = 254,
 	.bkl_min    = 0,
-	.bkl_freq    = 30000,
+	.bkl_freq    = 128,
 	.invert     = 1,
 /*	.def_on		 = 0,
 	.def_brightness	 = DEFAULT_BACKLIGHT_BRIGHTNESS,*/
