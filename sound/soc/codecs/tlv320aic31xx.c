@@ -1819,7 +1819,7 @@ static const struct snd_kcontrol_new aic31xx_snd_controls[] = {
 #ifdef AIC3100_CODEC_SUPPORT
 	/* SP Class-D driver output stage gain Control */
 	SOC_SINGLE("Class-D driver Vol",
-			SPL_DRIVER, 3, 0x04, 0),
+			SPL_DRIVER, 3, 0x04, 4), //Kuzma30 try to increase sound volume
 #endif
 
 	/* HP Analog Gain Volume Control */

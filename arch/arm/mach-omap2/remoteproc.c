@@ -136,7 +136,7 @@ static struct omap_rproc_pdata omap4_rproc_data[] = {
 	{
 		.name		= "ipu",
 		.iommu_name	= "ducati",
-		.firmware	= "ducati-m3.bin",
+		.firmware	= DUCATI_FIRMWARE_NAME,
 		.oh_name	= "ipu_c0",
 		.oh_name_opt	= "ipu_c1",
 		.clkdm_name	= "ducati_clkdm",

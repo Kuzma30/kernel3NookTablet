@@ -678,7 +678,7 @@ static struct omap2_hsmmc_info mmc[] = {
 		.mmc		= 1,
 		.caps		= MMC_CAP_4_BIT_DATA | MMC_CAP_8_BIT_DATA | MMC_CAP_1_8V_DDR,
 	//	.gpio_cd	= -EINVAL,
-		.gpio_wp	= -EINVAL,
+		.gpio_wp	= 4,
 		.nonremovable 	= false,
 #ifdef CONFIG_PM_RUNTIME
 		.power_saving	= true,

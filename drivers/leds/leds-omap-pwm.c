@@ -326,7 +326,7 @@ static int omap_pwm_led_probe(struct platform_device *pdev)
 	led->cdev.default_trigger = pdata->default_trigger;
 	led->cdev.name = pdata->name;
 	led->pdata = pdata;
-	led->brightness = LED_OFF;
+	led->brightness = 100; //LED_OFF;//Kuzma30
 
 	dev_info(&pdev->dev, "OMAP PWM LED (%s) at GP timer %d/%d\n",
 		 pdata->name, pdata->intensity_timer, pdata->blink_timer);
