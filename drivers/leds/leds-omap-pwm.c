@@ -86,6 +86,9 @@ static void omap_pwm_led_pad_disable(struct omap_pwm_led *led)
 
 static void omap_pwm_led_power_on(struct omap_pwm_led *led)
 {
+	u32 val;
+	u32 period;
+	struct clk *timer_fclk;
 	pr_debug("%s: start \n",__func__);
 	if (led->powered)
 		return;
@@ -103,6 +106,16 @@ static void omap_pwm_led_power_on(struct omap_pwm_led *led)
 
 	/* explicitly enable the timer, saves some SAR later */
 	omap_dm_timer_enable(led->intensity_timer);
+	omap_dm_timer_start(led->intensity_timer);
+
+	omap_dm_timer_set_pwm(led->intensity_timer, led->pdata->invert ? 1 : 0, 1,
+		      OMAP_TIMER_TRIGGER_OVERFLOW_AND_COMPARE);
+
+	timer_fclk = omap_dm_timer_get_fclk(led->intensity_timer);
+	period = clk_get_rate(timer_fclk) / 128;
+
+	val = 0xFFFFFFFF+1-period;
+	omap_dm_timer_set_load(led->intensity_timer, 1, val);
 	
 	/* Enable PWM timers */
 	if (led->blink_timer != NULL) {
@@ -151,20 +164,13 @@ static void pwm_set_speed(struct omap_dm_timer *gpt,
 	timer_fclk = omap_dm_timer_get_fclk(gpt);
 	period = clk_get_rate(timer_fclk) / frequency;
 
-	val = 0xFFFFFFFF+1-period;
-	omap_dm_timer_set_load(gpt, 1, val);
-
 	val = 0xFFFFFFFF+1-(period*duty_cycle/256);
 	omap_dm_timer_set_match(gpt, 1, val);
-
-	/* assume overflow first: no toogle if first trig is match */
-	omap_dm_timer_write_counter(gpt, 0xFFFFFFFE);
 }
 
 static void omap_pwm_led_set_pwm_cycle(struct omap_pwm_led *led, int cycle)
 {
 	int pwm_frequency = 10000;
-	int def_on;
 	
 	pr_debug("%s: cycle: %i\n", 
 			__func__, cycle);
@@ -179,18 +185,7 @@ static void omap_pwm_led_set_pwm_cycle(struct omap_pwm_led *led, int cycle)
 		pwm_frequency = led->pdata->bkl_freq;
 
 	if (cycle != LED_FULL)
-		def_on = led->pdata->invert ? 1:0;
-	else
-		def_on = led->pdata->invert ? 0:1;
-	
-	omap_dm_timer_set_pwm(led->intensity_timer, def_on, 1,
-		      OMAP_TIMER_TRIGGER_OVERFLOW_AND_COMPARE);
-
-	if (cycle != LED_FULL) {
 		pwm_set_speed(led->intensity_timer, pwm_frequency, 256-cycle);
-		omap_dm_timer_start(led->intensity_timer);
-	} else
-		omap_dm_timer_stop(led->intensity_timer);
 }
 
 static void omap_pwm_led_set(struct led_classdev *led_cdev,
@@ -201,26 +196,20 @@ static void omap_pwm_led_set(struct led_classdev *led_cdev,
 	pr_debug("%s: brightness: %i\n", __func__, value);
 
 	if (led->brightness != value) {
-		if (led->brightness == LED_OFF ||
+		if (led->brightness < led->pdata->bkl_min ||
 			led_cdev->flags & LED_SUSPENDED) {
 			/* LED currently OFF */
 			omap_pwm_led_power_on(led);
-			if (value < led->pdata->bkl_min*2) {
-				// some backlight stepup can't start without medium value during variable time
-				omap_pwm_led_set_pwm_cycle(led, led->pdata->bkl_min*3);
-				omap_pwm_led_pad_enable(led);
-				msleep(50);
-				omap_pwm_led_set_pwm_cycle(led, value);
-			
-			} else {
+			if (value > led->pdata->bkl_min) {
 				omap_pwm_led_set_pwm_cycle(led, value);
 				omap_pwm_led_pad_enable(led);
 			}
-		} else
+		} else {
 			/* just set the new cycle */
 			omap_pwm_led_set_pwm_cycle(led, value);
+		}
 			
-		if (value == LED_OFF) {
+		if (value < led->pdata->bkl_min && !(led_cdev->flags & LED_SUSPENDED)) {
 			/* LED now suspended */
 			omap_pwm_led_pad_disable(led);
 			omap_pwm_led_set_pwm_cycle(led, value);
@@ -369,8 +358,8 @@ static int omap_pwm_led_probe(struct platform_device *pdev)
 
 	}
 
-	omap_pwm_led_set_pwm_cycle(led, 145);
-	led->brightness = 145;
+	if(pdata->def_brightness)
+		omap_pwm_led_set(led, pdata->def_brightness);
 
 	return 0;
 
