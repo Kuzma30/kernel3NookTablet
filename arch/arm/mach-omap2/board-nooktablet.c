@@ -552,6 +552,7 @@ static struct platform_device btwilink_device = {
 /*******************************************************/
 static struct regulator_consumer_supply tp_supply[] = {
 	{ .supply = "vtp" },
+	{ .supply = "vlcd"},
 };
 
 static struct regulator_init_data tp_vinit = {
@@ -680,6 +681,7 @@ static struct omap2_hsmmc_info mmc[] = {
 	//	.gpio_cd	= -EINVAL,
 		.gpio_wp	= 4,
 		.nonremovable 	= false,
+		.no_off_init	= true,
 #ifdef CONFIG_PM_RUNTIME
 		.power_saving	= true,
 #endif

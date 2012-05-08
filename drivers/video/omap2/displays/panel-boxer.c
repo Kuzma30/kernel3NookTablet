@@ -38,7 +38,7 @@
 
 static struct workqueue_struct *boxer_panel_wq;
 static struct omap_dss_device *boxer_panel_dssdev;
-//static struct regulator *boxer_panel_regulator;
+static struct regulator *boxer_panel_regulator;
 static struct spi_device *boxer_spi_device;
 static atomic_t boxer_panel_is_enabled = ATOMIC_INIT(0);
 
@@ -417,7 +417,7 @@ static int boxer_spi_probe(struct spi_device *spi)
 {
 	int ret = 0;
 
-#if 0
+#if 1
 	boxer_panel_regulator = regulator_get(&spi->dev, "vlcd");
 	if (!regulator_is_enabled(boxer_panel_regulator)) {
 		if (g_ft_i2c_adapter) {
@@ -479,7 +479,7 @@ static int __init boxer_lcd_init(void)
 
 	boxer_panel_wq = create_singlethread_workqueue("boxer-panel-wq");
 
-#if 0
+#if 1
 	if (IS_ERR(boxer_panel_regulator)) {
 		printk(KERN_ERR "Unable to get vlcd regulator, reason: %ld!\n",
 		       IS_ERR(boxer_panel_regulator));
