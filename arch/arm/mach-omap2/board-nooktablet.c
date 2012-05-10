@@ -150,11 +150,11 @@ struct kxtf9_platform_data kxtf9_platform_data_here = {
 
 	/* Map the axes from the sensor to the device */
 	/* SETTINGS FOR acclaim */
-	.axis_map_x     = 0,
-	.axis_map_y     = 1,
+	.axis_map_x     = 1,
+	.axis_map_y     = 0,
 	.axis_map_z     = 2,
 	.negate_x       = 0,
-	.negate_y       = 0,
+	.negate_y       = 1,
 	.negate_z       = 0,
 	.data_odr_init          = ODR12_5F,
 //	.res_12bit	= 1,
@@ -212,9 +212,9 @@ static void ft5x06_platform_resume(void)
 }
  
 static struct ft5x06_platform_data ft5x06_platform_data = {
-	.maxx = 1024,
-	.maxy = 600,
-	.flags = FLIP_DATA_FLAG | REVERSE_Y_FLAG | REVERSE_X_FLAG,
+	.maxx = 600,
+	.maxy = 1024,
+	.flags = REVERSE_Y_FLAG,
 	.reset_gpio = OMAP_FT5x06_RESET_GPIO,
 	.use_st = FT_USE_ST,
 	.use_mt = FT_USE_MT,
