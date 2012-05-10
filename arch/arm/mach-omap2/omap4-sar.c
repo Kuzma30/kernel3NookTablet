@@ -26,7 +26,7 @@
 #include "cm-regbits-44xx.h"
 #include "prcm44xx.h"
 #include "cminst44xx.h"
-
+extern int omap4430_usbhs_update_sar(void);
 /*
  * These SECURE control registers are used to work-around
  * DDR corruption on the second chip select on OMAP443x.
