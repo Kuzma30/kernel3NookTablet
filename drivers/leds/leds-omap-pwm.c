@@ -199,8 +199,8 @@ static void omap_pwm_led_set(struct led_classdev *led_cdev,
 		if (led->brightness < led->pdata->bkl_min ||
 			led_cdev->flags & LED_SUSPENDED) {
 			/* LED currently OFF */
-			omap_pwm_led_power_on(led);
 			if (value > led->pdata->bkl_min) {
+				omap_pwm_led_power_on(led);
 				omap_pwm_led_set_pwm_cycle(led, value);
 				omap_pwm_led_pad_enable(led);
 			}
@@ -212,7 +212,7 @@ static void omap_pwm_led_set(struct led_classdev *led_cdev,
 		if (value < led->pdata->bkl_min && led->brightness > led->pdata->bkl_min) {
 			/* LED now suspended */
 			omap_pwm_led_pad_disable(led);
-			omap_pwm_led_set_pwm_cycle(led, value);
+			// omap_pwm_led_set_pwm_cycle(led, value);
 			omap_pwm_led_power_off(led);
 		}
 		led->brightness = value;
@@ -359,7 +359,7 @@ static int omap_pwm_led_probe(struct platform_device *pdev)
 	}
 
 	if(pdata->def_brightness)
-		omap_pwm_led_set(led, pdata->def_brightness);
+		omap_pwm_led_set(&led->cdev, pdata->def_brightness);
 
 	return 0;
 
