@@ -118,14 +118,13 @@ static struct attribute_group otter1_panel_attribute_group = {
 static void boxer_init_panel(void) {
 	int vendor0=1, vendor1=1;
 	int result = 0;
-	mdelay(1);
 #ifndef CONFIG_MACH_OMAP4_NOOKTABLET
+	mdelay(1);
 	vendor1 = gpio_get_value(175); //LCD_ID PIN#17(Vendor[1])
 	vendor0 = gpio_get_value(176); //LCD_ID PIN#15(Vendor[0])
 
 	//Before DVT
 	if (quanta_get_mbid() < 4) {
-#endif
 		if((vendor1 == 0) && (vendor0 == 0)) {
 			printk("***************************************************\n");
 			printk("******************  Panel of LG  ******************\n");
@@ -183,7 +182,6 @@ static void boxer_init_panel(void) {
 			result |= spi_send(boxer_spi_device, 0x10, 0x41);
 			result |= spi_send(boxer_spi_device, 0x00, 0xad);
 		}
-#ifndef CONFIG_MACH_OMAP4_NOOKTABLET
 	} else {
 		//After DVT
 		if((vendor1 == 0) && (vendor0 == 0))
@@ -235,6 +233,19 @@ static void boxer_init_panel(void) {
 			result |= spi_send(boxer_spi_device, 0x00, 0xad);
 		}
 	}
+#else
+    printk("*************************************************\n");
+    printk("******************  Nook panel ******************\n");
+    printk("*************************************************\n");
+    result |= spi_send(boxer_spi_device, 0x00, 0xad);
+    result |= spi_send(boxer_spi_device, 0x01, 0x30);
+    result |= spi_send(boxer_spi_device, 0x02, 0x40);
+    result |= spi_send(boxer_spi_device, 0x0e, 0x5f);
+    result |= spi_send(boxer_spi_device, 0x0f, 0xa4);
+    result |= spi_send(boxer_spi_device, 0x0d, 0x00);
+    result |= spi_send(boxer_spi_device, 0x02, 0x43);
+    result |= spi_send(boxer_spi_device, 0x0a, 0x28);
+    result |= spi_send(boxer_spi_device, 0x10, 0x41);
 #endif
 }
 
