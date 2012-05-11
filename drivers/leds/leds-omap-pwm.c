@@ -199,7 +199,7 @@ static void omap_pwm_led_set(struct led_classdev *led_cdev,
 		if (led->brightness < led->pdata->bkl_min ||
 			led_cdev->flags & LED_SUSPENDED) {
 			/* LED currently OFF */
-			if (value > led->pdata->bkl_min) {
+			if (value >= led->pdata->bkl_min) {
 				omap_pwm_led_power_on(led);
 				omap_pwm_led_set_pwm_cycle(led, value);
 				omap_pwm_led_pad_enable(led);
@@ -209,7 +209,7 @@ static void omap_pwm_led_set(struct led_classdev *led_cdev,
 			omap_pwm_led_set_pwm_cycle(led, value);
 		}
 			
-		if (value < led->pdata->bkl_min && led->brightness > led->pdata->bkl_min) {
+		if (value < led->pdata->bkl_min && led->brightness >= led->pdata->bkl_min) {
 			/* LED now suspended */
 			omap_pwm_led_pad_disable(led);
 			// omap_pwm_led_set_pwm_cycle(led, value);
