@@ -681,7 +681,7 @@ static struct omap2_hsmmc_info mmc[] = {
 	//	.gpio_cd	= -EINVAL,
 		.gpio_wp	= 4,
 		.nonremovable 	= false,
-		.no_off_init	= true,
+	//	.no_off_init	= true,
 #ifdef CONFIG_PM_RUNTIME
 		.power_saving	= true,
 #endif
