@@ -230,6 +230,10 @@ static struct omap_dss_device sdp4430_boxer_device = {
 	.driver_name		= "boxer_panel",
 	.type			= OMAP_DISPLAY_TYPE_DPI,
 	.channel		= OMAP_DSS_CHANNEL_LCD2,
+#ifdef TEMP_HACK
+	.platform_enable  = nooktablet_panel_enable_lcd,
+	.platform_disable  = nooktablet_panel_disable_lcd,
+#endif
 };
 
 static struct omap_dss_device *sdp4430_dss_devices[] = {
