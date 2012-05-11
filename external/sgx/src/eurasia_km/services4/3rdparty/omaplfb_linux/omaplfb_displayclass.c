@@ -734,16 +734,6 @@ static PVRSRV_ERROR SwapToDCBuffer(IMG_HANDLE hDevice,
 	return PVRSRV_OK;
 }
 
-static PVRSRV_ERROR SwapToDCSystem(IMG_HANDLE hDevice,
-                                   IMG_HANDLE hSwapChain)
-{
-	UNREFERENCED_PARAMETER(hDevice);
-	UNREFERENCED_PARAMETER(hSwapChain);
-	
-	
-	return PVRSRV_OK;
-}
-
 #if !defined(CONFIG_GCBV)
 IMG_BOOL OMAPLFBInitBlt(void)
 {
@@ -1024,11 +1014,10 @@ static IMG_BOOL ProcessFlipV2(IMG_HANDLE hCmdCookie,
 		/* TILER buffers do not need meminfos */
 		if(is_tiler_addr((u32)phyAddr.uiAddr))
 		{
-			asMemInfo[k].uiAddr = phyAddr.uiAddr + ppsMemInfos[i]->planeOffsets[0];
+			asMemInfo[k].uiAddr = phyAddr.uiAddr;
 			if (tiler_fmt((u32)phyAddr.uiAddr) == TILFMT_8BIT)
 			{
-				IMG_UINT32 uvOffset = ppsMemInfos[i]->planeOffsets[1] ?
-					ppsMemInfos[i]->planeOffsets[1] : ((uByteSize * 2) / 3);
+				IMG_UINT32 uvOffset = ((uByteSize * 2) / 3);
 				psDevInfo->sPVRJTable.pfnPVRSRVDCMemInfoGetCpuPAddr(ppsMemInfos[i],
 						uvOffset, &phyAddr);
 				asMemInfo[k].uiUVAddr = phyAddr.uiAddr;
@@ -1639,7 +1628,6 @@ static OMAPLFB_DEVINFO *OMAPLFBInitDev(unsigned uiFBDevID)
 	psDevInfo->sDCJTable.pfnSetDCSrcColourKey = SetDCSrcColourKey;
 	psDevInfo->sDCJTable.pfnGetDCBuffers = GetDCBuffers;
 	psDevInfo->sDCJTable.pfnSwapToDCBuffer = SwapToDCBuffer;
-	psDevInfo->sDCJTable.pfnSwapToDCSystem = SwapToDCSystem;
 	psDevInfo->sDCJTable.pfnSetDCState = SetDCState;
 
 	
