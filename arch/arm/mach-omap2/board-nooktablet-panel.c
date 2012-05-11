@@ -102,7 +102,7 @@ static void acclaim4430_disp_backlight_setpower(struct omap_pwm_led_platform_dat
 {
 	printk(KERN_INFO "Backlight set power, on_off = %d\n",on_off);
 	if (on_off) {
-		msleep(800);
+		msleep(500);
 		gpio_direction_output(38, (acclaim_board_type() >= EVT2) ? 1 : 0);
 	} else {
 		gpio_direction_output(38, (acclaim_board_type() >= EVT2) ? 0 : 1);
@@ -230,9 +230,6 @@ static struct omap_dss_device sdp4430_boxer_device = {
 	.driver_name		= "boxer_panel",
 	.type			= OMAP_DISPLAY_TYPE_DPI,
 	.channel		= OMAP_DSS_CHANNEL_LCD2,
-  	.platform_enable	= nooktablet_panel_enable_lcd,
-  	.platform_disable	= nooktablet_panel_disable_lcd,
-	.max_backlight_level	= 255,
 };
 
 static struct omap_dss_device *sdp4430_dss_devices[] = {
