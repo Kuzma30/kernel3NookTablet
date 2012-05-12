@@ -2799,8 +2799,9 @@ static int ft5x06_resume(struct i2c_client *client)
     int retval = 0;
     struct ft5x06 *ts = NULL;
 
+#if FT5x06_DEBUG_VERBOSE
     printk(KERN_INFO "%s() - Driver is resuming start function.\n", __FUNCTION__);
-
+#endif
     ts = (struct ft5x06 *) i2c_get_clientdata(client);
 
     retval = regulator_enable(ts->vtp);
@@ -2818,7 +2819,9 @@ static int ft5x06_resume(struct i2c_client *client)
 		mb();
 		enable_irq(ts->client->irq);
     }
+#if FT5x06_DEBUG_VERBOSE
 	printk(KERN_INFO "%s() - Driver is resuming end function.\n", __FUNCTION__);
+#endif
     return retval;
 }
 
@@ -2830,29 +2833,33 @@ static int ft5x06_suspend(struct i2c_client *client, pm_message_t message)
     struct ft5x06 *ts = NULL;
 
     ts = (struct ft5x06 *) i2c_get_clientdata(client);
-
+#if FT5x06_DEBUG_VERBOSE
     printk(KERN_INFO "%s() - Driver is suspending: start.\n", __FUNCTION__);
-
+#endif
    /* Disable/enable irq call (in irq/worker function) are matched, disable here for suspend */
     disable_irq(ts->client->irq);
+#if FT5x06_DEBUG_VERBOSE
 	printk(KERN_INFO "%s() - Driver is suspending: disable IRQ.\n", __FUNCTION__);
+#endif
    /* Wait for woker finish, even if worker enables irq, the irq still is disabled because of the above call */
     flush_workqueue(ft5x06_ts_wq);
+#if FT5x06_DEBUG_VERBOSE
 	printk(KERN_INFO "%s() - Driver is suspending: flash workqueue.\n", __FUNCTION__);
+#endif
    /* No need to cancel since irq is disabled, there is no pending worker at this time*/
 
 	if (ts->platform_data->platform_suspend) {
-		printk(KERN_INFO "%s() - Driver is suspending: platform suspend start.\n", __FUNCTION__);
+//		printk(KERN_INFO "%s() - Driver is suspending: platform suspend start.\n", __FUNCTION__);
 		ts->platform_data->platform_suspend();
-		printk(KERN_INFO "%s() - Driver is suspending: platform suspend end.\n", __FUNCTION__);
+//		printk(KERN_INFO "%s() - Driver is suspending: platform suspend end.\n", __FUNCTION__);
 	}
 
 	// keep focaltech controller in reset after this point
 	gpio_direction_output(ts->platform_data->reset_gpio, 0);
-	printk(KERN_INFO "%s() - Driver is suspending: keep focaltech controller in reset after this point.\n", __FUNCTION__);
+//	printk(KERN_INFO "%s() - Driver is suspending: keep focaltech controller in reset after this point.\n", __FUNCTION__);
 	regulator_disable(ts->vtp);
-	printk(KERN_INFO "%s() - Driver is suspending: regulator disable.\n", __FUNCTION__);
-	printk(KERN_INFO "%s() - Driver is suspending end.\n", __FUNCTION__);
+//	printk(KERN_INFO "%s() - Driver is suspending: regulator disable.\n", __FUNCTION__);
+//	printk(KERN_INFO "%s() - Driver is suspending end.\n", __FUNCTION__);
     return 0;
 }
 
@@ -2861,9 +2868,9 @@ static int ft5x06_suspend(struct i2c_client *client, pm_message_t message)
 static int __devexit ft5x06_remove(struct i2c_client *client)
 {
     struct ft5x06 *ts;
-
+#if FT5x06_DEBUG_VERBOSE
     printk(KERN_INFO "%s() - Driver is unregistering.\n", __FUNCTION__);
-
+#endif
     /* clientdata registered on probe */
     ts = i2c_get_clientdata(client);
     device_remove_file(&ts->client->dev, &dev_attr_irq_enable);
@@ -2906,9 +2913,9 @@ static int __devexit ft5x06_remove(struct i2c_client *client)
     {
         kfree(ts);
     }
-
+#if FT5x06_DEBUG_VERBOSE
     printk(KERN_INFO "%s() - Driver unregistration is complete.\n", __FUNCTION__);
-
+#endif
     return 0;
 }
 
@@ -2943,9 +2950,9 @@ static void ft5x06_late_resume(struct early_suspend *handler)
 static int ft5x06_init(void)
 {
     int ret = 0;
-
+#if FT5x06_DEBUG_VERBOSE
     printk(KERN_INFO "%s() - FT I2C Touchscreen Driver (Built %s @ %s)\n", __FUNCTION__, __DATE__, __TIME__);
-
+#endif
     ft5x06_ts_wq = create_singlethread_workqueue("ft5x06_ts_wq");
     if (NULL == ft5x06_ts_wq)
     {
