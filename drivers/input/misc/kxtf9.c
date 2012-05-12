@@ -31,7 +31,7 @@
 #include <linux/slab.h>
 #include <linux/earlysuspend.h>
 #include <linux/module.h>
-#define KXTF9_DEBUG
+#undef KXTF9_DEBUG
 
 #include <linux/input/kxtf9.h>
 

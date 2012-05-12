@@ -64,7 +64,7 @@
 
 #define FT5x06_UPGRADEVER_REG		0xCD
 
-#define FT5x06_DEBUG_VERBOSE             1
+#define FT5x06_DEBUG_VERBOSE             0
 
 #define GET_COORDINATE(l,h) ((l | (( h & 0x0F)<<8)))
 struct ft5x06 {
