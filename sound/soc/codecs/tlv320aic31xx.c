@@ -396,13 +396,13 @@ void debug_print_registers(struct snd_soc_codec *codec)
 
 	for (i = 0; i < 95; i++) {
 		data = (u8) aic31xx_read(codec, i);
-		printk(KERN_INFO "reg = %d val = %x\n", i, data);
+		DBG( "reg = %d val = %x\n", i, data);
 	}
 	DBG("### Page 1 Regs from 30 to 52\n");
 
 	for (i = 158; i < 180; i++) {
 		data = (u8) aic31xx_read(codec, i);
-		printk(KERN_INFO "reg = %d val = %x\n", (i%128), data);
+		DBG( "reg = %d val = %x\n", (i%128), data);
 	}
 
 
@@ -698,7 +698,7 @@ static int aic31xx_hw_params(struct snd_pcm_substream *substream,
 							(codec->active < 2))
 		aic31xx->record_stream = 0;
 
-	printk(KERN_INFO "%s: playback_stream= %d capture_stream=%d \
+	DBG("%s: playback_stream= %d capture_stream=%d \
 		priv_playback_stream= %d priv_record_stream=%d\n" , __func__, \
 		SNDRV_PCM_STREAM_PLAYBACK, SNDRV_PCM_STREAM_CAPTURE, \
 		aic31xx->playback_stream, aic31xx->record_stream);
@@ -911,14 +911,14 @@ void aic31xx_config_hp_volume(struct snd_soc_codec *codec, int mute)
 	/* Perform bulk I2C transactions */
 	if (i2c_transfer(client->adapter, i2c_right_transaction,
 				reg_update_count) != reg_update_count) {
-		printk(KERN_INFO "Error while Write brust i2c data error on "
+		DBG( "Error while Write brust i2c data error on "
 				"RIGHT_ANALOG_HPR!\n");
 	}
 
 
 	if (i2c_transfer(client->adapter, i2c_left_transaction,
 				reg_update_count) != reg_update_count) {
-		printk(KERN_INFO "Error while Write brust i2c data error on "
+		DBG( "Error while Write brust i2c data error on "
 				"LEFT_ANALOG_HPL!\n");
 	}
 
@@ -951,13 +951,13 @@ static int aic31xx_mute_codec(struct snd_soc_codec *codec, int mute)
 			if ((aic31xx->playback_stream == 1)  && \
 						(aic31xx->record_stream == 1)) {
 
-				printk(KERN_INFO "session still going on..\n");
+				DBG( "session still going on..\n");
 				mutex_unlock(&aic31xx->mutex_codec);
 				return 0;
 			}
 		}
 
-		printk(KERN_INFO "muting codec\n");
+		DBG( "muting codec\n");
 
 		/* Also update the global Playback Status Flag. This is required
 		 * for biquad update
@@ -984,7 +984,7 @@ static int aic31xx_mute_codec(struct snd_soc_codec *codec, int mute)
 
 	} else if ((!mute) || (aic31xx->playback_status)) {
 
-		printk(KERN_INFO "unmuting codec\n");
+		DBG( "unmuting codec\n");
 		aic31xx->playback_status = 1;
 
 		/* Check whether Playback or Record Session is about to Start */
@@ -1138,7 +1138,7 @@ static int aic31xx_dac_power_up_event(struct snd_soc_dapm_widget *w,
 				value = aic31xx_read(codec, DAC_FLAG_1);
 				counter++;
 			} while ((counter < 20) && ((value & 0x80) == 0));
-		printk(KERN_INFO "Left DAC powered up,counter = %d\n", counter);
+		DBG( "Left DAC powered up,counter = %d\n", counter);
 		} else if (w->shift == 6) {
 			counter = 0;
 			do {
@@ -1146,7 +1146,7 @@ static int aic31xx_dac_power_up_event(struct snd_soc_dapm_widget *w,
 				value = aic31xx_read(codec, DAC_FLAG_1);
 				counter++;
 			} while ((counter < 20) && ((value & 0x08) == 0));
-		printk(KERN_INFO "Right DAC powered up,counter= %d\n", counter);
+		DBG( "Right DAC powered up,counter= %d\n", counter);
 		}
 
 	} else if (SND_SOC_DAPM_EVENT_OFF(event)) {
@@ -1161,7 +1161,7 @@ static int aic31xx_dac_power_up_event(struct snd_soc_dapm_widget *w,
 				value = aic31xx_read(codec, DAC_FLAG_1);
 				counter++;
 			} while ((counter < 20) && ((value & 0x80) != 0));
-			printk(KERN_INFO "Left DAC powered down, \
+			DBG( "Left DAC powered down, \
 						counter = %d\n", counter);
 		} else if (w->shift == 6) {
 			counter = 0;
@@ -1170,7 +1170,7 @@ static int aic31xx_dac_power_up_event(struct snd_soc_dapm_widget *w,
 				value = aic31xx_read(codec, DAC_FLAG_1);
 				counter++;
 			} while ((counter < 20) && ((value & 0x08) != 0));
-		printk(KERN_INFO "RDAC powered down, counter = %d\n", counter);
+		DBG( "RDAC powered down, counter = %d\n", counter);
 		}
 	}
 	return 0;
@@ -1234,7 +1234,7 @@ static int aic31xx_hp_power_up_event(struct snd_soc_dapm_widget *w,
 	struct snd_soc_codec *codec = w->codec;
 
 	if (event & SND_SOC_DAPM_PRE_PMU) {
-		printk(KERN_INFO "pre_pmu: switching to HP\n");
+		DBG( "pre_pmu: switching to HP\n");
 		aic31xx_write(codec, HP_DRIVER_CTRL, 0x00);
 
 	} else if (event & SND_SOC_DAPM_POST_PMU) {
@@ -1249,7 +1249,7 @@ static int aic31xx_hp_power_up_event(struct snd_soc_dapm_widget *w,
 				value = aic31xx_read(codec, DAC_FLAG_1);
 				counter++;
 			} while ((value & 0x20) == 0);
-			printk(KERN_INFO "##HPL Power up Iterations %d\r\n", \
+			DBG( "##HPL Power up Iterations %d\r\n", \
 								counter);
 
 		}
@@ -1260,14 +1260,14 @@ static int aic31xx_hp_power_up_event(struct snd_soc_dapm_widget *w,
 				value = aic31xx_read(codec, DAC_FLAG_1);
 				counter++;
 			} while ((value & 0x02) == 0);
-			printk(KERN_INFO "##HPR Power up Iterations %d\r\n", \
+			DBG( "##HPR Power up Iterations %d\r\n", \
 								counter);
 
 		aic31xx_config_hp_volume(codec, 0);
 		}
 
 	} else if (event & SND_SOC_DAPM_PRE_PMD) {
-		printk(KERN_INFO "pre_pmd: switching to LO\n");
+		DBG( "pre_pmd: switching to LO\n");
 		aic31xx_write(codec, HP_DRIVER_CTRL, 0x06);
 
 	} else if (event & SND_SOC_DAPM_POST_PMD) {
@@ -1282,7 +1282,7 @@ static int aic31xx_hp_power_up_event(struct snd_soc_dapm_widget *w,
 				value = aic31xx_read(codec, DAC_FLAG_1);
 				counter++;
 			} while ((counter < 10) && ((value & 0x20) != 0));
-			printk(KERN_INFO "##HPL Power down Iterations %d\r\n", \
+			DBG( "##HPL Power down Iterations %d\r\n", \
 								counter);
 
 		}
@@ -1293,7 +1293,7 @@ static int aic31xx_hp_power_up_event(struct snd_soc_dapm_widget *w,
 				value = aic31xx_read(codec, DAC_FLAG_1);
 				counter++;
 			} while ((counter < 10) && ((value & 0x02) != 0));
-		printk(KERN_INFO "##HPR Power down Iterations %d\r\n", counter);
+		DBG( "##HPR Power down Iterations %d\r\n", counter);
 		}
 	}
 	return 0;
@@ -1317,7 +1317,7 @@ static int aic31xx_sp_event(struct snd_soc_dapm_widget *w,
 				value = aic31xx_read(codec, DAC_FLAG_1);
 				counter++;
 			} while ((value & 0x10) == 0);
-		printk(KERN_INFO "##SPL Power up Iterations %d\r\n", counter);
+		DBG( "##SPL Power up Iterations %d\r\n", counter);
 		}
 		if (w->shift == 6) {
 			counter = 0;
@@ -1326,7 +1326,7 @@ static int aic31xx_sp_event(struct snd_soc_dapm_widget *w,
 				value = aic31xx_read(codec, DAC_FLAG_1);
 				counter++;
 			} while ((value & 0x01) == 0);
-		printk(KERN_INFO "##SPR Power up Iterations %d\r\n", counter);
+		DBG( "##SPR Power up Iterations %d\r\n", counter);
 		}
 
 	} else if (SND_SOC_DAPM_EVENT_OFF(event)) {
@@ -1341,7 +1341,7 @@ static int aic31xx_sp_event(struct snd_soc_dapm_widget *w,
 				value = aic31xx_read(codec, DAC_FLAG_1);
 				counter++;
 			} while ((counter < 10) && ((value & 0x10) != 0));
-		printk(KERN_INFO "##SPL Power down Iterations %d\r\n", counter);
+		DBG( "##SPL Power down Iterations %d\r\n", counter);
 
 		}
 		if (w->shift == 6) {
@@ -1351,7 +1351,7 @@ static int aic31xx_sp_event(struct snd_soc_dapm_widget *w,
 				value = aic31xx_read(codec, DAC_FLAG_1);
 				counter++;
 			} while ((counter < 10) && ((value & 0x01) != 0));
-		printk(KERN_INFO "##SPR Power down Iterations %d\r\n", counter);
+		DBG( "##SPR Power down Iterations %d\r\n", counter);
 
 		}
 	}
@@ -2160,7 +2160,7 @@ static int __devinit tlv320aic31xx_codec_probe(struct platform_device *pdev)
 
 	ret = gpio_request(codec_interrupt_gpio, "Codec Interrupt");
 	if (ret < 0) {
-		printk(KERN_INFO "%s: error in gpio request. codec interrupt"
+		DBG( "%s: error in gpio request. codec interrupt"
 				"failed\n", __func__);
 		return ret;
 	}
