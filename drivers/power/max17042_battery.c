@@ -63,8 +63,8 @@
 #define HISTORY_MAGIC		0x1234
 
 /*leave the debug msg on until later release TBD*/
-#define DEBUG(x...) 			printk(x)
-
+//#define DEBUG(x...) 			printk(x)
+#define DEBUG(x...)
 // DEBUG_NO_BATTERY is used for configs without a real battery (bench supply)
 // this produces no Alert signal on faults (like temperature/capacity)
 

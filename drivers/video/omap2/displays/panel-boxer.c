@@ -31,7 +31,7 @@
 
 #define	OMAP_LCD_PWM_PIN	121
 #define	OMAP_LCD_ENABLE_PIN	38
-#define DEBUG
+//#define DEBUG
 /* Delay between Panel configuration and Panel enabling */
 #define LCD_RST_DELAY		100
 #define LCD_INIT_DELAY		200

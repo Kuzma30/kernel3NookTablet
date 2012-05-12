@@ -40,8 +40,8 @@
 #include <linux/i2c/twl.h>
 #include <linux/usb/otg.h>
 
-#define DEBUG(x...)   printk(x)
-//#define DEBUG(x...)
+//#define DEBUG(x...)   printk(x)
+#define DEBUG(x...)
 
 /*amperage def*/
 #define USB_CURRENT_LIMIT_LOW    100   /* mA */
