@@ -225,7 +225,7 @@ static void omap2_init_processor_devices(void)
 		_init_omap_device("l3_main_1", &l3_dev);
 		_init_omap_device("dsp", &dsp_dev);
 		_init_omap_device("iva", &iva_dev);
-		//_init_omap_device("fdif", &fdif_dev);
+		_init_omap_device("fdif", &fdif_dev);
 	} else {
 		_init_omap_device("l3_main", &l3_dev);
 	}
