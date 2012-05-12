@@ -2166,7 +2166,7 @@ static int __devinit tlv320aic31xx_codec_probe(struct platform_device *pdev)
 	}
 	gpio_direction_input(codec_interrupt_gpio);
 	codec_interrupt = OMAP_GPIO_IRQ(codec_interrupt_gpio);
-	printk("Set codec interrupt\n");
+	DBG("Set codec interrupt\n");
 
 	ret = gpio_request(AUDIO_CODEC_PWR_ON_GPIO, AUDIO_CODEC_PWR_ON_GPIO_NAME);
 	if(ret < 0) {
@@ -2177,7 +2177,7 @@ static int __devinit tlv320aic31xx_codec_probe(struct platform_device *pdev)
 	gpio_set_value(AUDIO_CODEC_PWR_ON_GPIO, 1);
 	mdelay(10);
 	
-	printk("POWER ON codec\n");
+	DBG("POWER ON codec\n");
 	
 	ret = gpio_request(AUDIO_CODEC_RESET_GPIO, AUDIO_CODEC_RESET_GPIO_NAME);
 	if(ret < 0) {
@@ -2188,7 +2188,7 @@ static int __devinit tlv320aic31xx_codec_probe(struct platform_device *pdev)
 	gpio_set_value(AUDIO_CODEC_RESET_GPIO, 1);
 	mdelay(10);
 	
-	printk("Release RESET codec pin\n");
+	DBG("Release RESET codec pin\n");
 	phymuxbase = ioremap(0x4A100000, 0x1000);
 
 	/* GPIOs 101-AUD-CODEC-EN signal as per Schematics,
