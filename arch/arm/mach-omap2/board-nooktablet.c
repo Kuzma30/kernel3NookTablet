@@ -698,16 +698,25 @@ static struct omap2_hsmmc_info mmc[] = {
 	{}      /* Terminator */
 };
 
-static struct regulator_consumer_supply sdp4430_vaux_supply[] = {
+/* External SD-card */
+static struct regulator_consumer_supply sdp4430_vmmc_supply[] = {
  	{
 		.supply = "vmmc",
  		.dev_name = "omap_hsmmc.0",
  	},
 };
-static struct regulator_consumer_supply sdp4430_vmmc_supply[] = {
+
+/* Internal EMMC memory */
+static struct regulator_consumer_supply sdp4430_vemmc_supply[] = {
 	{
- 		.supply = "vemmc",
+		.supply = "vmmc",
 		.dev_name = "omap_hsmmc.1",
+	},
+};
+
+static struct regulator_consumer_supply sdp4430_vwlan_supply[] = {
+	{
+		.supply = "vwlan",
 	},
 };
 
@@ -774,7 +783,6 @@ static struct regulator_consumer_supply audio_supply[] = {
         { .supply = "audio-pwr", },
 };
 
-
 static struct regulator_init_data sdp4430_vaux1 = {
 	.constraints = {
 		.min_uV			= 1000000,
@@ -791,8 +799,6 @@ static struct regulator_init_data sdp4430_vaux1 = {
 		},
 		.always_on	= true,
 	},
-	.num_consumer_supplies	= 1,
-	.consumer_supplies	= sdp4430_vaux_supply,
 };
 
 static struct regulator_init_data sdp4430_vaux2 = {
@@ -812,25 +818,25 @@ static struct regulator_init_data sdp4430_vaux2 = {
 	},
 };
 
- static struct regulator_init_data sdp4430_vaux3 = {
- 	.constraints = {
- 		.min_uV			= 1800000,
- 		.max_uV			= 1800000,
-//  		.apply_uV		= true,
- 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
- 			| REGULATOR_MODE_STANDBY,
- 		.valid_ops_mask	 = REGULATOR_CHANGE_VOLTAGE
- 			| REGULATOR_CHANGE_MODE
- 			| REGULATOR_CHANGE_STATUS,
- 		.state_mem = {
- 			.enabled	= false,
- 			.disabled	= true,
- 		},
- 		.always_on	= true,
- 	},
-//  	.num_consumer_supplies = 1,
-//  	.consumer_supplies = sdp4430_vwlan_supply,
- };
+static struct regulator_init_data sdp4430_vaux3 = {
+	.constraints = {
+		.min_uV			= 1800000,
+		.max_uV			= 1800000,
+		.apply_uV		= true,
+		.valid_modes_mask	= REGULATOR_MODE_NORMAL
+			| REGULATOR_MODE_STANDBY,
+		.valid_ops_mask	 = REGULATOR_CHANGE_VOLTAGE
+			| REGULATOR_CHANGE_MODE
+			| REGULATOR_CHANGE_STATUS,
+		.state_mem = {
+			.enabled	= false,
+			.disabled	= true,
+		},
+		.always_on	= true,
+	},
+	.num_consumer_supplies = 1,
+	.consumer_supplies = sdp4430_vwlan_supply,
+};
 
 static struct regulator_init_data sdp4430_vmmc = {
 	.constraints = {
@@ -846,7 +852,6 @@ static struct regulator_init_data sdp4430_vmmc = {
 			.enabled	= false,
 			.disabled	= true,
 		},
-		.always_on	= true,
 	},
 	.num_consumer_supplies  = 1,
 	.consumer_supplies      = sdp4430_vmmc_supply,
