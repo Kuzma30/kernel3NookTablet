@@ -49,6 +49,7 @@
 #include <mach/omap4-common.h>
 #include <mach/emif.h>
 #include <mach/lpddr2-elpida.h>
+#include <mach/lpddr2-samsung.h>
 #include <mach/dmm.h>
 
 #include <asm/mach-types.h>
@@ -103,6 +104,10 @@
 #define TWL6030_RTC_GPIO 		6
 #define BLUETOOTH_UART			UART2
 #define CONSOLE_UART			UART1
+
+#define  SAMSUNG_SDRAM 0x1
+#define  ELPIDA_SDRAM  0x3
+#define  HYNIX_SDRAM   0x6
 
 #define MAX17042_GPIO_FOR_IRQ  65
 #define KXTF9_GPIO_FOR_IRQ  66
@@ -1189,11 +1194,26 @@ static struct omap_board_mux board_mux[] __initdata = {
  *
  * Same devices installed on EMIF1 and EMIF2
  */
-static __initdata struct emif_device_details emif_devices = {
-	.cs0_device = &lpddr2_elpida_2G_S4_dev,
-	.cs1_device = &lpddr2_elpida_2G_S4_dev
+
+static __initdata struct emif_device_details emif_devices_samsung = {
+        .cs0_device = &samsung_4G_S4,
+        .cs1_device = 0
 };
 
+static __initdata struct emif_device_details emif_devices_512_samsung = {
+        .cs0_device = &samsung_2G_S4,
+        .cs1_device = 0
+};
+
+static __initdata struct emif_device_details emif_devices_elpida = {
+        .cs0_device = &lpddr2_elpida_2G_S4_dev,
+        .cs1_device = &lpddr2_elpida_2G_S4_dev
+};
+
+static __initdata struct emif_device_details emif_devices_512_elpida = {
+        .cs0_device = &lpddr2_elpida_2G_S4_dev,
+        .cs1_device = 0
+};
 
 static struct omap_device_pad blaze_uart1_pads[] __initdata = {
 	{
@@ -1439,14 +1459,46 @@ static void __init omap_4430sdp_init(void)
 {
 	int status;
 	int package = OMAP_PACKAGE_CBS;
+	ulong sdram_size = get_sdram_size();
 
 	if (omap_rev() == OMAP4430_REV_ES1_0)
 		package = OMAP_PACKAGE_CBL;
 	omap4_mux_init(board_mux, NULL, package);
 
 	acclaim_board_init();
-	
-	omap_emif_setup_device_details(&emif_devices, &emif_devices);
+        if (sdram_vendor() == SAMSUNG_SDRAM) {
+                if (sdram_size == SZ_512M) {
+                        omap_emif_setup_device_details(&emif_devices_512_samsung, &emif_devices_512_samsung);
+                } else if (sdram_size == SZ_1G) {
+                        omap_emif_setup_device_details(&emif_devices_samsung, &emif_devices_samsung);
+                } else {
+                        pr_err("sdram memory size does not exist, default to using 1024MB \n");
+                        omap_emif_setup_device_details(&emif_devices_samsung, &emif_devices_samsung);
+                }
+                printk(KERN_INFO"Samsung DDR Memory \n");
+        } else if (sdram_vendor() == ELPIDA_SDRAM) {
+                if (sdram_size == SZ_512M) {
+                        omap_emif_setup_device_details(&emif_devices_512_elpida, &emif_devices_512_elpida);
+                } else if (sdram_size == SZ_1G) {
+                        omap_emif_setup_device_details(&emif_devices_elpida, &emif_devices_elpida);
+                } else {
+                        pr_err("sdram memory size does not exist, default to using 1024MB \n");
+                        omap_emif_setup_device_details(&emif_devices_elpida, &emif_devices_elpida);
+                }
+                printk(KERN_INFO"Elpida DDR Memory \n");
+        } else if (sdram_vendor() == HYNIX_SDRAM) {
+                /* Re-use ELPIDA timings as they are absolutely the same */
+                if (sdram_size == SZ_512M) {
+                        omap_emif_setup_device_details(&emif_devices_512_elpida, &emif_devices_512_elpida);
+                } else if (sdram_size == SZ_1G) {
+                        omap_emif_setup_device_details(&emif_devices_elpida, &emif_devices_elpida);
+                } else {
+                        pr_err("sdram memory size does not exist, default to using 1024MB \n");
+                        omap_emif_setup_device_details(&emif_devices_elpida, &emif_devices_elpida);
+                }
+                printk(KERN_INFO"Hynix DDR Memory \n");
+        } else
+                pr_err("Memory type does not exist\n");
 
 	omap_board_config = sdp4430_config;
 	omap_board_config_size = ARRAY_SIZE(sdp4430_config);
@@ -1512,7 +1564,12 @@ static void __init omap_4430sdp_init(void)
 static inline void ramconsole_reserve_sdram(void)
 {
 	// make the ram console the size of the printk log buffer
-    reserve_bootmem(ACCLAIM_RAM_CONSOLE_START, (1 << CONFIG_LOG_BUF_SHIFT), 0);
+    ulong sdram_size = get_sdram_size();
+    if (sdram_size == SZ_512M) {
+        reserve_bootmem(NOOKTABLET_RAM_CONSOLE_512MB_START, NOOKTABLET_RAM_CONSOLE_SIZE, 0);
+    } else {
+        reserve_bootmem(NOOKTABLET_RAM_CONSOLE_START, NOOKTABLET_RAM_CONSOLE_SIZE, 0);
+    }
 }
 #else
 static inline void ramconsole_reserve_sdram(void) {}

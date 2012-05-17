@@ -20,14 +20,22 @@
 #include <plat/cpu.h>
 #include "resetreason.h"
 #include "omap_ram_console.h"
+#include "mach/board-nooktablet.h"
 
 static struct resource ram_console_resources[] = {
 	{
 		.flags  = IORESOURCE_MEM,
-		.start  = OMAP_RAM_CONSOLE_START_DEFAULT,
-		.end    = OMAP_RAM_CONSOLE_START_DEFAULT +
-			  OMAP_RAM_CONSOLE_SIZE_DEFAULT - 1,
+		.start  = NOOKTABLET_RAM_CONSOLE_START,
+		.end    = NOOKTABLET_RAM_CONSOLE_END,
 	},
+};
+
+static struct resource ram_console_resources_512[] = {
+        {
+                .flags  = IORESOURCE_MEM,
+                .start  = NOOKTABLET_RAM_CONSOLE_512MB_START,
+                .end    = NOOKTABLET_RAM_CONSOLE_512MB_END,
+        },
 };
 
 static struct ram_console_platform_data ram_console_pdata;
@@ -42,6 +50,17 @@ static struct platform_device ram_console_device = {
 	},
 };
 
+static struct platform_device ram_console_device_512 = {
+        .name           = "ram_console",
+        .id             = -1,
+        .num_resources  = ARRAY_SIZE(ram_console_resources_512),
+        .resource       = ram_console_resources_512,
+        .dev            = {
+        .platform_data  = &ram_console_pdata,
+        },
+};
+
+
 static __initdata bool omap_ramconsole_inited;
 
 /**
@@ -54,7 +73,12 @@ static int __init omap_ram_console_register(void)
 	if (!omap_ramconsole_inited)
 		return -ENODEV;
 
-	ret = platform_device_register(&ram_console_device);
+	ulong sdram_size = get_sdram_size();
+	if (sdram_size == SZ_512M) {
+		ret = platform_device_register(&ram_console_device_512);
+	} else {
+		ret = platform_device_register(&ram_console_device);
+	}
 	if (ret) {
 		pr_err("%s: unable to register ram console device:"
 			"start=0x%08x, end=0x%08x, ret=%d\n",

@@ -28,6 +28,7 @@
 #include <linux/smp.h>
 #include <linux/fs.h>
 #include <linux/proc_fs.h>
+#include <linux/gpio.h>
 #include <linux/memblock.h>
 
 #include <asm/unified.h>
@@ -602,8 +603,34 @@ static int __init parse_tag_core(const struct tag *tag)
 
 __tagtable(ATAG_CORE, parse_tag_core);
 
+static ulong sdram_size = 0;
+ulong get_sdram_size(void)
+{
+	return sdram_size;
+}
+
+#ifdef CONFIG_MACH_OMAP4_NOOKTABLET
+static int get_board_hwid(void)
+{
+	int hwid;
+
+	hwid = !!gpio_get_value(33);
+	hwid |= (!!gpio_get_value(34)) << 1;
+	hwid |= (!!gpio_get_value(35)) << 2;
+	hwid |= (!!gpio_get_value(40)) << 3;
+	hwid |= (!!gpio_get_value(41)) << 4;
+	hwid |= (!!gpio_get_value(49)) << 5;
+	hwid |= (!!gpio_get_value(50)) << 6;
+	hwid |= (!!gpio_get_value(51)) << 7;
+
+	return hwid;
+
+}
+#endif
+
 static int __init parse_tag_mem32(const struct tag *tag)
 {
+	sdram_size = tag->u.mem.size;
 	return arm_add_memory(tag->u.mem.start, tag->u.mem.size);
 }
 
@@ -1051,6 +1078,9 @@ static int c_show(struct seq_file *m, void *v)
 
 	seq_printf(m, "Hardware\t: %s\n", machine_name);
 	seq_printf(m, "Revision\t: %04x\n", system_rev);
+#ifdef CONFIG_MACH_OMAP4_NOOKTABLET
+	seq_printf(m, "HWID\t\t: %04x\n", get_board_hwid());
+#endif
 	seq_printf(m, "Serial\t\t: %08x%08x\n",
 		   system_serial_high, system_serial_low);
 
