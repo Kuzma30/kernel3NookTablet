@@ -521,6 +521,11 @@ static enum bverror do_map(struct bvbuffdesc *buffdesc, int client,
 		__func__, __LINE__, gcmap.size);
 
 	gc_map(&gcmap);
+	if (gcmap.gcerror != GCERR_NONE) {
+		BVSETERROR(BVERR_OOM,
+				"unable to allocate gccore memory");
+		goto exit;
+	}
 
 	bvbuffmapinfo = (struct bvbuffmapinfo *) bvbuffmap->handle;
 	bvbuffmapinfo->handle = gcmap.handle;
@@ -607,6 +612,11 @@ static enum bverror do_unmap(struct bvbuffdesc *buffdesc, int client)
 
 	/* Unmap the buffer. */
 	gc_unmap(&gcmap);
+	if (gcmap.gcerror != GCERR_NONE) {
+		BVSETERROR(BVERR_OOM,
+				"unable to free gccore memory");
+		goto exit;
+	}
 
 	bverror = BVERR_NONE;
 
@@ -840,9 +850,17 @@ static enum bverror add_fixup(struct gcbatch *batch, unsigned int *fixup,
 						"fixup allocation failed");
 				goto exit;
 			}
+
+			GCPRINT(GCDBGFILTER, GCZONE_FIXUP, GC_MOD_PREFIX
+				"new fixup struct allocated = 0x%08X\n",
+				__func__, __LINE__, (unsigned int) temp);
 		} else {
 			temp = gccontext.vac_fixups;
 			gccontext.vac_fixups = temp->next;
+
+			GCPRINT(GCDBGFILTER, GCZONE_FIXUP, GC_MOD_PREFIX
+				"fixup struct reused = 0x%08X\n",
+				__func__, __LINE__, (unsigned int) temp);
 		}
 
 		temp->next = NULL;
@@ -853,10 +871,6 @@ static enum bverror add_fixup(struct gcbatch *batch, unsigned int *fixup,
 		else
 			buffer->fixuptail->next = temp;
 		buffer->fixuptail = temp;
-
-		GCPRINT(GCDBGFILTER, GCZONE_FIXUP, GC_MOD_PREFIX
-			"new fixup struct allocated = 0x%08X\n",
-			__func__, __LINE__, (unsigned int) temp);
 
 	} else {
 		GCPRINT(GCDBGFILTER, GCZONE_FIXUP, GC_MOD_PREFIX
@@ -1011,135 +1025,163 @@ struct bvformatxlate {
 	{ 0, 0, 0, { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } } }
 
 static struct bvformatxlate formatxlate[] = {
-	/* BITS=12 ALPHA=0 REVERSED=0 LEFT_JUSTIFIED=0 */
-	BVFORMATRGBA(16, X4R4G4B4, RGBA,
-		BVRED(12, 4), BVGREEN(8, 4), BVBLUE(4, 4), BVALPHA(0, 0)),
-
-	/* BITS=12 ALPHA=0 REVERSED=0 LEFT_JUSTIFIED=1 */
+	/*  #0: OCDFMT_xRGB12
+		BITS=12 ALPHA=0 REVERSED=0 LEFT_JUSTIFIED=0 */
 	BVFORMATRGBA(16, X4R4G4B4, ARGB,
 		BVRED(8, 4), BVGREEN(4, 4), BVBLUE(0, 4), BVALPHA(12, 0)),
 
-	/* BITS=12 ALPHA=0 REVERSED=1 LEFT_JUSTIFIED=0 */
-	BVFORMATRGBA(16, X4R4G4B4, BGRA,
-		BVRED(4, 4), BVGREEN(8, 4), BVBLUE(12, 4), BVALPHA(0, 0)),
+	/*  #1: OCDFMT_RGBx12
+		BITS=12 ALPHA=0 REVERSED=0 LEFT_JUSTIFIED=1 */
+	BVFORMATRGBA(16, X4R4G4B4, RGBA,
+		BVRED(12, 4), BVGREEN(8, 4), BVBLUE(4, 4), BVALPHA(0, 0)),
 
-	/* BITS=12 ALPHA=0 REVERSED=1 LEFT_JUSTIFIED=1 */
+	/*  #2: OCDFMT_xBGR12
+		BITS=12 ALPHA=0 REVERSED=1 LEFT_JUSTIFIED=0 */
 	BVFORMATRGBA(16, X4R4G4B4, ABGR,
 		BVRED(0, 4), BVGREEN(4, 4), BVBLUE(8, 4), BVALPHA(12, 0)),
 
-	/* BITS=12 ALPHA=1 REVERSED=0 LEFT_JUSTIFIED=0 */
-	BVFORMATRGBA(16, A4R4G4B4, RGBA,
-		BVRED(12, 4), BVGREEN(8, 4), BVBLUE(4, 4), BVALPHA(0, 4)),
+	/*  #3: OCDFMT_BGRx12
+		BITS=12 ALPHA=0 REVERSED=1 LEFT_JUSTIFIED=1 */
+	BVFORMATRGBA(16, X4R4G4B4, BGRA,
+		BVRED(4, 4), BVGREEN(8, 4), BVBLUE(12, 4), BVALPHA(0, 0)),
 
-	/* BITS=12 ALPHA=1 REVERSED=0 LEFT_JUSTIFIED=1 */
+	/*  #4: OCDFMT_ARGB12
+		BITS=12 ALPHA=1 REVERSED=0 LEFT_JUSTIFIED=0 */
 	BVFORMATRGBA(16, A4R4G4B4, ARGB,
 		BVRED(8, 4), BVGREEN(4, 4), BVBLUE(0, 4), BVALPHA(12, 4)),
 
-	/* BITS=12 ALPHA=1 REVERSED=1 LEFT_JUSTIFIED=0 */
-	BVFORMATRGBA(16, A4R4G4B4, BGRA,
-		BVRED(4, 4), BVGREEN(8, 4), BVBLUE(12, 4), BVALPHA(0, 4)),
+	/*  #5: OCDFMT_RGBA12
+		BITS=12 ALPHA=1 REVERSED=0 LEFT_JUSTIFIED=1 */
+	BVFORMATRGBA(16, A4R4G4B4, RGBA,
+		BVRED(12, 4), BVGREEN(8, 4), BVBLUE(4, 4), BVALPHA(0, 4)),
 
-	/* BITS=12 ALPHA=1 REVERSED=1 LEFT_JUSTIFIED=1 */
+	/*  #6: OCDFMT_ABGR12
+		BITS=12 ALPHA=1 REVERSED=1 LEFT_JUSTIFIED=0 */
 	BVFORMATRGBA(16, A4R4G4B4, ABGR,
 		BVRED(0, 4), BVGREEN(4, 4), BVBLUE(8, 4), BVALPHA(12, 4)),
 
+	/*  #7: OCDFMT_BGRA12
+		BITS=12 ALPHA=1 REVERSED=1 LEFT_JUSTIFIED=1 */
+	BVFORMATRGBA(16, A4R4G4B4, BGRA,
+		BVRED(4, 4), BVGREEN(8, 4), BVBLUE(12, 4), BVALPHA(0, 4)),
+
 	/***********************************************/
 
-	/* BITS=15 ALPHA=0 REVERSED=0 LEFT_JUSTIFIED=0 */
-	BVFORMATRGBA(16, X1R5G5B5, RGBA,
-		BVRED(11, 5), BVGREEN(6, 5), BVBLUE(1, 5), BVALPHA(0, 0)),
-
-	/* BITS=15 ALPHA=0 REVERSED=0 LEFT_JUSTIFIED=1 */
+	/*  #8: OCDFMT_xRGB15
+		BITS=15 ALPHA=0 REVERSED=0 LEFT_JUSTIFIED=0 */
 	BVFORMATRGBA(16, X1R5G5B5, ARGB,
 		BVRED(10, 5), BVGREEN(5, 5), BVBLUE(0, 5), BVALPHA(15, 0)),
 
-	/* BITS=15 ALPHA=0 REVERSED=1 LEFT_JUSTIFIED=0 */
-	BVFORMATRGBA(16, X1R5G5B5, BGRA,
-		BVRED(1, 5), BVGREEN(6, 5), BVBLUE(11, 5), BVALPHA(0, 0)),
+	/*  #9: OCDFMT_RGBx15
+		BITS=15 ALPHA=0 REVERSED=0 LEFT_JUSTIFIED=1 */
+	BVFORMATRGBA(16, X1R5G5B5, RGBA,
+		BVRED(11, 5), BVGREEN(6, 5), BVBLUE(1, 5), BVALPHA(0, 0)),
 
-	/* BITS=15 ALPHA=0 REVERSED=1 LEFT_JUSTIFIED=1 */
+	/* #10: OCDFMT_xBGR15
+		BITS=15 ALPHA=0 REVERSED=1 LEFT_JUSTIFIED=0 */
 	BVFORMATRGBA(16, X1R5G5B5, ABGR,
 		BVRED(0, 5), BVGREEN(5, 5), BVBLUE(10, 5), BVALPHA(15, 0)),
 
-	/* BITS=15 ALPHA=1 REVERSED=0 LEFT_JUSTIFIED=0 */
-	BVFORMATRGBA(16, A1R5G5B5, RGBA,
-		BVRED(11, 5), BVGREEN(6, 5), BVBLUE(1, 5), BVALPHA(0, 1)),
+	/* #11: OCDFMT_BGRx15
+		BITS=15 ALPHA=0 REVERSED=1 LEFT_JUSTIFIED=1 */
+	BVFORMATRGBA(16, X1R5G5B5, BGRA,
+		BVRED(1, 5), BVGREEN(6, 5), BVBLUE(11, 5), BVALPHA(0, 0)),
 
-	/* BITS=15 ALPHA=1 REVERSED=0 LEFT_JUSTIFIED=1 */
+	/* #12: OCDFMT_ARGB15
+		BITS=15 ALPHA=1 REVERSED=0 LEFT_JUSTIFIED=0 */
 	BVFORMATRGBA(16, A1R5G5B5, ARGB,
 		BVRED(10, 5), BVGREEN(5, 5), BVBLUE(0, 5), BVALPHA(15, 1)),
 
-	/* BITS=15 ALPHA=1 REVERSED=1 LEFT_JUSTIFIED=0 */
-	BVFORMATRGBA(16, A1R5G5B5, BGRA,
-		BVRED(1, 5), BVGREEN(6, 5), BVBLUE(11, 5), BVALPHA(0, 1)),
+	/* #13: OCDFMT_RGBA15
+		BITS=15 ALPHA=1 REVERSED=0 LEFT_JUSTIFIED=1 */
+	BVFORMATRGBA(16, A1R5G5B5, RGBA,
+		BVRED(11, 5), BVGREEN(6, 5), BVBLUE(1, 5), BVALPHA(0, 1)),
 
-	/* BITS=15 ALPHA=1 REVERSED=1 LEFT_JUSTIFIED=1 */
+	/* #14: OCDFMT_ABGR15
+		BITS=15 ALPHA=1 REVERSED=1 LEFT_JUSTIFIED=0 */
 	BVFORMATRGBA(16, A1R5G5B5, ABGR,
 		BVRED(0, 5), BVGREEN(5, 5), BVBLUE(10, 5), BVALPHA(15, 1)),
 
-	/***********************************************/
-
-	/* BITS=16 ALPHA=0 REVERSED=0 LEFT_JUSTIFIED=0 */
-	BVFORMATRGBA(16, R5G6B5, ARGB,
-		BVRED(11, 5), BVGREEN(5, 6), BVBLUE(0, 5), BVALPHA(0, 0)),
-
-	/* BITS=16 ALPHA=0 REVERSED=0 LEFT_JUSTIFIED=1 */
-	BVFORMATRGBA(16, R5G6B5, ARGB,
-		BVRED(11, 5), BVGREEN(5, 6), BVBLUE(0, 5), BVALPHA(0, 0)),
-
-	/* BITS=16 ALPHA=0 REVERSED=1 LEFT_JUSTIFIED=0 */
-	BVFORMATRGBA(16, R5G6B5, ABGR,
-		BVRED(0, 5), BVGREEN(5, 6), BVBLUE(11, 5), BVALPHA(0, 0)),
-
-	/* BITS=16 ALPHA=0 REVERSED=1 LEFT_JUSTIFIED=1 */
-	BVFORMATRGBA(16, R5G6B5, ABGR,
-		BVRED(0, 5), BVGREEN(5, 6), BVBLUE(11, 5), BVALPHA(0, 0)),
-
-	/* BITS=16 ALPHA=1 REVERSED=0 LEFT_JUSTIFIED=0 */
-	BVFORMATINVALID,
-
-	/* BITS=16 ALPHA=1 REVERSED=0 LEFT_JUSTIFIED=1 */
-	BVFORMATINVALID,
-
-	/* BITS=16 ALPHA=1 REVERSED=1 LEFT_JUSTIFIED=0 */
-	BVFORMATINVALID,
-
-	/* BITS=16 ALPHA=1 REVERSED=1 LEFT_JUSTIFIED=1 */
-	BVFORMATINVALID,
+	/* #15: OCDFMT_BGRA15
+		BITS=15 ALPHA=1 REVERSED=1 LEFT_JUSTIFIED=1 */
+	BVFORMATRGBA(16, A1R5G5B5, BGRA,
+		BVRED(1, 5), BVGREEN(6, 5), BVBLUE(11, 5), BVALPHA(0, 1)),
 
 	/***********************************************/
 
-	/* BITS=24 ALPHA=0 REVERSED=0 LEFT_JUSTIFIED=0 */
-	BVFORMATRGBA(32, X8R8G8B8, RGBA,
-		BVRED(24, 8), BVGREEN(16, 8), BVBLUE(8, 8), BVALPHA(0, 0)),
+	/* #16: OCDFMT_RGB16
+		BITS=16 ALPHA=0 REVERSED=0 LEFT_JUSTIFIED=0 */
+	BVFORMATRGBA(16, R5G6B5, ARGB,
+		BVRED(11, 5), BVGREEN(5, 6), BVBLUE(0, 5), BVALPHA(0, 0)),
 
-	/* BITS=24 ALPHA=0 REVERSED=0 LEFT_JUSTIFIED=1 */
-	BVFORMATRGBA(32, X8R8G8B8, ARGB,
-		BVRED(16, 8), BVGREEN(8, 8), BVBLUE(0, 8), BVALPHA(0, 0)),
+	/* #17: OCDFMT_RGB16
+		BITS=16 ALPHA=0 REVERSED=0 LEFT_JUSTIFIED=1 */
+	BVFORMATRGBA(16, R5G6B5, ARGB,
+		BVRED(11, 5), BVGREEN(5, 6), BVBLUE(0, 5), BVALPHA(0, 0)),
 
-	/* BITS=24 ALPHA=0 REVERSED=1 LEFT_JUSTIFIED=0 */
+	/* #18: OCDFMT_BGR16
+		BITS=16 ALPHA=0 REVERSED=1 LEFT_JUSTIFIED=0 */
+	BVFORMATRGBA(16, R5G6B5, ABGR,
+		BVRED(0, 5), BVGREEN(5, 6), BVBLUE(11, 5), BVALPHA(0, 0)),
+
+	/* #19: OCDFMT_BGR16
+		BITS=16 ALPHA=0 REVERSED=1 LEFT_JUSTIFIED=1 */
+	BVFORMATRGBA(16, R5G6B5, ABGR,
+		BVRED(0, 5), BVGREEN(5, 6), BVBLUE(11, 5), BVALPHA(0, 0)),
+
+	/* #20 */
+	BVFORMATINVALID,
+
+	/* #21 */
+	BVFORMATINVALID,
+
+	/* #22 */
+	BVFORMATINVALID,
+
+	/* #23 */
+	BVFORMATINVALID,
+
+	/***********************************************/
+
+	/* #24: OCDFMT_xRGB24
+		BITS=24 ALPHA=0 REVERSED=0 LEFT_JUSTIFIED=0 */
 	BVFORMATRGBA(32, X8R8G8B8, BGRA,
 		BVRED(8, 8), BVGREEN(16, 8), BVBLUE(24, 8), BVALPHA(0, 0)),
 
-	/* BITS=24 ALPHA=0 REVERSED=1 LEFT_JUSTIFIED=1 */
+	/* #25: OCDFMT_RGBx24
+		BITS=24 ALPHA=0 REVERSED=0 LEFT_JUSTIFIED=1 */
 	BVFORMATRGBA(32, X8R8G8B8, ABGR,
-		BVRED(0, 8), BVGREEN(8, 8), BVBLUE(16, 8), BVALPHA(0, 0)),
+		BVRED(0, 8), BVGREEN(8, 8), BVBLUE(16, 8), BVALPHA(24, 0)),
 
-	/* BITS=24 ALPHA=1 REVERSED=0 LEFT_JUSTIFIED=0 */
-	BVFORMATRGBA(32, A8R8G8B8, RGBA,
-		BVRED(24, 8), BVGREEN(16, 8), BVBLUE(8, 8), BVALPHA(0, 8)),
+	/* #26: OCDFMT_xBGR24
+		BITS=24 ALPHA=0 REVERSED=1 LEFT_JUSTIFIED=0 */
+	BVFORMATRGBA(32, X8R8G8B8, RGBA,
+		BVRED(24, 8), BVGREEN(16, 8), BVBLUE(8, 8), BVALPHA(0, 0)),
 
-	/* BITS=24 ALPHA=1 REVERSED=0 LEFT_JUSTIFIED=1 */
-	BVFORMATRGBA(32, A8R8G8B8, ARGB,
-		BVRED(16, 8), BVGREEN(8, 8), BVBLUE(0, 8), BVALPHA(24, 8)),
+	/* #27: OCDFMT_BGRx24
+		BITS=24 ALPHA=0 REVERSED=1 LEFT_JUSTIFIED=1 */
+	BVFORMATRGBA(32, X8R8G8B8, ARGB,
+		BVRED(16, 8), BVGREEN(8, 8), BVBLUE(0, 8), BVALPHA(24, 0)),
 
-	/* BITS=24 ALPHA=1 REVERSED=1 LEFT_JUSTIFIED=0 */
+	/* #28: OCDFMT_ARGB24
+		BITS=24 ALPHA=1 REVERSED=0 LEFT_JUSTIFIED=0 */
 	BVFORMATRGBA(32, A8R8G8B8, BGRA,
 		BVRED(8, 8), BVGREEN(16, 8), BVBLUE(24, 8), BVALPHA(0, 8)),
 
-	/* BITS=24 ALPHA=1 REVERSED=1 LEFT_JUSTIFIED=1 */
+	/* #29: OCDFMT_RGBA24
+		BITS=24 ALPHA=1 REVERSED=0 LEFT_JUSTIFIED=1 */
 	BVFORMATRGBA(32, A8R8G8B8, ABGR,
 		BVRED(0, 8), BVGREEN(8, 8), BVBLUE(16, 8), BVALPHA(24, 8)),
+
+	/* #30: OCDFMT_ABGR24
+		BITS=24 ALPHA=1 REVERSED=1 LEFT_JUSTIFIED=0 */
+	BVFORMATRGBA(32, A8R8G8B8, RGBA,
+		BVRED(24, 8), BVGREEN(16, 8), BVBLUE(8, 8), BVALPHA(0, 8)),
+
+	/* #31: OCDFMT_BGRA24
+		BITS=24 ALPHA=1 REVERSED=1 LEFT_JUSTIFIED=1 */
+	BVFORMATRGBA(32, A8R8G8B8, ARGB,
+		BVRED(16, 8), BVGREEN(8, 8), BVBLUE(0, 8), BVALPHA(24, 8)),
 };
 
 static int parse_format(enum ocdformat ocdformat, struct bvformatxlate **format)
@@ -3731,6 +3773,8 @@ enum bverror gcbv_blt(struct bvbltparams *bltparams)
 		switch (srccount) {
 		case 0:
 			bverror = do_blit(bltparams, batch, NULL, 0, gca);
+			if (bverror != BVERR_NONE)
+				goto exit;
 			break;
 
 		case 1:
@@ -3742,6 +3786,8 @@ enum bverror gcbv_blt(struct bvbltparams *bltparams)
 				bverror = do_fill(bltparams, batch, srcinfo);
 			else
 				bverror = do_filter(bltparams, batch);
+			if (bverror != BVERR_NONE)
+				goto exit;
 			break;
 
 		case 2:
@@ -3761,6 +3807,8 @@ enum bverror gcbv_blt(struct bvbltparams *bltparams)
 				else
 					BVSETBLTERROR(BVERR_SRC1_HORZSCALE,
 						"scaling not supported");
+			if (bverror != BVERR_NONE)
+				goto exit;
 		}
 	}
 
@@ -3825,3 +3873,118 @@ exit:
 	return bverror;
 }
 EXPORT_SYMBOL(gcbv_blt);
+
+enum bverror gcbv_cache(struct bvcopparams *copparams)
+{
+	enum bverror bverror = BVERR_NONE;
+	int count; /* number of planes */
+	unsigned int bpp = 0; /* bytes per pixel */
+	unsigned long vert_offset, horiz_offset;
+
+	struct c2dmrgn rgn[3];
+	int container_size = 0;
+
+	unsigned long subsample = copparams->geom->format &
+			OCDFMTDEF_SUBSAMPLE_MASK;
+	unsigned long vendor = copparams->geom->format &
+			OCDFMTDEF_VENDOR_MASK;
+	unsigned long layout = copparams->geom->format &
+			OCDFMTDEF_LAYOUT_MASK;
+	unsigned long sizeminus1 = copparams->geom->format &
+			OCDFMTDEF_COMPONENTSIZEMINUS1_MASK;
+	unsigned long container = copparams->geom->format &
+			OCDFMTDEF_CONTAINER_MASK;
+
+
+	if (vendor != OCDFMTDEF_VENDOR_ALL) {
+		bverror = BVERR_FORMAT;
+		goto Error;
+	}
+
+	switch (container) {
+	case OCDFMTDEF_CONTAINER_8BIT:
+		container_size = 8;
+		break;
+	case OCDFMTDEF_CONTAINER_16BIT:
+		container_size = 16;
+		break;
+	case OCDFMTDEF_CONTAINER_24BIT:
+		container_size = 24;
+		break;
+	case OCDFMTDEF_CONTAINER_32BIT:
+		container_size = 32;
+		break;
+	case OCDFMTDEF_CONTAINER_48BIT:
+		container_size = 48;
+		break;
+	case OCDFMTDEF_CONTAINER_64BIT:
+		container_size = 64;
+		break;
+	}
+
+	switch (layout) {
+	case OCDFMTDEF_PACKED:
+
+		count = 1;
+
+		switch (subsample) {
+		case OCDFMTDEF_SUBSAMPLE_NONE:
+			if (sizeminus1 >= 8) {
+				bpp = container_size / 8;
+			} else {
+				bverror = BVERR_FORMAT;
+				goto Error;
+			}
+			break;
+
+		case OCDFMTDEF_SUBSAMPLE_422_YCbCr:
+			bpp = (container_size / 2) / 8;
+			break;
+
+		case OCDFMTDEF_SUBSAMPLE_420_YCbCr:
+			bverror = BVERR_FORMAT;
+			goto Error;
+			break;
+
+		case OCDFMTDEF_SUBSAMPLE_411_YCbCr:
+			bverror = BVERR_FORMAT;
+			goto Error;
+			break;
+		default:
+			bverror = BVERR_FORMAT;
+			goto Error;
+		}
+
+		rgn[0].span = copparams->rect->width * bpp;
+		rgn[0].lines = copparams->rect->height;
+		rgn[0].stride = copparams->geom->virtstride;
+		horiz_offset = copparams->rect->left * bpp;
+		vert_offset = copparams->rect->top;
+
+		rgn[0].start = (void *) ((unsigned long)
+				copparams->desc->virtaddr +
+				vert_offset * rgn[0].stride +
+				horiz_offset);
+		gcbvcacheop(count, rgn, copparams->cacheop);
+
+		break;
+	case OCDFMTDEF_DISTRIBUTED:
+		bverror = BVERR_FORMAT;
+		break;
+	/*TODO: Multi plane still need to be implemented */
+	case OCDFMTDEF_2_PLANE_YCbCr:
+		printk(KERN_INFO "Not yet implemented\n");
+		break;
+	case OCDFMTDEF_3_PLANE_STACKED:
+	case OCDFMTDEF_3_PLANE_SIDE_BY_SIDE_YCbCr:
+		printk(KERN_INFO "Not yet implemented\n");
+		break;
+	default:
+		bverror = BVERR_FORMAT;
+		break;
+	}
+
+Error:
+	return bverror;
+}
+EXPORT_SYMBOL(gcbv_cache);
