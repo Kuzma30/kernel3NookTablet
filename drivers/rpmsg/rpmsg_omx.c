@@ -106,8 +106,35 @@ static LIST_HEAD(rpmsg_omx_services_list);
 #endif
 #endif
 
+/*
+ * TODO: Need to do this using lookup with rproc, but rproc is not
+ * visible to rpmsg_omx
+ */
+#define TILER_START	0x60000000
+#define TILER_END	0x80000000
+
+#ifdef CONFIG_ION_OMAP_DYNAMIC
+#define ION_1D_START	0x82700000
+#define ION_1D_END	0x99700000
+#define ION_1D_VA	0x88000000
+#endif
+
 static int _rpmsg_pa_to_da(struct rpmsg_omx_instance *omx, u32 pa, u32 *da)
 {
+#ifdef CONFIG_ION_OMAP_DYNAMIC
+	if (pa >= TILER_START && pa < TILER_END) {
+		*da = pa;
+		return 0;
+	}
+	else if (pa >= ION_1D_START && pa < ION_1D_END) {
+		*da = (pa - ION_1D_START + ION_1D_VA);
+		return 0;
+	}
+	else {
+		*da = 0;
+		return -EINVAL;
+	}
+#else
 	int ret;
 	struct rproc *rproc;
 	u64 temp_da;
@@ -124,9 +151,11 @@ static int _rpmsg_pa_to_da(struct rpmsg_omx_instance *omx, u32 pa, u32 *da)
 		/* we know it is a 32 bit address */
 		*da = (u32)temp_da;
 
+
 	mutex_unlock(&omx->omxserv->lock);
 
 	return ret;
+#endif
 }
 
 static int _rpmsg_omx_buffer_lookup(struct rpmsg_omx_instance *omx,
@@ -330,6 +359,8 @@ static int rpmsg_omx_connect(struct rpmsg_omx_instance *omx, char *omxname)
 	payload = (struct omx_conn_req *)hdr->data;
 	strcpy(payload->name, omxname);
 
+	init_completion(&omx->reply_arrived);
+
 	/* send a conn req to the remote OMX connection service. use
 	 * the new local address that was just allocated by ->open */
 	ret = rpmsg_send_offchannel(omxserv->rpdev, omx->ept->addr,
@@ -389,7 +420,6 @@ long rpmsg_omx_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	case OMX_IOCIONREGISTER:
 	{
 		struct ion_fd_data data;
-
 		if (copy_from_user(&data, (char __user *) arg, sizeof(data))) {
 			dev_err(omxserv->dev,
 				"%s: %d: copy_from_user fail: %d\n", __func__,
@@ -397,9 +427,9 @@ long rpmsg_omx_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			return -EFAULT;
 		}
 		data.handle = ion_import_fd(omx->ion_client, data.fd);
-		if (IS_ERR_OR_NULL(data.handle))
+		if (IS_ERR(data.handle))
 			data.handle = NULL;
-		if (copy_to_user((char __user *) arg, &data, sizeof(data))) {
+		if (copy_to_user(&data, (char __user *) arg, sizeof(data))) {
 			dev_err(omxserv->dev,
 				"%s: %d: copy_to_user fail: %d\n", __func__,
 				_IOC_NR(cmd), ret);
@@ -410,7 +440,6 @@ long rpmsg_omx_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	case OMX_IOCIONUNREGISTER:
 	{
 		struct ion_fd_data data;
-
 		if (copy_from_user(&data, (char __user *) arg, sizeof(data))) {
 			dev_err(omxserv->dev,
 				"%s: %d: copy_from_user fail: %d\n", __func__,
@@ -418,7 +447,7 @@ long rpmsg_omx_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			return -EFAULT;
 		}
 		ion_free(omx->ion_client, data.handle);
-		if (copy_to_user((char __user *) arg, &data, sizeof(data))) {
+		if (copy_to_user(&data, (char __user *) arg, sizeof(data))) {
 			dev_err(omxserv->dev,
 				"%s: %d: copy_to_user fail: %d\n", __func__,
 				_IOC_NR(cmd), ret);
@@ -472,8 +501,6 @@ static int rpmsg_omx_open(struct inode *inode, struct file *filp)
 					    "rpmsg-omx");
 #endif
 
-	init_completion(&omx->reply_arrived);
-
 	/* associate filp with the new omx instance */
 	filp->private_data = omx;
 	mutex_lock(&omxserv->lock);
@@ -502,26 +529,23 @@ static int rpmsg_omx_release(struct inode *inode, struct file *filp)
 	if (omx->state == OMX_FAIL)
 		goto out;
 
-	if (omx->state == OMX_CONNECTED) {
-		/* send a disconnect msg with the OMX instance addr */
-		hdr->type = OMX_DISCONNECT;
-		hdr->flags = 0;
-		hdr->len = sizeof(struct omx_disc_req);
-		disc_req->addr = omx->dst;
-		use = sizeof(*hdr) + hdr->len;
+	/* send a disconnect msg with the OMX instance addr */
+	hdr->type = OMX_DISCONNECT;
+	hdr->flags = 0;
+	hdr->len = sizeof(struct omx_disc_req);
+	disc_req->addr = omx->dst;
+	use = sizeof(*hdr) + hdr->len;
 
-		dev_dbg(omxserv->dev, "Disconnecting from OMX service at %d\n",
-			omx->dst);
+	dev_dbg(omxserv->dev, "Disconnecting from OMX service at %d\n",
+		omx->dst);
 
-		/* send the msg to the remote OMX connection service */
-		ret = rpmsg_send_offchannel(omxserv->rpdev, omx->ept->addr,
-						omxserv->rpdev->dst, kbuf, use);
-		if (ret) {
-			dev_err(omxserv->dev, "rpmsg_send failed: %d\n", ret);
-			return ret;
-		}
+	/* send the msg to the remote OMX connection service */
+	ret = rpmsg_send_offchannel(omxserv->rpdev, omx->ept->addr,
+					omxserv->rpdev->dst, kbuf, use);
+	if (ret) {
+		dev_err(omxserv->dev, "rpmsg_send failed: %d\n", ret);
+		return ret;
 	}
-
 	rpmsg_destroy_ept(omx->ept);
 out:
 #ifdef CONFIG_ION_OMAP
@@ -604,9 +628,6 @@ static ssize_t rpmsg_omx_write(struct file *filp, const char __user *ubuf,
 	struct omx_msg_hdr *hdr = (struct omx_msg_hdr *) kbuf;
 	int use, ret;
 
-	if (omx->state == OMX_FAIL)
-		return -ENXIO;
-
 	if (omx->state != OMX_CONNECTED)
 		return -ENOTCONN;
 
@@ -621,7 +642,7 @@ static ssize_t rpmsg_omx_write(struct file *filp, const char __user *ubuf,
 	 * be significant in real use cases
 	 */
 	if (copy_from_user(hdr->data, ubuf, use))
-		return -EFAULT;
+		return -EMSGSIZE;
 
 	ret = _rpmsg_omx_map_buf(omx, hdr->data);
 	if (ret < 0)
@@ -737,7 +758,7 @@ static int rpmsg_omx_probe(struct rpmsg_channel *rpdev)
 
 	omxserv->dev = device_create(rpmsg_omx_class, &rpdev->dev,
 			MKDEV(major, minor), NULL,
-			rpdev->id.name);
+			"rpmsg-omx%d", minor);
 	if (IS_ERR(omxserv->dev)) {
 		ret = PTR_ERR(omxserv->dev);
 		dev_err(&rpdev->dev, "device_create failed: %d\n", ret);
@@ -812,13 +833,19 @@ static void rpmsg_omx_driver_cb(struct rpmsg_channel *rpdev, void *data,
 		       data, len,  true);
 }
 
+#if 0
 static struct rpmsg_device_id rpmsg_omx_id_table[] = {
 	{ .name	= "rpmsg-omx0" }, /* ipu_c0 */
 	{ .name	= "rpmsg-omx1" }, /* ipu_c1 */
 	{ .name	= "rpmsg-omx2" }, /* dsp */
 	{ },
 };
-MODULE_DEVICE_TABLE(rpmsg, rpmsg_omx_id_table);
+#endif
+static struct rpmsg_device_id rpmsg_omx_id_table[] = {
+	{ .name	= "rpmsg-omx" },
+	{ },
+};
+MODULE_DEVICE_TABLE(platform, rpmsg_omx_id_table);
 
 static struct rpmsg_driver rpmsg_omx_driver = {
 	.drv.name	= KBUILD_MODNAME,

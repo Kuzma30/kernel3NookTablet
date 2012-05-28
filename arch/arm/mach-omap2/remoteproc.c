@@ -116,6 +116,17 @@ static struct omap_rproc_timers_info dsp_timers[] = {
 #endif
 };
 
+#ifdef CONFIG_ION_OMAP_DYNAMIC
+#define SUSPEND_BASE  0x9CA00000
+#else
+#define SUSPEND_BASE  0xB3B00000
+#endif
+
+// 102D8 bytes into PM_DATA which is at 0xE0000
+#define SUSPEND_OFS (0xE0000 + 0x102D8)
+
+#define SUSPEND_ADDR (SUSPEND_BASE + SUSPEND_OFS)
+
 static struct omap_rproc_pdata omap4_rproc_data[] = {
 	{
 		.name		= "dsp",
@@ -127,6 +138,7 @@ static struct omap_rproc_pdata omap4_rproc_data[] = {
 		.timers_cnt	= ARRAY_SIZE(dsp_timers),
 		.idle_addr	= OMAP4430_CM_DSP_DSP_CLKCTRL,
 		.idle_mask	= OMAP4430_STBYST_MASK,
+		.suspend_addr   = SUSPEND_ADDR,
 		.suspend_mask	= ~0,
 		.sus_timeout	= 5000,
 		.sus_mbox_name	= "mailbox-2",
