@@ -250,16 +250,17 @@ static void boxer_init_panel(void)
 
 static void boxer_panel_work_func(struct work_struct *work)
 {
-#if 0
 	if (!regulator_is_enabled(boxer_panel_regulator)) {
+		if (g_ft_i2c_adapter) {
+			i2c_lock_adapter(g_ft_i2c_adapter);
+		}
 		regulator_enable(boxer_panel_regulator);
+		if (g_ft_i2c_adapter) {
+			i2c_unlock_adapter(g_ft_i2c_adapter);
+		}
 	}
-#endif
-	msleep(LCD_RST_DELAY);
 
-	boxer_spi_device->mode = SPI_MODE_0;
-	boxer_spi_device->bits_per_word = 16;
-	spi_setup(boxer_spi_device);
+	msleep(LCD_RST_DELAY);
 
 	boxer_init_panel();
 
@@ -338,6 +339,15 @@ static void boxer_panel_stop(struct omap_dss_device *dssdev)
 	}
 
 	omapdss_dpi_display_disable(dssdev);
+	if (regulator_is_enabled(boxer_panel_regulator)) {
+		if (g_ft_i2c_adapter) {
+			i2c_lock_adapter(g_ft_i2c_adapter);
+		}
+		regulator_disable(boxer_panel_regulator);
+		if (g_ft_i2c_adapter) {
+			i2c_unlock_adapter(g_ft_i2c_adapter);
+		}
+	}
 }
 
 static int boxer_panel_enable(struct omap_dss_device *dssdev)
@@ -434,7 +444,6 @@ static int boxer_spi_probe(struct spi_device *spi)
 {
 	int ret = 0;
 
-#if 1
 	boxer_panel_regulator = regulator_get(&spi->dev, "vlcd");
 	if (!regulator_is_enabled(boxer_panel_regulator)) {
 		if (g_ft_i2c_adapter) {
@@ -450,7 +459,7 @@ static int boxer_spi_probe(struct spi_device *spi)
 			goto out;
 		}
 	}
-#endif
+
 	spi->mode = SPI_MODE_0;
 	spi->bits_per_word = 16;
 	spi->chip_select = 0;
@@ -471,8 +480,16 @@ static int boxer_spi_remove(struct spi_device *spi)
 	       __LINE__);
 	sysfs_remove_group(&spi->dev.kobj, &otter1_panel_attribute_group);
 	omap_dss_unregister_driver(&boxer_driver);
-	//regulator_disable(boxer_panel_regulator);
-	//regulator_put(boxer_panel_regulator);
+	if (regulator_is_enabled(boxer_panel_regulator)) {
+		if (g_ft_i2c_adapter) {
+			i2c_lock_adapter(g_ft_i2c_adapter);
+		}
+		regulator_disable(boxer_panel_regulator);
+		if (g_ft_i2c_adapter) {
+			i2c_unlock_adapter(g_ft_i2c_adapter);
+		}
+	}
+	regulator_put(boxer_panel_regulator);
 	return 0;
 }
 
@@ -496,14 +513,13 @@ static int __init boxer_lcd_init(void)
 
 	boxer_panel_wq = create_singlethread_workqueue("boxer-panel-wq");
 
-#if 1
 	if (IS_ERR(boxer_panel_regulator)) {
 		printk(KERN_ERR "Unable to get vlcd regulator, reason: %ld!\n",
 		       IS_ERR(boxer_panel_regulator));
 		ret = -ENODEV;
 		goto out;
 	}
-#endif
+
 	return spi_register_driver(&boxer_spi_driver);
 out:
 	return ret;
