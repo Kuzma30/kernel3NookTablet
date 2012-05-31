@@ -103,8 +103,7 @@ enum fw_resource_type {
 	RSC_TRACE	= 4,
 	RSC_BOOTADDR	= 5,
 	RSC_CRASHDUMP	= 6,
-	RSC_SUSPENDADDR	= 7,
-	RSC_END		= 8,
+	RSC_END		= 7,
 };
 
 /**
@@ -161,7 +160,6 @@ struct rproc_ops {
 	int (*watchdog_init)(struct rproc *, int (*)(struct rproc *));
 	int (*watchdog_exit)(struct rproc *);
 	void (*dump_registers)(struct rproc *);
-	int (*pm_init)(struct rproc *rproc, u64 suspaddr);
 };
 
 /*
