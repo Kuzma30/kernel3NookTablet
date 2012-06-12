@@ -40,6 +40,7 @@ struct gcpage {
 
 enum gcerror gc_alloc_pages(struct gcpage *p, unsigned int size);
 void gc_free_pages(struct gcpage *p);
+void gc_flush_pages(struct gcpage *p);
 
 /*
  * Power management.
@@ -48,7 +49,6 @@ void gc_free_pages(struct gcpage *p);
 enum gcpower {
 	GCPWR_UNKNOWN,
 	GCPWR_ON,
-	GCPWR_LOW,
 	GCPWR_OFF
 };
 

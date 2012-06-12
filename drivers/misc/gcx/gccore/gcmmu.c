@@ -164,20 +164,10 @@ static enum gcerror mmu2d_allocate_slave(struct mmu2dcontext *ctxt,
 	struct mmu2dstlbblock *block;
 	struct mmu2dstlb *temp;
 
-	GCPRINT(GCDBGFILTER, GCZONE_MAPPING, "++" GC_MOD_PREFIX
-		"\n", __func__, __LINE__);
-
 	if (ctxt->slave_recs == NULL) {
 		block = kmalloc(STLB_PREALLOC_SIZE, GFP_KERNEL);
-		if (block == NULL) {
-			GCPRINT(NULL, 0, GC_MOD_PREFIX
-				"failed to allocate slave page table wrapper\n",
-				__func__, __LINE__);
-
-			gcerror = GCERR_SETGRP(GCERR_OODM,
-						GCERR_MMU_STLB_ALLOC);
-			goto exit;
-		}
+		if (block == NULL)
+			return GCERR_SETGRP(GCERR_OODM, GCERR_MMU_STLB_ALLOC);
 
 		block->next = ctxt->slave_blocks;
 		ctxt->slave_blocks = block;
@@ -191,14 +181,8 @@ static enum gcerror mmu2d_allocate_slave(struct mmu2dcontext *ctxt,
 	}
 
 	gcerror = gc_alloc_pages(&ctxt->slave_recs->pages, MMU_STLB_SIZE);
-	if (gcerror != GCERR_NONE) {
-		GCPRINT(NULL, 0, GC_MOD_PREFIX
-			"failed to allocate slave page table\n",
-			__func__, __LINE__);
-
-		gcerror = GCERR_SETGRP(gcerror, GCERR_MMU_STLB_ALLOC);
-		goto exit;
-	}
+	if (gcerror != GCERR_NONE)
+		return GCERR_SETGRP(gcerror, GCERR_MMU_STLB_ALLOC);
 
 	/* Remove from the list of available records. */
 	temp = ctxt->slave_recs;
@@ -210,14 +194,9 @@ static enum gcerror mmu2d_allocate_slave(struct mmu2dcontext *ctxt,
 
 	/* Reset allocated entry count. */
 	temp->count = 0;
+
 	*stlb = temp;
-
-exit:
-	GCPRINT(GCDBGFILTER, GCZONE_MAPPING, "--" GC_MOD_PREFIX
-		"gc%s = 0x%08X\n", __func__, __LINE__,
-		(gcerror == GCERR_NONE) ? "result" : "error", gcerror);
-
-	return gcerror;
+	return GCERR_NONE;
 }
 #endif
 
@@ -390,6 +369,8 @@ static void flush_user_buffer(struct mmu2darena *arena)
 				__func__, __LINE__, i);
 			continue;
 		}
+
+		gc_flush_pages(&gcpage);
 	}
 }
 #endif
@@ -663,8 +644,8 @@ enum gcerror mmu2d_map(struct mmu2dcontext *ctxt, struct mmu2dphysmem *mem,
 		"  stlb=%d\n",
 		__func__, __LINE__, vacant->stlb);
 	GCPRINT(GCDBGFILTER, GCZONE_MAPPING, GC_MOD_PREFIX
-		"  count=%d (needed %d)\n",
-		__func__, __LINE__, vacant->count, mem->count);
+		"  count=%d\n",
+		__func__, __LINE__, vacant->count);
 
 	/*
 	 * Create page array.
@@ -755,11 +736,17 @@ enum gcerror mmu2d_map(struct mmu2dcontext *ctxt, struct mmu2dphysmem *mem,
 
 			parray += 1;
 		}
+
+		gc_flush_pages(&stlb_array[i]->pages);
 #endif
 
 		count -= available;
 		stlb_idx = next_idx;
 	}
+
+#if MMU_ENABLE
+	gc_flush_pages(&ctxt->master);
+#endif
 
 	/*
 	 * Claim arena.
