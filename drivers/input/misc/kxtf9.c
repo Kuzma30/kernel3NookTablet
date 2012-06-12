@@ -1140,9 +1140,12 @@ static struct i2c_driver kxtf9_driver = {
 	.probe = kxtf9_probe,
 	.remove = __devexit_p(kxtf9_remove),
 #ifndef CONFIG_HAS_EARLYSUSPEND
-	.resume = kxtf9_resume,
-	.suspend = kxtf9_suspend,
-#endif
+	.suspend = NULL,
+	.resume = NULL,
+#else /* CONFIG_HAS_EARLYSUSPEND */
+	.suspend = kxtf9_resume,
+	.resume = kxtf9_suspend,
+#endif /* CONFIG_HAS_EARLYSUSPEND */
 	.id_table = kxtf9_id,
 };
 
