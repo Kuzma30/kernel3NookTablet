@@ -64,7 +64,7 @@
 
 #define FT5x06_UPGRADEVER_REG		0xCD
 
-#define FT5x06_DEBUG_VERBOSE             0
+#define FT5x06_DEBUG_VERBOSE             1
 
 #define GET_COORDINATE(l,h) ((l | (( h & 0x0F)<<8)))
 struct ft5x06 {
@@ -3027,7 +3027,7 @@ static int __devinit ft5x06_probe(struct i2c_client *client,
 	register_ft_i2c_adapter(client->adapter);
 
 	retval =
-	    i2c_smbus_read_i2c_block_data(ts->client, 0, sizeof(u8), &buffer);
+		i2c_smbus_read_i2c_block_data(ts->client, 0, sizeof(u8), &buffer);
 	if (0 > retval) {
 		printk(KERN_ERR "%s() - ERROR: FT5x06 not found on I2C bus.\n",
 		       __FUNCTION__);
@@ -3132,16 +3132,24 @@ static int ft5x06_suspend(struct i2c_client *client, pm_message_t message)
 	/* No need to cancel since irq is disabled, there is no pending worker at this time */
 
 	if (ts->platform_data->platform_suspend) {
-//              printk(KERN_INFO "%s() - Driver is suspending: platform suspend start.\n", __FUNCTION__);
+#if FT5x06_DEBUG_VERBOSE
+		printk(KERN_INFO "%s() - Driver is suspending: platform suspend start.\n", __FUNCTION__);
+#endif
 		ts->platform_data->platform_suspend();
-//              printk(KERN_INFO "%s() - Driver is suspending: platform suspend end.\n", __FUNCTION__);
+#if FT5x06_DEBUG_VERBOSE
+		printk(KERN_INFO "%s() - Driver is suspending: platform suspend end.\n", __FUNCTION__);
+#endif
 	}
 	// keep focaltech controller in reset after this point
 	gpio_direction_output(ts->platform_data->reset_gpio, 0);
-//      printk(KERN_INFO "%s() - Driver is suspending: keep focaltech controller in reset after this point.\n", __FUNCTION__);
+#if FT5x06_DEBUG_VERBOSE
+	printk(KERN_INFO "%s() - Driver is suspending: keep focaltech controller in reset after this point.\n", __FUNCTION__);
+#endif
 	regulator_disable(ts->vtp);
 //      printk(KERN_INFO "%s() - Driver is suspending: regulator disable.\n", __FUNCTION__);
-//      printk(KERN_INFO "%s() - Driver is suspending end.\n", __FUNCTION__);
+#if FT5x06_DEBUG_VERBOSE
+	printk(KERN_INFO "%s() - Driver is suspending end.\n", __FUNCTION__);
+#endif
 	return 0;
 }
 
