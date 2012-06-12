@@ -556,8 +556,9 @@ static struct platform_device btwilink_device = {
 
 /*******************************************************/
 static struct regulator_consumer_supply tp_supply[] = {
-	{ .supply = "vtp" },
-	{ .supply = "vlcd"},
+	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dss"),
+	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dsi1"),
+	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dsi2"),
 };
 
 static struct regulator_init_data tp_vinit = {
@@ -590,9 +591,7 @@ static struct platform_device touch_regulator_device = {
 /*****************************************************/
 
 static struct regulator_consumer_supply lcd_supply[] = {
-	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dss"),
-	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dsi1"),
-	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dsi2"),
+	{ .supply = "leds_pwm"},
 };
 
 static struct regulator_init_data lcd_vinit = {
@@ -610,8 +609,8 @@ static struct fixed_voltage_config lcd_reg_data = {
 	.supply_name = "vdd_lcd",
 	.microvolts = 3300000,
 	.gpio = 121,
-	.enable_high = 0,
-	.enabled_at_boot = 0,
+	.enable_high = 1,
+	.enabled_at_boot = 1,
 	.init_data = &lcd_vinit,
 };
 
