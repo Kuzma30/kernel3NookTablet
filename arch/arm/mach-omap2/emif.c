@@ -28,7 +28,9 @@
 #include <mach/emif.h>
 #include <mach/lpddr2-jedec.h>
 #include <mach/omap4-common.h>
+#include <linux/delay.h>
 
+#include "control.h"
 #include "voltage.h"
 
 /* Utility macro for masking and setting a field in a register/variable */
@@ -61,6 +63,65 @@ static struct omap_device_pm_latency omap_emif_latency[] = {
 	       .flags = OMAP_DEVICE_LATENCY_AUTO_ADJUST,
 	       },
 };
+
+//add for the Silicon Bandgap Temperature Measurement
+u8 omap4_ctrl_temp_sensor_single_conv(void)
+{
+	u8 val = 0;
+    u8 celsius = 0;
+	
+	omap_ctrl_writel(0x00000200, OMAP4_CTRL_MODULE_CORE_TEMP_SENSOR);
+	msleep(1);
+	omap_ctrl_writel(0x00000000, OMAP4_CTRL_MODULE_CORE_TEMP_SENSOR);
+
+	val |= omap_ctrl_readl(OMAP4_CTRL_MODULE_CORE_TEMP_SENSOR);
+
+	if(val<=14)
+		celsius = 0;
+	else if(val>=15 && val<=20)
+		celsius = 10;
+	else if(val>=21 && val<=25)
+		celsius = 20;
+	else if(val>=26 && val<=31)
+		celsius = 30;
+	else if(val>=32 && val<=37)
+		celsius = 40;
+	else if(val>=38 && val<=43)
+		celsius = 50;
+	else if(val>=44 && val<=48)
+		celsius = 60;
+	else if(val>=49 && val<=54)
+		celsius = 70;
+	else if(val>=55 && val<=60)
+		celsius = 80;
+	else if(val>=61 && val<=66)
+		celsius = 90;
+	else if(val>=67 && val<=72)
+		celsius = 100;
+	else if(val>=73 && val<=77)
+		celsius = 110;
+	else if(val>=78 && val<=83)
+		celsius = 120;
+	else if(val>=84 && val<=89)
+		celsius = 130;
+	else if(val>=90 && val<=95)
+		celsius = 140;
+	else if(val>=96 && val<=100)
+		celsius = 150;
+	else if(val>=101 && val<=106)
+		celsius = 160;
+	else if(val>=107)
+		celsius = 165;
+	else
+		celsius = 255;
+
+	pr_info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+	pr_info("OMAP4_CTRL_MODULE_CORE_TEMP_SENSOR = [0x%x] \n", val);
+	pr_info("Silicon Temp around [%d - 40] degree Celsius \n", celsius);
+	pr_info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+	
+	return celsius;
+}
 
 /*
  * EMIF Power Management timer for Self Refresh will put the external SDRAM
@@ -883,6 +944,7 @@ static ssize_t emif_temperature_show(struct device *dev,
 				     struct device_attribute *attr, char *buf)
 {
 	u32 temperature;
+	u8 bandgaptemp = 0;
 	if (dev == &(emif[EMIF1].pdev->dev))
 		temperature = emif_temperature_level[EMIF1];
 	else if (dev == &(emif[EMIF2].pdev->dev))
@@ -890,7 +952,10 @@ static ssize_t emif_temperature_show(struct device *dev,
 	else
 		return 0;
 
-	return snprintf(buf, 20, "%u\n", temperature);
+	bandgaptemp = omap4_ctrl_temp_sensor_single_conv();
+	//printk("Bandgap Temp around [%d -40] degree Celsius\n",bandgaptemp);
+
+	return snprintf(buf, 20, "%u\n%u\n", temperature, bandgaptemp);
 }
 static DEVICE_ATTR(temperature, S_IRUGO, emif_temperature_show, NULL);
 
@@ -1449,6 +1514,9 @@ static void __init setup_lowpower_regs(u32 emif_nr,
 	if (dev->emif_ddr_selfrefresh_cycles >= 0) {
 		u32 num_cycles, ddr_sr_timer;
 
+		/* Enable self refresh if not already configured */
+		temp = __raw_readl(base + OMAP44XX_EMIF_PWR_MGMT_CTRL) &
+			OMAP44XX_REG_LP_MODE_MASK;
 		/*
 		 * Configure the self refresh timing
 		 * base value starts at 16 cycles mapped to 1( __fls(16) = 4)
@@ -1484,18 +1552,24 @@ static void __init setup_lowpower_regs(u32 emif_nr,
 		__raw_writel(temp, base + OMAP44XX_EMIF_PWR_MGMT_CTRL_SHDW);
 
 		/* Enable Self Refresh */
-		set_lp_mode(emif_nr, LP_MODE_SELF_REFRESH);
+		temp = __raw_readl(base + OMAP44XX_EMIF_PWR_MGMT_CTRL);
+		mask_n_set(temp, OMAP44XX_REG_LP_MODE_SHIFT,
+			   OMAP44XX_REG_LP_MODE_MASK, LP_MODE_SELF_REFRESH);
+		__raw_writel(temp, base + OMAP44XX_EMIF_PWR_MGMT_CTRL);
 	} else {
-		/* Disable Automatic power management if < 0 */
+		/* Disable Automatic power management if < 0 and not disabled */
+		temp = __raw_readl(base + OMAP44XX_EMIF_PWR_MGMT_CTRL) &
+			OMAP44XX_REG_LP_MODE_MASK;
 
-		/* Program the idle delay to 0x0 */
 		temp = __raw_readl(base + OMAP44XX_EMIF_PWR_MGMT_CTRL_SHDW);
 		mask_n_set(temp, OMAP44XX_REG_SR_TIM_SHDW_SHIFT,
 			   OMAP44XX_REG_SR_TIM_SHDW_MASK, 0x0);
 		__raw_writel(temp, base + OMAP44XX_EMIF_PWR_MGMT_CTRL_SHDW);
 
-		/* Disable Automatic power management */
-		set_lp_mode(emif_nr, LP_MODE_DISABLE);
+		temp = __raw_readl(base + OMAP44XX_EMIF_PWR_MGMT_CTRL);
+		mask_n_set(temp, OMAP44XX_REG_LP_MODE_SHIFT,
+			   OMAP44XX_REG_LP_MODE_MASK, LP_MODE_DISABLE);
+		__raw_writel(temp, base + OMAP44XX_EMIF_PWR_MGMT_CTRL);
 	}
 }
 
@@ -1549,18 +1623,3 @@ static int __init omap_init_emif_timings(void)
 	return ret;
 }
 late_initcall(omap_init_emif_timings);
-
-int sdram_vendor(void)
-{
-        int ddr_manufact_id =0;         
-        void __iomem *base;
-
-        base = emif[EMIF1].base;
-
-        __raw_writel(LPDDR2_MR5, base + OMAP44XX_EMIF_LPDDR2_MODE_REG_CFG);
-        ddr_manufact_id =  __raw_readb(base  +  OMAP44XX_EMIF_LPDDR2_MODE_REG_DATA);
-
-        return ddr_manufact_id ;
-
-}
-
