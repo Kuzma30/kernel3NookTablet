@@ -33,7 +33,7 @@
 
 #define AIC31XX_VERSION "0.1"
 
-#undef AIC31x_CODEC_DEBUG
+#define AIC31x_CODEC_DEBUG
 
 #ifdef AIC31x_CODEC_DEBUG
 #define DBG(x...) printk(KERN_INFO x)
