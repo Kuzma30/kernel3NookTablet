@@ -3112,8 +3112,10 @@ static int ft5x06_suspend(struct i2c_client *client, pm_message_t message)
 	}
 	// keep focaltech controller in reset after this point
 	gpio_direction_output(ts->platform_data->reset_gpio, 0);
-//      printk(KERN_INFO "%s() - Driver is suspending: keep focaltech controller in reset after this point.\n", __FUNCTION__);
-//      printk(KERN_INFO "%s() - Driver is suspending end.\n", __FUNCTION__);
+#if FT5x06_DEBUG_VERBOSE
+	printk(KERN_INFO "%s() - Driver is suspending: keep focaltech controller in reset after this point.\n", __FUNCTION__);
+	printk(KERN_INFO "%s() - Driver is suspending end.\n", __FUNCTION__);
+#endif
 	return 0;
 }
 
