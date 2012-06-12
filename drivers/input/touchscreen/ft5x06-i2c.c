@@ -3002,24 +3002,6 @@ static int __devinit ft5x06_probe(struct i2c_client *client,
 		goto error_devinit0;
 	}
 
-	ts->vtp = regulator_get(NULL, "vtp");
-	if (IS_ERR(ts->vtp)) {
-		printk(KERN_ERR "%s() - ERROR: Could not get VTP Regulator.\n",
-		       __FUNCTION__);
-		retval = IS_ERR(ts->vtp);
-		goto error_free_ts;
-	}
-
-	retval = regulator_enable(ts->vtp);
-	if (retval) {
-		printk(KERN_ERR
-		       "%s() - ERROR: Could not enable VTP Regulator.\n",
-		       __FUNCTION__);
-		goto error_regulator_put;
-	}
-
-	msleep(100);
-
 	ts->client = client;
 	ts->platform_data = client->dev.platform_data;
 	i2c_set_clientdata(client, ts);
@@ -3031,7 +3013,7 @@ static int __devinit ft5x06_probe(struct i2c_client *client,
 	if (0 > retval) {
 		printk(KERN_ERR "%s() - ERROR: FT5x06 not found on I2C bus.\n",
 		       __FUNCTION__);
-		goto error_regulator_disable;
+		goto error_free_ts;
 	}
 
 	printk(KERN_INFO "%s() - FT5x06 found on I2C bus.\n", __FUNCTION__);
@@ -3059,11 +3041,6 @@ static int __devinit ft5x06_probe(struct i2c_client *client,
 
 error_mutex_destroy:
 	mutex_destroy(&ts->device_mode_mutex);
-error_regulator_disable:
-	regulator_disable(ts->vtp);
-
-error_regulator_put:
-	regulator_put(ts->vtp);
 
 error_free_ts:
 	kfree(ts);
@@ -3086,20 +3063,13 @@ static int ft5x06_resume(struct i2c_client *client)
 	       __FUNCTION__);
 #endif
 	ts = (struct ft5x06 *)i2c_get_clientdata(client);
-
-	retval = regulator_enable(ts->vtp);
-	if (retval) {
-		printk(KERN_ERR "%s() - ERROR: Could not enable regulator.\n",
-		       __FUNCTION__);
-	} else {
-		if (ts->platform_data->platform_resume) {
-			ts->platform_data->platform_resume();
-		}
-
-		ft5x06_reset_panel_via_gpio(ts->platform_data->reset_gpio);
-		mb();
-		enable_irq(ts->client->irq);
+	if (ts->platform_data->platform_resume) {
+		ts->platform_data->platform_resume();
 	}
+
+	ft5x06_reset_panel_via_gpio(ts->platform_data->reset_gpio);
+	mb();
+	enable_irq(ts->client->irq);
 #if FT5x06_DEBUG_VERBOSE
 	printk(KERN_INFO "%s() - Driver is resuming end function.\n",
 	       __FUNCTION__);
@@ -3142,14 +3112,8 @@ static int ft5x06_suspend(struct i2c_client *client, pm_message_t message)
 	}
 	// keep focaltech controller in reset after this point
 	gpio_direction_output(ts->platform_data->reset_gpio, 0);
-#if FT5x06_DEBUG_VERBOSE
-	printk(KERN_INFO "%s() - Driver is suspending: keep focaltech controller in reset after this point.\n", __FUNCTION__);
-#endif
-	regulator_disable(ts->vtp);
-//      printk(KERN_INFO "%s() - Driver is suspending: regulator disable.\n", __FUNCTION__);
-#if FT5x06_DEBUG_VERBOSE
-	printk(KERN_INFO "%s() - Driver is suspending end.\n", __FUNCTION__);
-#endif
+//      printk(KERN_INFO "%s() - Driver is suspending: keep focaltech controller in reset after this point.\n", __FUNCTION__);
+//      printk(KERN_INFO "%s() - Driver is suspending end.\n", __FUNCTION__);
 	return 0;
 }
 
@@ -3182,9 +3146,6 @@ static int __devexit ft5x06_remove(struct i2c_client *client)
 #ifdef CONFIG_HAS_EARLYSUSPEND
 	unregister_early_suspend(&ts->early_suspend);
 #endif /* CONFIG_HAS_EARLYSUSPEND */
-
-	regulator_disable(ts->vtp);
-	regulator_put(ts->vtp);
 
 	/* housekeeping */
 	/* Wait until any outstanding SYSFS transaction has finished,
