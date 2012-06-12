@@ -58,7 +58,7 @@ config PANEL_TC358765
 	  
 config PANEL_BOXER
 	tristate "BOXER Panel - B&N"
-	depends on OMAP2_DSS_DPI
+	depends on OMAP2_DSS
 	help
 	  This is the LCD panel used on OMAP3 Boxer board
 
