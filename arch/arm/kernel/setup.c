@@ -907,7 +907,7 @@ static struct machine_desc * __init setup_machine_tags(unsigned int nr)
 
 	/* parse_early_param needs a boot_command_line */
 	strlcpy(boot_command_line, from, COMMAND_LINE_SIZE);
-	early_print("Setup machine tags finished\n");
+//	early_print("Setup machine tags finished\n");
 	return mdesc;
 }
 
@@ -925,7 +925,7 @@ void __init setup_arch(char **cmdline_p)
 	machine_desc = mdesc;
 	machine_name = mdesc->name;
 
-	printk("Mashine NAME=%s",machine_name);
+//	printk("Mashine NAME=%s",machine_name);
 	if (mdesc->soft_reboot)
 		reboot_setup("s");
 
