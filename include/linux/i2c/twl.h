@@ -640,11 +640,10 @@ struct twl4030_bci_platform_data {
 	unsigned int max_bat_voltagemV;
 	unsigned int low_bat_voltagemV;
 
+	unsigned int sense_resistor_mohm;
+
 	/* twl6032 */
-	unsigned int use_hw_charger;
-	unsigned int use_power_path;
 	unsigned long features;
-	unsigned int use_eeprom_config;
 
 	unsigned long errata;
 };
