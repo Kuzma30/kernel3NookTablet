@@ -134,7 +134,7 @@ static void omap_pwm_led_power_off(struct omap_pwm_led *led)
 		return;
 	led->powered = 0;
 
-	pr_debug("%s: brightness: %i\n", 
+	pr_debug("%s: brightness = %i\n", 
 			__func__, led->brightness);
 	
 	if (led->pdata->set_power != NULL)
@@ -193,7 +193,7 @@ static void omap_pwm_led_set(struct led_classdev *led_cdev,
 {
 	struct omap_pwm_led *led = cdev_to_omap_pwm_led(led_cdev);
 
-	pr_debug("%s: brightness: %i\n", __func__, value);
+	pr_debug("%s: brightness value = %i\n", __func__, value);
 
 	if (led->brightness != value) {
 		if (led->brightness < led->pdata->bkl_min ||

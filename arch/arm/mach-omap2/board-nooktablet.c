@@ -473,20 +473,12 @@ static struct platform_device sdp4430_aic3110 = {
         .id = -1,
 };
 
-/*static struct spi_board_info sdp4430_spi_board_info[] __initdata = {
-	{
-		.modalias		= "boxer_disp_spi",
-		.bus_num		= 4,	// 4: McSPI4
-		.chip_select		= 0,
-		.max_speed_hz		= 375000,
-	},
-};*/
-
-
+static struct wake_lock st_wk_lock;
 /* TODO: handle suspend/resume here.
  * Upon every suspend, make sure the wilink chip is capable enough to wake-up the
  * OMAP host.
  */
+#if 0
 static int plat_wlink_kim_suspend(struct platform_device *pdev, pm_message_t
 		state)
 {
@@ -555,7 +547,7 @@ static struct platform_device btwilink_device = {
 	.name = "btwilink",
 	.id = -1,
 };
-
+#endif
 /*******************************************************/
 static struct regulator_consumer_supply tp_supply[] = {
 	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dss"),
@@ -630,7 +622,7 @@ static struct platform_device *sdp4430_devices[] __initdata = {
 	//&sdp4430_leds_pwm,
 	&sdp4430_aic3110,
 	&acclaim_keys_gpio,
-	&wl128x_device,
+//	&wl128x_device,
 //	&btwilink_device,
 	&lcd_regulator_device,
 	&touch_regulator_device,
@@ -1560,7 +1552,7 @@ static void __init omap_4430sdp_init(void)
                 omap_pm_enable_off_mode();
 
 }
-
+#if 0
 #ifdef CONFIG_ANDROID_RAM_CONSOLE
 static inline void ramconsole_reserve_sdram(void)
 {
@@ -1572,10 +1564,10 @@ static inline void ramconsole_reserve_sdram(void)
         reserve_bootmem(NOOKTABLET_RAM_CONSOLE_START, NOOKTABLET_RAM_CONSOLE_SIZE, 0);
     }
 }
-#else
+#else ?>
 static inline void ramconsole_reserve_sdram(void) {}
 #endif /* CONFIG_ANDROID_RAM_CONSOLE */
-
+#endif
 static void __init omap_4430sdp_map_io(void)
 {
 	omap2_set_globals_443x();

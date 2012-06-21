@@ -165,7 +165,9 @@ static inline void __arch_decomp_setup(unsigned long arch_id)
 		DEBUG_LL_OMAP4(3, omap_4430sdp);
 		DEBUG_LL_OMAP4(3, omap4_panda);
 		DEBUG_LL_OMAP4(3, omap_tabletblaze);
-//		DEBUG_LL_OMAP4(1, omap4_nooktablet);
+
+		/* Nook TAblet OMAP4430 use UART1 */
+		DEBUG_LL_OMAP4(1, omap4_nooktablet);
 
 		/* zoom2/3 external uart */
 		DEBUG_LL_ZOOM(omap_zoom2);

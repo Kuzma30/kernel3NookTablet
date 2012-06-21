@@ -205,8 +205,10 @@ static int omap_abe_dl1_enabled(struct omap_abe_data *abe_priv)
 
 static int omap_abe_dl2_enabled(struct omap_abe_data *abe_priv)
 {
-	return omap_abe_port_is_enabled(abe_priv->abe,
-				abe_priv->port[OMAP_ABE_BE_PORT_PDM_DL2]);
+	return 0;
+	
+//	omap_abe_port_is_enabled(abe_priv->abe,
+//				abe_priv->port[ OMAP_ABE_BE_PORT_PDM_DL2]); //Kuzma30
 }
 
 static void mute_be(struct snd_soc_pcm_runtime *be,
