@@ -40,7 +40,14 @@
 
 #include <linux/input/ft5x06.h>
 
+#ifdef CONFIG_INPUT_KXTJ9
+#include <linux/input/kxtj9.h>
+#endif
+
+#ifdef CONFIG_INPUT_KXTF9
 #include <linux/input/kxtf9.h>
+#endif
+
 #include <linux/power/max17042.h>
 #include <linux/power/max8903.h>
 
@@ -87,9 +94,17 @@
 
 #define WILINK_UART_DEV_NAME "/dev/ttyO1"
 
+#ifdef CONFIG_INPUT_KXTF9
 #define KXTF9_DEVICE_ID                 "kxtf9"
 #define KXTF9_I2C_SLAVE_ADDRESS         0x0F
 #define KXTF9_GPIO_FOR_PWR              34
+#endif
+
+#ifdef CONFIG_INPUT_KXTJ9
+#define KXTJ9_DEVICE_ID                 "kxtj9"
+#define KXTJ9_I2C_SLAVE_ADDRESS         0x0F
+#define KXTJ9_GPIO_FOR_PWR              34
+#endif
 
 #define CONFIG_SERIAL_OMAP_IDLE_TIMEOUT 5
 
@@ -111,6 +126,7 @@
 
 #define MAX17042_GPIO_FOR_IRQ  65
 #define KXTF9_GPIO_FOR_IRQ  66
+#define KXTJ9_GPIO_FOR_IRQ  66
 
 void acclaim_panel_init(void);
 
@@ -130,6 +146,7 @@ static void max17042_dev_init(void)
 }
 #endif
 
+#ifdef CONFIG_INPUT_KXTF9
 static void kxtf9_dev_init(void)
 {
 	printk("board-4430sdp.c: kxtf9_dev_init ...\n");
@@ -180,6 +197,40 @@ struct kxtf9_platform_data kxtf9_platform_data_here = {
 
 	.gpio = KXTF9_GPIO_FOR_IRQ,
 };
+#endif
+
+#ifdef CONFIG_INPUT_KXTJ9
+static void kxtj9_dev_init(void)
+{
+	printk("board-4430sdp.c: kxtj9_dev_init ...\n");
+
+	if (gpio_request(KXTJ9_GPIO_FOR_IRQ, "kxtj9_irq") < 0)
+	{
+		printk("Can't get GPIO for kxtj9 IRQ\n");
+		return;
+	}
+
+	printk("board-4430sdp.c: kxtj9_dev_init > Init kxtj9 irq pin %d !\n",
+			KXTJ9_GPIO_FOR_IRQ);
+	gpio_direction_input(KXTJ9_GPIO_FOR_IRQ);
+}
+
+
+struct kxtj9_platform_data kxtj9_platform_data_here = {
+	.min_interval = 1,
+	.g_range = KXTJ9_G_8G,
+	/* Map the axes from the sensor to the device */
+	/* SETTINGS FOR acclaim */
+	.axis_map_x = 0,
+	.axis_map_y = 1,
+	.axis_map_z = 2,
+	.negate_x = 0,
+	.negate_y = 0,
+	.negate_z = 0,
+	.data_odr_init = ODR12_5F,
+	.res_12bit = 1,
+};
+#endif
 
 int ft5x06_dev_init(int resource)
 {
@@ -1021,14 +1072,21 @@ static struct twl4030_platform_data sdp4430_twldata = {
 
 };
 
-
-
 static struct i2c_board_info __initdata sdp4430_i2c_1_boardinfo[] = {
+#ifdef CONFIG_INPUT_KXTF9
 	{
 		I2C_BOARD_INFO(KXTF9_DEVICE_ID, KXTF9_I2C_SLAVE_ADDRESS),
 		.platform_data = &kxtf9_platform_data_here,
 		.irq = OMAP_GPIO_IRQ(66),
 	},
+#endif
+#ifdef CONFIG_INPUT_KXTJ9
+	{
+		I2C_BOARD_INFO(KXTJ9_DEVICE_ID, KXTJ9_I2C_SLAVE_ADDRESS),
+		.platform_data = &kxtj9_platform_data_here,
+		.irq = OMAP_GPIO_IRQ(66),
+	},
+#endif
 	{
 		I2C_BOARD_INFO(MAX17042_DEVICE_ID, MAX17042_I2C_SLAVE_ADDRESS),
 		.platform_data = &max17042_platform_data_here,
@@ -1347,11 +1405,6 @@ void config_wlan_mux(void)
 
 static void omap4_sdp4430_wifi_init(void)
 {
-//   struct device *dev;
-//   struct omap_mmc_platform_data *pdata;
-//   int ret;
-// 
-
       struct device *dev;
       struct omap_mmc_platform_data *pdata;
       int ret;
@@ -1528,8 +1581,14 @@ static void __init omap_4430sdp_init(void)
 // #else
 // 	omap4_4430sdp_wifi_init();
 // #endif
-
+#ifdef CONFIG_INPUT_KXTF9
 	kxtf9_dev_init();
+#endif
+
+#ifdef CONFIG_INPUT_KXTJ9
+	kxtj9_dev_init();
+#endif
+
 #ifdef CONFIG_BATTERY_MAX17042
 	max17042_dev_init();
 #endif
