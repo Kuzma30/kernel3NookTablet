@@ -65,12 +65,12 @@ config INPUT_AD714X_SPI
 config INPUT_KXTF9
 	tristate "Kionix KXTF9 tri-axis digital accelerometer"
 	depends on I2C && SYSFS
-	default y
-	  help
+	help
 	  if you say yes here you get support for the Kionix KXTF9 digital tri axis- accelerometer.
 
 	  This driver can also be built as a module.  If so, the module
 	  will be called kxtf9.
+
 config INPUT_KXTJ9
 	tristate "Kionix KXTJ9 tri-axis digital accelerometer"
 	depends on I2C
