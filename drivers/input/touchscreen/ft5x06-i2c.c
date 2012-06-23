@@ -155,13 +155,13 @@ static struct i2c_driver ft5x06_driver = {
 		   },
 	.probe = ft5x06_probe,
 	.remove = __devexit_p(ft5x06_remove),
-#ifndef CONFIG_HAS_EARLYSUSPEND
-	.suspend = NULL,
-	.resume = NULL,
-#else /* CONFIG_HAS_EARLYSUSPEND */
-	.suspend = ft5x06_suspend,
-	.resume = ft5x06_resume,
-#endif /* CONFIG_HAS_EARLYSUSPEND */
+//#ifndef CONFIG_HAS_EARLYSUSPEND
+//	.suspend = NULL,
+//	.resume = NULL,
+//#else /* CONFIG_HAS_EARLYSUSPEND */
+//	.suspend = ft5x06_suspend,
+//	.resume = ft5x06_resume,
+//#endif /* CONFIG_HAS_EARLYSUSPEND */
 	.id_table = ft5x06_id,
 };
 
@@ -3029,6 +3029,7 @@ static int __devinit ft5x06_probe(struct i2c_client *client,
 		       __FUNCTION__);
 		goto error_mutex_destroy;
 	}
+#if 0
 #ifdef CONFIG_HAS_EARLYSUSPEND
 	ts->early_suspend.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN + 1;
 	ts->early_suspend.suspend = ft5x06_early_suspend;
@@ -3036,7 +3037,7 @@ static int __devinit ft5x06_probe(struct i2c_client *client,
 
 	register_early_suspend(&ts->early_suspend);
 #endif /* CONFIG_HAS_EARLYSUSPEND */
-
+#endif
 	goto error_return;
 
 error_mutex_destroy:
@@ -3144,11 +3145,11 @@ static int __devexit ft5x06_remove(struct i2c_client *client)
 	} else {
 		free_irq(client->irq, ts);
 	}
-
+#if 0
 #ifdef CONFIG_HAS_EARLYSUSPEND
 	unregister_early_suspend(&ts->early_suspend);
 #endif /* CONFIG_HAS_EARLYSUSPEND */
-
+#endif
 	/* housekeeping */
 	/* Wait until any outstanding SYSFS transaction has finished,
 	 * and prevent any new ones from starting.
@@ -3169,6 +3170,7 @@ static int __devexit ft5x06_remove(struct i2c_client *client)
 	return 0;
 }
 
+#if 0
 #ifdef CONFIG_HAS_EARLYSUSPEND
 static void ft5x06_early_suspend(struct early_suspend *handler)
 {
@@ -3184,6 +3186,8 @@ static void ft5x06_late_resume(struct early_suspend *handler)
 	ft5x06_resume(ts->client);
 }
 #else /* CONFIG_HAS_EARLYSUSPEND */
+#endif
+#endif
 static void ft5x06_early_suspend(struct early_suspend *handler)
 {
 	/* Do Nothing */
@@ -3193,7 +3197,7 @@ static void ft5x06_late_resume(struct early_suspend *handler)
 {
 	/* Do Nothing */
 }
-#endif /* CONFIG_HAS_EARLYSUSPEND */
+//#endif /* CONFIG_HAS_EARLYSUSPEND */
 
 static int ft5x06_init(void)
 {

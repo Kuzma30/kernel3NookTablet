@@ -112,11 +112,13 @@ struct kxtf9_data {
 	int irq;
 	struct early_suspend early_suspend;
 };
-
+#if 0
 #ifdef CONFIG_HAS_EARLYSUSPEND
 static void kxtf9_late_resume(struct early_suspend *handler);
 static void kxtf9_early_suspend(struct early_suspend *handler);
 #else
+#endif
+#endif
 static void kxtf9_late_resume(struct early_suspend *handler)
 {
 }
@@ -124,7 +126,7 @@ static void kxtf9_late_resume(struct early_suspend *handler)
 static void kxtf9_early_suspend(struct early_suspend *handler)
 {
 }
-#endif
+//#endif
 
 static int kxtf9_i2c_read(struct kxtf9_data *tf9, u8 addr, u8 * data, int len)
 {
@@ -1038,7 +1040,7 @@ static int __devinit kxtf9_probe(struct i2c_client *client,
 		goto err5;
 	}
 	disable_irq_nosync(tf9->irq);
-
+#if 0
 #ifdef CONFIG_HAS_EARLYSUSPEND
 	tf9->early_suspend.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN + 1;
 	tf9->early_suspend.suspend = kxtf9_early_suspend;
@@ -1046,7 +1048,7 @@ static int __devinit kxtf9_probe(struct i2c_client *client,
 
 	register_early_suspend(&tf9->early_suspend);
 #endif
-
+#endif
 	mutex_unlock(&tf9->lock);
 
 	return 0;
@@ -1078,11 +1080,11 @@ static int __devexit kxtf9_remove(struct i2c_client *client)
 	kxtf9_device_power_off(tf9);
 	if (tf9->pdata->exit)
 		tf9->pdata->exit();
-
+#if 0
 #ifdef CONFIG_HAS_EARLYSUSPEND
 	unregister_early_suspend(&tf9->early_suspend);
 #endif
-
+#endif
 	kfree(tf9->pdata);
 	sysfs_remove_group(&client->dev.kobj, &kxtf9_attribute_group);
 	kfree(tf9);
@@ -1090,6 +1092,7 @@ static int __devexit kxtf9_remove(struct i2c_client *client)
 	return 0;
 }
 
+#if 0
 #ifdef CONFIG_PM
 static int kxtf9_resume(struct i2c_client *client)
 {
@@ -1124,6 +1127,8 @@ static void kxtf9_early_suspend(struct early_suspend *handler)
 }
 #endif
 
+#endif
+
 static const struct i2c_device_id kxtf9_id[] = {
 	{NAME, 0},
 	{},
@@ -1137,13 +1142,13 @@ static struct i2c_driver kxtf9_driver = {
 		   },
 	.probe = kxtf9_probe,
 	.remove = __devexit_p(kxtf9_remove),
-#ifndef CONFIG_HAS_EARLYSUSPEND
-	.suspend = NULL,
-	.resume = NULL,
-#else /* CONFIG_HAS_EARLYSUSPEND */
-	.suspend = kxtf9_resume,
-	.resume = kxtf9_suspend,
-#endif /* CONFIG_HAS_EARLYSUSPEND */
+//#ifndef CONFIG_HAS_EARLYSUSPEND
+//	.suspend = NULL,
+//	.resume = NULL,
+//#else /* CONFIG_HAS_EARLYSUSPEND */
+//	.suspend = kxtf9_resume,
+//	.resume = kxtf9_suspend,
+//#endif /* CONFIG_HAS_EARLYSUSPEND */
 	.id_table = kxtf9_id,
 };
 
