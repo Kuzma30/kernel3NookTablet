@@ -143,42 +143,6 @@ struct gcmap {
 		 * used when pagearray is not provided (set to NULL). */
 		void *logical;
 
-<<<<<<< HEAD
-	union {
-		void *logical;		/* Pointer to the buffer; used when
-					   pagearray is NULL. */
-		unsigned int offset;	/* Page offset of the buffer; used when
-					   pagearray is provided. */
-	} buf;
-
-	unsigned int pagesize;		/* Size of a physical page, 0 for
-					   default. */
-	unsigned long *pagearray;	/* Pointer to array of physical
-					   pages. */
-
-	unsigned int size;		/* Size of the buffer. */
-};
-
-/*****************************************************************************
- * Cache manipulation API entries.
- */
-
-struct bvcachexfer;
-
-#define GCIOCTL_CACHE _IOW(GCIOCTL_TYPE, GCIOCTL_BASE + 0x22,\
-			struct bvcachexfer)
-
-struct bvcachexfer {
-	int count;			/* number of regions */
-	struct c2dmrgn rgn[3];		/* The most regions that we deal with
-					   is 3 */
-	int dir;			/* direction of data */
-};
-
-
-/*******************************************************************************
- * BLTsville: blit API entry.
-=======
 		/* Page offset of the buffer to be mapped;
 		 * used when pagearray is provided. */
 		unsigned int offset;
@@ -197,7 +161,6 @@ struct bvcachexfer {
 
 /*****************************************************************************
  * Cache manipulation API entries.
->>>>>>> remotes/omapzoom/p-android-omap-3.0-dev
  */
 
 #define GCIOCTL_CACHE _IOW(GCIOCTL_TYPE, GCIOCTL_BASE + 0x30, \
