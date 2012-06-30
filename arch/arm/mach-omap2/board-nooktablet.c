@@ -24,19 +24,19 @@
 #include <linux/hwspinlock.h>
 #include <linux/bootmem.h>
 #include <linux/i2c/twl.h>
-#include <linux/i2c/bq2415x.h>
+//#include <linux/i2c/bq2415x.h>
 #include <linux/gpio_keys.h>
 #include <linux/regulator/machine.h>
 #include <linux/regulator/fixed.h>
-#include <linux/regulator/tps6130x.h>
+//#include <linux/regulator/tps6130x.h>
 #include <linux/leds.h>
 #include <linux/leds_pwm.h>
 #include <linux/omapfb.h>
 #include <linux/reboot.h>
-#include <linux/twl6040-vib.h>
+//#include <linux/twl6040-vib.h>
 #include <linux/wl12xx.h>
 #include <linux/memblock.h>
-#include <linux/mfd/twl6040-codec.h>
+//#include <linux/mfd/twl6040-codec.h>
 
 #include <linux/input/ft5x06.h>
 
@@ -118,8 +118,8 @@
 #define OMAP_FT5x06_RESET_GPIO   	39 /*46*/
 
 #define TWL6030_RTC_GPIO 		6
-#define BLUETOOTH_UART			UART2
-#define CONSOLE_UART			UART1
+//#define BLUETOOTH_UART			UART2
+//#define CONSOLE_UART			UART1
 
 #define  SAMSUNG_SDRAM 0x1
 #define  ELPIDA_SDRAM  0x3
@@ -764,25 +764,6 @@ static struct regulator_consumer_supply sdp4430_vemmc_supply[] = {
 	},
 };
 
-static struct regulator_consumer_supply sdp4430_vwlan_supply[] = {
-	{
-		.supply = "vwlan",
-	},
-};
-
-static int wl12xx_set_power(struct device *dev, int slot, int on, int vdd)
-{
-	printk(KERN_WARNING"%s: %d\n", __func__, on);
-	if (on) {
-		gpio_set_value(GPIO_WIFI_PWEN, on);
-		udelay(800);
-		gpio_set_value(GPIO_WIFI_PMENA, on);
-	} else {
-		gpio_set_value(GPIO_WIFI_PMENA, on);
-		gpio_set_value(GPIO_WIFI_PWEN, on);
-	}
-	return 0;
-}
 
 static int omap4_twl6030_hsmmc_late_init(struct device *dev)
 {
@@ -868,7 +849,7 @@ static struct regulator_init_data sdp4430_vaux2 = {
 	},
 };
 
-static struct regulator_init_data sdp4430_vaux3 = {
+/*static struct regulator_init_data sdp4430_vaux3 = {
 	.constraints = {
 		.min_uV			= 1800000,
 		.max_uV			= 1800000,
@@ -886,7 +867,7 @@ static struct regulator_init_data sdp4430_vaux3 = {
 	},
 	.num_consumer_supplies = 1,
 	.consumer_supplies = sdp4430_vwlan_supply,
-};
+};*/
 
 static struct regulator_init_data sdp4430_vmmc = {
 	.constraints = {
@@ -1063,7 +1044,7 @@ static struct twl4030_platform_data sdp4430_twldata = {
 	.vusb		= &sdp4430_vusb,
 	.vaux1		= &sdp4430_vaux1,
 	.vaux2		= &sdp4430_vaux2,
-	.vaux3		= &sdp4430_vaux3,
+//	.vaux3		= &sdp4430_vaux3,
 	.clk32kg	= &sdp4430_clk32kg,
 	.usb		= &omap4_usbphy_data,
 	.bci		= &sdp4430_bci_data,
@@ -1153,6 +1134,19 @@ static void __init blaze_pmic_mux_init(void)
 						OMAP_WAKEUP_EN);
 }
 
+
+static void enable_rtc_gpio(void){
+	/* To access twl registers we enable gpio6
+	 * we need this so the RTC driver can work.
+	 */
+	gpio_request(TWL6030_RTC_GPIO, "h_SYS_DRM_MSEC");
+	gpio_direction_output(TWL6030_RTC_GPIO, 1);
+
+	omap_mux_init_signal("fref_clk0_out.gpio_wk6", \
+		OMAP_PIN_OUTPUT | OMAP_PIN_OFF_NONE);
+	return;
+}
+
 static void __init omap_i2c_hwspinlock_init(int bus_id, int spinlock_id,
 				struct omap_i2c_bus_board_data *pdata)
 {
@@ -1209,14 +1203,6 @@ static int __init omap4_i2c_init(void)
 	 * should be set in the board file. Before regulators are registered.
 	 */
 	regulator_has_full_constraints();
-
-	gpio_request(TWL6030_RTC_GPIO, "h_SYS_DRM_MSEC");
-	gpio_direction_output(TWL6030_RTC_GPIO, 1);
-
-	omap_mux_init_signal("fref_clk0_out.gpio_wk6", OMAP_PIN_OUTPUT| OMAP_PIN_OFF_NONE);
-// 	gpio_request(6, "msecure");
-// 	gpio_direction_output(6, 1);
-
 	return 0;
 }
 
@@ -1372,6 +1358,88 @@ static inline void board_serial_init(void)
 // 		ARRAY_SIZE(blaze_uart4_pads), &blaze_uart_info_uncon);
 }
 
+#if 1
+static struct wl12xx_platform_data __initdata omap4_kc1_wlan_data = {
+	.irq = OMAP_GPIO_IRQ(GPIO_WIFI_IRQ),
+	.board_ref_clock = WL12XX_REFCLOCK_38,
+};
+
+static struct regulator_consumer_supply omap4_sdp4430_vmmc5_supply = {
+	.supply = "vmmc",
+	.dev_name = "omap_hsmmc.2",
+};
+static struct regulator_init_data sdp4430_vmmc5 = {
+	.constraints = {
+		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
+	},
+	.num_consumer_supplies = 1,
+	.consumer_supplies = &omap4_sdp4430_vmmc5_supply,
+};
+static struct fixed_voltage_config sdp4430_vwlan = {
+	.supply_name		= "vwl1271",
+	.microvolts		= 1800000, /* 1.8V */
+	.gpio			= GPIO_WIFI_PMENA,
+	.startup_delay		= 70000, /* 70msec */
+	.enable_high		= 1,
+	.enabled_at_boot	= 0,
+	.init_data		= &sdp4430_vmmc5,
+};
+static struct platform_device omap_vwlan_device = {
+	.name		= "reg-fixed-voltage",
+	.id		= 1,
+	.dev = { .platform_data = &sdp4430_vwlan, }
+};
+
+static void omap4_kc1_wifi_mux_init(void)
+{
+	omap_mux_init_gpio(GPIO_WIFI_IRQ, OMAP_PIN_INPUT |
+				OMAP_PIN_OFF_WAKEUPENABLE);
+	omap_mux_init_gpio(GPIO_WIFI_PMENA, OMAP_PIN_OUTPUT);
+
+	omap_mux_init_signal("sdmmc5_cmd.sdmmc5_cmd",
+				OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP);
+	omap_mux_init_signal("sdmmc5_clk.sdmmc5_clk",
+				OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP);
+	omap_mux_init_signal("sdmmc5_dat0.sdmmc5_dat0",
+				OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP);
+	omap_mux_init_signal("sdmmc5_dat1.sdmmc5_dat1",
+				OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP);
+	omap_mux_init_signal("sdmmc5_dat2.sdmmc5_dat2",
+				OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP);
+	omap_mux_init_signal("sdmmc5_dat3.sdmmc5_dat3",
+				OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP);
+}
+
+static void __init omap4_kc1_wifi_init(void)
+{
+	omap4_kc1_wifi_mux_init();
+	if (wl12xx_set_platform_data(&omap4_kc1_wlan_data))
+		pr_err("Error setting wl12xx data\n");
+	platform_device_register(&omap_vwlan_device);
+}
+#endif
+
+#if 0
+//***********************************WiFi section *********************************/
+static struct regulator_consumer_supply sdp4430_vwlan_supply[] = {
+	{
+		.supply = "vwlan",
+	},
+};
+
+static int wl12xx_set_power(struct device *dev, int slot, int on, int vdd)
+{
+	printk(KERN_WARNING"%s: %d\n", __func__, on);
+	if (on) {
+		gpio_set_value(GPIO_WIFI_PWEN, on);
+		udelay(800);
+		gpio_set_value(GPIO_WIFI_PMENA, on);
+	} else {
+		gpio_set_value(GPIO_WIFI_PMENA, on);
+		gpio_set_value(GPIO_WIFI_PWEN, on);
+	}
+	return 0;
+}
 static void omap4_sdp4430_wifi_mux_init(void)
 {
 	omap_mux_init_gpio(GPIO_WIFI_IRQ, OMAP_PIN_INPUT |
@@ -1458,6 +1526,9 @@ static void omap4_sdp4430_wifi_init(void)
 	return;
 
 }
+
+//************************* end of WiFi section ******************************/
+#endif
 #include <linux/temphack.h>
 
 #define LCD_RST_DELAY           100
@@ -1678,7 +1749,7 @@ void __init acclaim_panel_init(void)
         platform_add_devices(sdp4430_panel_devices, ARRAY_SIZE(sdp4430_panel_devices));
 #endif
 }
-// #if defined(CONFIG_USB_EHCI_HCD_OMAP) || defined(CONFIG_USB_OHCI_HCD_OMAP3)
+#if defined(CONFIG_USB_EHCI_HCD_OMAP) || defined(CONFIG_USB_OHCI_HCD_OMAP3)
 struct usbhs_omap_board_data usbhs_bdata __initdata = {
 	.port_mode[0] = OMAP_EHCI_PORT_MODE_PHY,
 	.port_mode[1] = OMAP_OHCI_PORT_MODE_PHY_6PIN_DATSE0,
@@ -1692,24 +1763,24 @@ struct usbhs_omap_board_data usbhs_bdata __initdata = {
 static void __init omap4_ehci_ohci_init(void)
 {
 
-// 	omap_mux_init_signal("usbb2_ulpitll_clk.gpio_157", \
-// 		OMAP_PIN_OUTPUT | \
-// 		OMAP_PIN_OFF_NONE);
-// 
-// 	Power on the ULPI PHY
-// 	if (gpio_is_valid(BLAZE_MDM_PWR_EN_GPIO)) {
-// 		gpio_request(BLAZE_MDM_PWR_EN_GPIO, "USBB1 PHY VMDM_3V3");
-// 		gpio_direction_output(BLAZE_MDM_PWR_EN_GPIO, 1);
-// 	}
+	omap_mux_init_signal("usbb2_ulpitll_clk.gpio_157", \
+		OMAP_PIN_OUTPUT | \
+		OMAP_PIN_OFF_NONE);
+ 
+	Power on the ULPI PHY
+	if (gpio_is_valid(BLAZE_MDM_PWR_EN_GPIO)) {
+		gpio_request(BLAZE_MDM_PWR_EN_GPIO, "USBB1 PHY VMDM_3V3");
+		gpio_direction_output(BLAZE_MDM_PWR_EN_GPIO, 1);
+	}
 
 	usbhs_init(&usbhs_bdata);
 
 	return;
 
 }
-// // #else
-// // static void __init omap4_ehci_ohci_init(void){}
-// // #endif
+#else
+static void __init omap4_ehci_ohci_init(void){}
+#endif
 
 static void blaze_set_osc_timings(void)
 {
@@ -1776,6 +1847,7 @@ static void __init omap_4430sdp_init(void)
 // 	blaze_pmic_mux_init();
 	blaze_set_osc_timings();
 	omap4_i2c_init();
+	enable_rtc_gpio();
 //	blaze_sensor_init();
 //	blaze_touch_init();
 	omap4_register_ion();
@@ -1789,18 +1861,15 @@ static void __init omap_4430sdp_init(void)
 	board_serial_init();
 	
 	omap4_twl6030_hsmmc_init(mmc);
-	
-	omap4_sdp4430_wifi_init();
+
+	omap4_kc1_wifi_init();
+//	omap4_sdp4430_wifi_init();
 // 	/* blaze_modem_init shall be called before omap4_ehci_ohci_init */
 // 	if (!strcmp(modem_ipc, "hsi"))
 // 		blaze_modem_init(true);
 // 	else
-// 		blaze_modem_init(false);
-// #ifdef CONFIG_TIWLAN_SDIO
-// 	config_wlan_mux();
-// #else
-// 	omap4_4430sdp_wifi_init();
-// #endif
+//	blaze_modem_init(false);
+
 #ifdef CONFIG_INPUT_KXTF9
 	kxtf9_dev_init();
 #endif
@@ -1843,7 +1912,7 @@ static inline void ramconsole_reserve_sdram(void)
         reserve_bootmem(NOOKTABLET_RAM_CONSOLE_START, NOOKTABLET_RAM_CONSOLE_SIZE, 0);
     }
 }
-#else ?>
+#else 
 static inline void ramconsole_reserve_sdram(void) {}
 #endif /* CONFIG_ANDROID_RAM_CONSOLE */
 #endif
