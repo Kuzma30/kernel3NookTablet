@@ -53,7 +53,7 @@ OPK_DEFAULT := libpvrANDROID_WSEGL.so
 #
 KERNEL_COMPONENTS := srvkm
 ifeq ($(is_at_least_honeycomb),0)
-KERNEL_COMPONENTS += bufferclass_example
+#KERNEL_COMPONENTS += bufferclass_example
 endif
 
 # Kernel modules are always installed here under Android

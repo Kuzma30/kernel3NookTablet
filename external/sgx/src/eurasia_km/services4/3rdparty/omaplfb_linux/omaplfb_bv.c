@@ -344,6 +344,11 @@ static OMAPLFB_ERROR InitBltFBsTiler2D(OMAPLFB_DEVINFO *psDevInfo)
 	res = omap_ion_nonsecure_tiler_alloc(gpsIONClient, &sAllocData);
 	if (res < 0)
 	{
+		res = omap_ion_tiler_alloc(gpsIONClient, &sAllocData);
+	}
+	psPVRFBInfo->psIONHandle = sAllocData.handle;
+	if (res < 0)
+	{
 		printk(KERN_ERR DRIVER_PREFIX
 			"Could not allocate BltFBs\n");
 		return OMAPLFB_ERROR_INIT_FAILURE;

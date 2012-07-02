@@ -1224,6 +1224,11 @@ static OMAPLFB_ERROR OMAPLFBInitIonOmap(OMAPLFB_DEVINFO *psDevInfo,
 	res = omap_ion_nonsecure_tiler_alloc(gpsIONClient, &sAllocData);
 	if (res < 0)
 	{
+		res = omap_ion_tiler_alloc(gpsIONClient, &sAllocData);
+	}
+	psPVRFBInfo->psIONHandle = sAllocData.handle;
+	if (res < 0)
+	{
 		printk(KERN_ERR DRIVER_PREFIX
 			" %s: Device %u: Could not allocate 2D framebuffer(%d)\n", __FUNCTION__, uiFBDevID, res);
 		return OMAPLFB_ERROR_INIT_FAILURE;

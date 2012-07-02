@@ -7,7 +7,7 @@ pvrsrvinit.
 
 [DDK Version]
 1.8@869593
-DDK commit ID: f1c7c76bd87aa3c712a3b206dd4ca91d4771bb13 
+DDK commit ID: 1bd1fe11b9df2b5c5396359e1754e9c68cd60efb
 Branch: remotes/origin/ti_ics_1.8
 Kernel modules built against: 
 Kernel Version: 3.0.21-00003-OMAP-Android
@@ -61,7 +61,7 @@ For 4460:
 # adb push omaplfb_sgx540_120.ko /system/lib/modules/
 
 For 4470
-# cd ANDROID_ROOT/device/ti/proprietary-open/omap4/sgx/src/eurasia_km/eurasiacon/binary2_544_120_omap4430_android_release/target/
+# cd ANDROID_ROOT/device/ti/proprietary-open/omap4/sgx/src/eurasia_km/eurasiacon/binary2_540_120_omap4430_android_release/target/
 # adb push pvrsrvkm_sgx544_112.ko /system/lib/modules/
 # adb push omaplfb_sgx544_112.ko /system/lib/modules/
 
