@@ -77,7 +77,7 @@
 #include <plat/omap-pm.h>
 #include <linux/wakelock.h>
 //#include "board-blaze.h"
-#include "omap4_ion.h"
+#include <mach/omap4_ion.h>
 #include "omap_ram_console.h"
 #include "mux.h"
 #include "hsmmc.h"
