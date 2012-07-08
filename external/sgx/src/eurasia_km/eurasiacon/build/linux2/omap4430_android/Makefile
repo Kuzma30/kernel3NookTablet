@@ -114,7 +114,7 @@ PVR_DRI_DRM_NOT_PCI := 1
 KERNEL_COMPONENTS += linux_drm
 endif
 EXTRA_PVRSRVKM_COMPONENTS += $(DISPLAY_CONTROLLER_COMPONENT)
-EXTRA_KBUILD_SOURCE := $(KERNELSRC)
+EXTRA_KBUILD_SOURCE := $(KERNELDIR)
 # FIXME: Only required for comparison with X's KM
 PVR_SECURE_DRM_AUTH_EXPORT := 1
 ifneq ($(OMAP_NON_FLIP_DISPLAY),1)
@@ -133,6 +133,9 @@ endif
 endif
 
 PVR_ANDROID_PLATFORM_HAS_LINUX_FBDEV := 1
+
+# FIXME: Remove this once vsync issues are resolved
+PVR_ANDROID_COMPOSITOR_WAIT_FOR_RENDER := 1
 
 ifeq ($(is_at_least_icecream_sandwich),1)
 -include products.mk

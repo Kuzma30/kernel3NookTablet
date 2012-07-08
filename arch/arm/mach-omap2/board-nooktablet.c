@@ -75,6 +75,7 @@
 #include <video/omap-panel-nokia-dsi.h>
 #include <plat/vram.h>
 #include <plat/omap-pm.h>
+#include <plat/android-display.h>
 #include <linux/wakelock.h>
 //#include "board-blaze.h"
 #include <mach/omap4_ion.h>
@@ -802,6 +803,11 @@ static int omap4_twl6030_hsmmc_late_init(struct device *dev)
 		pdata->slots[0].card_detect = twl6030_mmc_card_detect;
 //		printk("Card detect IRQ = %d, Card detect = %d",TWL6030_IRQ_BASE + MMCDETECT_INTR_OFFSET, twl6030_mmc_card_detect);
 	}
+	if (pdev->id == 2) {
+		ret = 0;
+		pdata->slots[0].mmc_data.built_in = 1;
+	}
+
 	return ret;
 }
 
@@ -1172,8 +1178,8 @@ static void __init omap_i2c_hwspinlock_init(int bus_id, int spinlock_id,
 
 static struct omap_i2c_bus_board_data __initdata sdp4430_i2c_1_bus_pdata;
 static struct omap_i2c_bus_board_data __initdata sdp4430_i2c_2_bus_pdata;
-// static struct omap_i2c_bus_board_data __initdata sdp4430_i2c_3_bus_pdata;
-// static struct omap_i2c_bus_board_data __initdata sdp4430_i2c_4_bus_pdata;
+static struct omap_i2c_bus_board_data __initdata sdp4430_i2c_3_bus_pdata;
+static struct omap_i2c_bus_board_data __initdata sdp4430_i2c_4_bus_pdata;
 
 static int __init omap4_i2c_init(void)
 {
@@ -1181,13 +1187,13 @@ static int __init omap4_i2c_init(void)
 
 	omap_i2c_hwspinlock_init(1, 0, &sdp4430_i2c_1_bus_pdata);
 	omap_i2c_hwspinlock_init(2, 1, &sdp4430_i2c_2_bus_pdata);
-// 	omap_i2c_hwspinlock_init(3, 2, &sdp4430_i2c_3_bus_pdata);
-// 	omap_i2c_hwspinlock_init(4, 3, &sdp4430_i2c_4_bus_pdata);
+	omap_i2c_hwspinlock_init(3, 2, &sdp4430_i2c_3_bus_pdata);
+	omap_i2c_hwspinlock_init(4, 3, &sdp4430_i2c_4_bus_pdata);
 
 	omap_register_i2c_bus_board_data(1, &sdp4430_i2c_1_bus_pdata);
 	omap_register_i2c_bus_board_data(2, &sdp4430_i2c_2_bus_pdata);
-// 	omap_register_i2c_bus_board_data(3, &sdp4430_i2c_3_bus_pdata);
-// 	omap_register_i2c_bus_board_data(4, &sdp4430_i2c_4_bus_pdata);
+	omap_register_i2c_bus_board_data(3, &sdp4430_i2c_3_bus_pdata);
+	omap_register_i2c_bus_board_data(4, &sdp4430_i2c_4_bus_pdata);
 
 	omap4_pmic_init("twl6030", &sdp4430_twldata);
 	
@@ -1198,23 +1204,14 @@ static int __init omap4_i2c_init(void)
 // 				ARRAY_SIZE(sdp4430_i2c_boardinfo));
 	omap_register_i2c_bus(2, 400, sdp4430_i2c_2_boardinfo,
 				ARRAY_SIZE(sdp4430_i2c_2_boardinfo));
-// 	omap_register_i2c_bus(3, 400, sdp4430_i2c_3_boardinfo,
-// 				ARRAY_SIZE(sdp4430_i2c_3_boardinfo));
-// 	omap_register_i2c_bus(4, 400, sdp4430_i2c_4_boardinfo,
-// 				ARRAY_SIZE(sdp4430_i2c_4_boardinfo));
-
+	omap_register_i2c_bus(3, 400, NULL, 0);
+	omap_register_i2c_bus(4, 400, NULL, 0);
 	/*
 	 * This will allow unused regulator to be shutdown. This flag
 	 * should be set in the board file. Before regulators are registered.
 	 */
 	regulator_has_full_constraints();
 
-	gpio_request(TWL6030_RTC_GPIO, "h_SYS_DRM_MSEC");
-	gpio_direction_output(TWL6030_RTC_GPIO, 1);
-
-	omap_mux_init_signal("fref_clk0_out.gpio_wk6", OMAP_PIN_OUTPUT| OMAP_PIN_OFF_NONE);
-// 	gpio_request(6, "msecure");
-// 	gpio_direction_output(6, 1);
 
 	return 0;
 }
@@ -1289,19 +1286,19 @@ static struct omap_device_pad blaze_uart1_pads[] __initdata = {
 
 
 static struct omap_device_pad blaze_uart2_pads[] __initdata = {
-	{
+/*	{
 		.name	= "uart2_cts.uart2_cts",
 		.enable	= OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE0,
 		.flags  = OMAP_DEVICE_PAD_REMUX,
-		.idle   = OMAP_WAKEUP_EN | OMAP_PIN_OFF_INPUT_PULLUP |
+	//	.idle   = OMAP_WAKEUP_EN | OMAP_PIN_OFF_INPUT_PULLUP |
 			  OMAP_MUX_MODE0,
 	},
 	{
 		.name	= "uart2_rts.uart2_rts",
 		.flags  = OMAP_DEVICE_PAD_REMUX,
 		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
-		.idle   = OMAP_PIN_OFF_INPUT_PULLUP | OMAP_MUX_MODE7,
-	},
+	//	.idle   = OMAP_PIN_OFF_INPUT_PULLUP | OMAP_MUX_MODE7,
+	},*/
 	{
 		.name	= "uart2_tx.uart2_tx",
 		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
@@ -1313,14 +1310,14 @@ static struct omap_device_pad blaze_uart2_pads[] __initdata = {
 };
 
 static struct omap_device_pad blaze_uart3_pads[] __initdata = {
-	{
-		.name	= "uart3_cts_rctx.uart3_cts_rctx",
-		.enable	= OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE0,
+/*	{
+//		.name	= "uart3_cts_rctx.uart3_cts_rctx",
+//		.enable	= OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE0,
 	},
 	{
 		.name	= "uart3_rts_sd.uart3_rts_sd",
 		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
-	},
+	},*/
 	{
 		.name	= "uart3_tx_irtx.uart3_tx_irtx",
 		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
@@ -1363,12 +1360,12 @@ static inline void board_serial_init(void)
 	pr_info(KERN_INFO "Board serial init\n");
 	omap_serial_init_port_pads(0, blaze_uart1_pads,
 		ARRAY_SIZE(blaze_uart1_pads), &blaze_uart_info_uncon);
-// 	omap_serial_init_port_pads(1, blaze_uart2_pads,
-// 		ARRAY_SIZE(blaze_uart2_pads), &blaze_uart_info);
-// 	omap_serial_init_port_pads(2, blaze_uart3_pads,
-// 		ARRAY_SIZE(blaze_uart3_pads), &blaze_uart_info);
-// 	omap_serial_init_port_pads(3, blaze_uart4_pads,
-// 		ARRAY_SIZE(blaze_uart4_pads), &blaze_uart_info_uncon);
+//	omap_serial_init_port_pads(1, blaze_uart2_pads,
+//		ARRAY_SIZE(blaze_uart2_pads), &blaze_uart_info);
+//	omap_serial_init_port_pads(2, blaze_uart3_pads,
+//		ARRAY_SIZE(blaze_uart3_pads), &blaze_uart_info);
+//	omap_serial_init_port_pads(3, blaze_uart4_pads,
+//		ARRAY_SIZE(blaze_uart4_pads), &blaze_uart_info_uncon);
 }
 
 static void omap4_sdp4430_wifi_mux_init(void)
@@ -1458,7 +1455,23 @@ static void omap4_sdp4430_wifi_init(void)
 
 }
 
-// #if defined(CONFIG_USB_EHCI_HCD_OMAP) || defined(CONFIG_USB_OHCI_HCD_OMAP3)
+static void enable_rtc_gpio(void){
+        /* To access twl registers we enable gpio6
+         * we need this so the RTC driver can work.
+         */
+        gpio_request(TWL6030_RTC_GPIO, "h_SYS_DRM_MSEC");
+        gpio_direction_output(TWL6030_RTC_GPIO, 1);
+
+        omap_mux_init_signal("fref_clk0_out.gpio_wk6", \
+                OMAP_PIN_OUTPUT | OMAP_PIN_OFF_NONE);
+                
+//	gpio_request(6, "msecure");
+//	gpio_direction_output(6, 1);
+
+        return;
+}
+
+#if defined(CONFIG_USB_EHCI_HCD_OMAP) || defined(CONFIG_USB_OHCI_HCD_OMAP3)
 struct usbhs_omap_board_data usbhs_bdata __initdata = {
 	.port_mode[0] = OMAP_EHCI_PORT_MODE_PHY,
 	.port_mode[1] = OMAP_OHCI_PORT_MODE_PHY_6PIN_DATSE0,
@@ -1472,24 +1485,24 @@ struct usbhs_omap_board_data usbhs_bdata __initdata = {
 static void __init omap4_ehci_ohci_init(void)
 {
 
-// 	omap_mux_init_signal("usbb2_ulpitll_clk.gpio_157", \
-// 		OMAP_PIN_OUTPUT | \
-// 		OMAP_PIN_OFF_NONE);
+	omap_mux_init_signal("usbb2_ulpitll_clk.gpio_157", \
+		OMAP_PIN_OUTPUT | \
+		OMAP_PIN_OFF_NONE);
 // 
 // 	Power on the ULPI PHY
-// 	if (gpio_is_valid(BLAZE_MDM_PWR_EN_GPIO)) {
-// 		gpio_request(BLAZE_MDM_PWR_EN_GPIO, "USBB1 PHY VMDM_3V3");
-// 		gpio_direction_output(BLAZE_MDM_PWR_EN_GPIO, 1);
-// 	}
+	if (gpio_is_valid(BLAZE_MDM_PWR_EN_GPIO)) {
+		gpio_request(BLAZE_MDM_PWR_EN_GPIO, "USBB1 PHY VMDM_3V3");
+		gpio_direction_output(BLAZE_MDM_PWR_EN_GPIO, 1);
+	}
 
 	usbhs_init(&usbhs_bdata);
 
 	return;
 
 }
-// // #else
-// // static void __init omap4_ehci_ohci_init(void){}
-// // #endif
+#else
+static void __init omap4_ehci_ohci_init(void){}
+#endif
 
 static void blaze_set_osc_timings(void)
 {
@@ -1556,6 +1569,7 @@ static void __init omap_4430sdp_init(void)
 // 	blaze_pmic_mux_init();
 	blaze_set_osc_timings();
 	omap4_i2c_init();
+	enable_rtc_gpio();
 //	blaze_sensor_init();
 //	blaze_touch_init();
 	omap4_register_ion();
@@ -1575,7 +1589,7 @@ static void __init omap_4430sdp_init(void)
 // 	if (!strcmp(modem_ipc, "hsi"))
 // 		blaze_modem_init(true);
 // 	else
-// 		blaze_modem_init(false);
+//	blaze_modem_init(false);
 // #ifdef CONFIG_TIWLAN_SDIO
 // 	config_wlan_mux();
 // #else
@@ -1627,13 +1641,257 @@ static inline void ramconsole_reserve_sdram(void)
 static inline void ramconsole_reserve_sdram(void) {}
 #endif /* CONFIG_ANDROID_RAM_CONSOLE */
 #endif
+
+
+#include <linux/temphack.h>
+
+#define LCD_RST_DELAY		100
+#define LCD_INIT_DELAY		200
+
+#define DEFAULT_BACKLIGHT_BRIGHTNESS	105
+static void acclaim4430_init_display_led(void)
+{
+#ifndef TEMP_HACK
+ 	if (acclaim_board_type() >= EVT2) {
+  		printk(KERN_INFO "init_display_led: evt2 hardware\n");
+  		omap_mux_init_signal("abe_dmic_din2.dmtimer11_pwm_evt", OMAP_MUX_MODE5);
+	} else {
+		printk(KERN_INFO "init_display_led: evt1 hardware\n");
+		printk(KERN_INFO "WARNING: brigthness control disabled on EVT1 hardware\n");
+		/* mux the brightness control pin as gpio, because on EVT1 it is connected to
+		   timer8 and we cannot use timer8 because of audio conflicts causing crash */
+		omap_mux_init_signal("usbb1_ulpitll_dat4.gpio_92", OMAP_MUX_MODE3);
+		if (gpio_request(92, "EVT1 BACKLIGHT"))
+			printk(KERN_ERR "ERROR: failed to request backlight gpio\n");
+		else
+			gpio_direction_output(92, 0);
+	}
+#else
+	printk(KERN_INFO "Temporary Hack for LCD PWM LED\n");
+	printk(KERN_INFO "WARNING: brigthness control disabled now\n");
+	/* mux the brightness control pin as gpio, because on EVT1 it is connected to
+	   timer8 and we cannot use timer8 because of audio conflicts causing crash */
+	omap_mux_init_signal("abe_dmic_din2.gpio_121", OMAP_MUX_MODE3);
+//	if (gpio_request(121, "EVT1 BACKLIGHT"))
+//		printk(KERN_ERR "ERROR: failed to request backlight gpio\n");
+//	else
+//		gpio_direction_output(121, 0);
+#endif
+}
+
+static void acclaim4430_disp_backlight_setpower(struct omap_pwm_led_platform_data *pdata, int on_off)
+{
+	printk(KERN_INFO "Backlight set power, on_off = %d\n",on_off);
+	if (on_off) {
+		msleep(500);
+		gpio_direction_output(38, (acclaim_board_type() >= EVT2) ? 1 : 0);
+	} else {
+		gpio_direction_output(38, (acclaim_board_type() >= EVT2) ? 0 : 1);
+	}
+	gpio_direction_output(44, 0);
+	gpio_direction_output(45, 0);
+	pr_debug("%s: on_off:%d\n", __func__, on_off);
+
+	printk(KERN_INFO "Backlight set power end\n");
+}
+
+#ifndef TEMP_HACK
+static struct omap_pwm_led_platform_data acclaim4430_disp_backlight_data = {
+	.name 		 = "lcd-backlight",
+	.default_trigger  = "backlight",
+	.intensity_timer = 11,
+	.bkl_max    = 254,
+	.bkl_min    = 5,
+	.bkl_freq    = 128*2,
+	.invert     = 1,
+	.def_brightness	 = DEFAULT_BACKLIGHT_BRIGHTNESS,
+	.set_power	 = acclaim4430_disp_backlight_setpower,
+};
+
+static struct platform_device sdp4430_disp_led = {
+	.name	=	"omap_pwm_led",
+	.id	=	0,
+	.dev	= {
+		.platform_data = &acclaim4430_disp_backlight_data,
+	},
+};
+
+static struct platform_device *sdp4430_panel_devices[] __initdata = {
+	&sdp4430_disp_led,
+};
+#endif
+static void sdp4430_panel_get_resource(void)
+{
+	int ret_val = 0;
+
+	pr_info("sdp4430_panel_get_resource\n");
+	ret_val = gpio_request(38, "BOXER BL PWR EN");
+
+	if ( ret_val ) {
+		printk("%s : Could not request bl pwr en\n",__FUNCTION__);
+	}
+	ret_val = gpio_request(44, "BOXER CABC0");
+	if ( ret_val ){
+		printk( "%s : could not request CABC0\n",__FUNCTION__);
+	}
+	ret_val = gpio_request(45, "BOXER CABC1");
+	if ( ret_val ) {
+		printk("%s: could not request CABC1\n",__FUNCTION__);
+	}
+}
+
+static struct boxer_panel_data boxer_panel;
+
+static inline struct boxer_panel_data * get_panel_data(struct omap_dss_device *dssdev)
+{
+	return dssdev->data;
+}
+
+#ifdef TEMP_HACK
+static int nooktablet_panel_enable_lcd(struct omap_dss_device *dssdev)
+{
+	acclaim4430_disp_backlight_setpower(NULL,1);
+	pr_info("NookTablet LCD enable!\n");
+	return 0;
+}
+
+static void nooktablet_panel_disable_lcd(struct omap_dss_device *dssdev)
+{
+	acclaim4430_disp_backlight_setpower(NULL,0);
+	pr_info("NookTablet LCD disable!\n");
+}
+#endif
+
+static struct omap_dss_device sdp4430_boxer_device = {
+	.phy		= {
+		.dpi	= {
+			.data_lines	= 24,
+		},
+	},
+	.clocks		= {
+		.dispc	= {
+			.channel	= {
+				.lck_div        = 1,
+				.pck_div        = 4,
+				.lcd_clk_src    = OMAP_DSS_CLK_SRC_DSI2_PLL_HSDIV_DISPC,
+			},
+			.dispc_fclk_src = OMAP_DSS_CLK_SRC_DSI2_PLL_HSDIV_DISPC,
+		},
+#if 0
+		.dsi	= {
+			.regn		= 16, /*it is (N+1)*/
+			.regm		= 115,
+			.regm_dispc	= 3,
+			.regm_dsi	= 3,
+			.dsi_fclk_src   = OMAP_DSS_CLK_SRC_DSI2_PLL_HSDIV_DSI,
+		},
+#endif
+	},
+        .panel          = {
+		.config		= OMAP_DSS_LCD_TFT | OMAP_DSS_LCD_IVS |
+				  OMAP_DSS_LCD_IHS,
+		.timings	= {
+			.x_res          = 1024,
+			.y_res          = 600,
+			.pixel_clock    = 46000, /* in kHz */
+			.hfp            = 160,   /* HFP fix 160 */
+			.hsw            = 10,    /* HSW = 1~140 */
+			.hbp            = 150,   /* HSW + HBP = 160 */
+			.vfp            = 12,    /* VFP fix 12 */
+			.vsw            = 3,     /* VSW = 1~20 */
+			.vbp            = 20,    /* VSW + VBP = 23 */
+		},
+        	.width_in_um = 158000,
+        	.height_in_um = 92000,
+        },
+#if 0
+	.ctrl = {
+		.pixel_size = 24,
+	},
+#endif
+	.name			= "lcd2",
+	.driver_name		= "boxer_panel",
+	.type			= OMAP_DISPLAY_TYPE_DPI,
+	.channel		= OMAP_DSS_CHANNEL_LCD2,
+#ifdef TEMP_HACK
+	.platform_enable  = nooktablet_panel_enable_lcd,
+	.platform_disable  = nooktablet_panel_disable_lcd,
+#endif
+};
+
+static struct omap_dss_device *sdp4430_dss_devices[] = {
+ 	&sdp4430_boxer_device,
+};
+ 
+static struct omap_dss_board_info sdp4430_dss_data = {
+	.num_devices	= ARRAY_SIZE(sdp4430_dss_devices),
+	.devices	= sdp4430_dss_devices,
+	.default_device	= &sdp4430_boxer_device,
+};
+
+static struct spi_board_info tablet_spi_board_info[] __initdata = {
+{
+	.modalias= "boxer_disp_spi",
+	.bus_num= 4,     /* McSPI4 */
+	.chip_select= 0,
+	.max_speed_hz= 375000,
+	},
+};
+
+#define BLAZE_FB_RAM_SIZE                SZ_16M /* 1920×1080*4 * 2 */
+static struct omapfb_platform_data blaze_fb_pdata = {
+	.mem_desc = {
+		.region_cnt = 1,
+		.region = {
+			[0] = {
+				.size = BLAZE_FB_RAM_SIZE,
+			},
+		},
+	},
+};
+
+void acclaim_panel_init(void)
+{
+	sdp4430_panel_get_resource();
+	acclaim4430_init_display_led();
+	omapfb_set_platform_data(&blaze_fb_pdata); 
+	omap_display_init(&sdp4430_dss_data);
+	int ret;
+	
+	spi_register_board_info(tablet_spi_board_info,ARRAY_SIZE(tablet_spi_board_info));
+
+//	omap_mux_enable_wkup("sys_nirq1");
+//	omap_mux_enable_wkup("sys_nirq2");
+#ifndef TEMP_HACK
+	platform_add_devices(sdp4430_panel_devices, ARRAY_SIZE(sdp4430_panel_devices));
+#endif
+}
+
 static void __init omap_4430sdp_map_io(void)
 {
 	omap2_set_globals_443x();
 	omap44xx_map_common_io();
 }
+
 static void __init omap_4430sdp_reserve(void)
 {
+	omap_init_ram_size();
+
+#ifdef CONFIG_ION_OMAP
+	omap_android_display_setup(&sdp4430_dss_data,
+				   NULL,
+				   NULL,
+				   &blaze_fb_pdata,
+				   get_omap_ion_platform_data());
+	omap_ion_init();
+#else
+	omap_android_display_setup(&sdp4430_dss_data,
+				   NULL,
+				   NULL,
+				   &blaze_fb_pdata,
+				   NULL);
+#endif
+
 	omap_ram_console_init(OMAP_RAM_CONSOLE_START_DEFAULT,
 			OMAP_RAM_CONSOLE_SIZE_DEFAULT);
 
@@ -1641,17 +1899,10 @@ static void __init omap_4430sdp_reserve(void)
 	memblock_remove(PHYS_ADDR_SMC_MEM, PHYS_ADDR_SMC_SIZE);
 	memblock_remove(PHYS_ADDR_DUCATI_MEM, PHYS_ADDR_DUCATI_SIZE);
 	/* ipu needs to recognize secure input buffer area as well */
-	omap_ipu_set_static_mempool(PHYS_ADDR_DUCATI_MEM, PHYS_ADDR_DUCATI_SIZE +
-					OMAP4_ION_HEAP_SECURE_INPUT_SIZE);
-#ifdef CONFIG_OMAP_REMOTE_PROC_DSP
-	memblock_remove(PHYS_ADDR_TESLA_MEM, PHYS_ADDR_TESLA_SIZE);
-	omap_dsp_set_static_mempool(PHYS_ADDR_TESLA_MEM,
-					PHYS_ADDR_TESLA_SIZE);
-#endif
-
-#ifdef CONFIG_ION_OMAP
-	omap_ion_init();
-#endif
+	omap_ipu_set_static_mempool(PHYS_ADDR_DUCATI_MEM,
+					PHYS_ADDR_DUCATI_SIZE +
+					OMAP4_ION_HEAP_SECURE_INPUT_SIZE +
+					OMAP4_ION_HEAP_SECURE_OUTPUT_WFDHDCP_SIZE);
 
 	omap_reserve();
 }
