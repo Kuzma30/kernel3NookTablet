@@ -787,7 +787,7 @@ static int wl12xx_set_power(struct device *dev, int slot, int on, int vdd)
 #endif
 
 static struct regulator_consumer_supply omap4_sdp4430_vwlan_supply = {
-	.supply = "vmmc",
+	.supply = "vwlan", //vmmc prev
 	.dev_name = "omap_hsmmc.2", // previous 5
 };
 
@@ -1095,13 +1095,13 @@ static struct twl4030_platform_data sdp4430_twldata = {
 	/* Regulators */
 	.vmmc		= &sdp4430_vmmc,
 	.vpp		= &sdp4430_vpp,
-	.vusim		= &sdp4430_vusim,
+//	.vusim		= &sdp4430_vusim,
 	.vana		= &sdp4430_vana,
 	.vcxio		= &sdp4430_vcxio,
 //	.vdac		= &sdp4430_vdac,
 	.vusb		= &sdp4430_vusb,
 	.vaux1		= &sdp4430_vaux1,
-	.vaux2		= &sdp4430_vaux2,
+//	.vaux2		= &sdp4430_vaux2,
 //	.vaux3		= &sdp4430_vaux3,
 	.clk32kg	= &sdp4430_clk32kg,
 	.usb		= &omap4_usbphy_data,
