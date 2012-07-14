@@ -2075,8 +2075,8 @@ static int aic31xx_resume(struct snd_soc_codec *codec)
 struct snd_soc_codec_driver soc_codec_dev_aic31xx = {
 	.probe = aic31xx_probe,
 	.remove = aic31xx_remove,
-	.suspend = NULL,//aic31xx_suspend,
-	.resume = NULL,//aic31xx_resume,
+	.suspend = aic31xx_suspend,
+	.resume = aic31xx_resume,
 	.read = aic31xx_read,
 	.write = aic31xx_write,
 	.set_bias_level = aic31xx_set_bias_level,
