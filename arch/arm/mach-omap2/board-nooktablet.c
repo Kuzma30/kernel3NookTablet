@@ -1095,7 +1095,7 @@ static struct twl4030_platform_data sdp4430_twldata = {
 	/* Regulators */
 	.vmmc		= &sdp4430_vmmc,
 	.vpp		= &sdp4430_vpp,
-//	.vusim		= &sdp4430_vusim,
+	.vusim		= &sdp4430_vusim,
 	.vana		= &sdp4430_vana,
 	.vcxio		= &sdp4430_vcxio,
 //	.vdac		= &sdp4430_vdac,
