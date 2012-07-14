@@ -29,6 +29,10 @@ ifeq ($(CONFIG_ION),y)
 EXTRA_CFLAGS += -DCONFIG_TF_ION
 endif
 
+plus_sec := $(call as-instr,.arch_extension sec,+sec)
+
+AFLAGS_bridge_pub2sec.o += -Wa,-march=armv7-a$(plus_sec)
+
 tf_driver-objs += tf_util.o
 tf_driver-objs += tf_conn.o
 tf_driver-objs += tf_device.o
