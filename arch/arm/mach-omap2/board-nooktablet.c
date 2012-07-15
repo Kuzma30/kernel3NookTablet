@@ -787,7 +787,7 @@ static int wl12xx_set_power(struct device *dev, int slot, int on, int vdd)
 #endif
 
 static struct regulator_consumer_supply omap4_sdp4430_vwlan_supply = {
-	.supply = "vwlan", //vmmc prev
+	.supply = "vmmc", //vmmc prev
 	.dev_name = "omap_hsmmc.2", // previous 5
 };
 
@@ -1101,7 +1101,7 @@ static struct twl4030_platform_data sdp4430_twldata = {
 //	.vdac		= &sdp4430_vdac,
 	.vusb		= &sdp4430_vusb,
 	.vaux1		= &sdp4430_vaux1,
-//	.vaux2		= &sdp4430_vaux2,
+	.vaux2		= &sdp4430_vaux2,
 //	.vaux3		= &sdp4430_vaux3,
 	.clk32kg	= &sdp4430_clk32kg,
 	.usb		= &omap4_usbphy_data,
@@ -1519,10 +1519,30 @@ static struct wl12xx_platform_data omap4_sdp4430_wlan_data __initdata = {
 	//.board_tcxo_clock = WL12XX_TCXOCLOCK_26,
 };
 
+static void omap4_sdp4430_wifi_power_on(void)
+{
+	//***********************WiFI level translator power on and init *****************************/
+	int ret;
+	ret = gpio_request(GPIO_WIFI_PWEN, "wifi_pwen");
+	if (ret < 0) {
+		pr_err("%s: can't reserve GPIO: %d\n", __func__,
+			GPIO_WIFI_PWEN);
+	}
+//	gpio_direction_output(GPIO_WIFI_PWEN, 0);
+	
+	gpio_set_value(GPIO_WIFI_PWEN, 1); 
+	udelay(800);
+	printk ("GPIO_WIFI_PWEN on\n");
+	
+/************************WiFI level translator power on and init end *************************/
+
+}
+
 static void __init omap4_sdp4430_wifi_init(void)
 {
 	int ret;
-
+	
+	omap4_sdp4430_wifi_power_on();
 	omap4_sdp4430_wifi_mux_init();
 	omap4_sdp4430_wlan_data.irq = gpio_to_irq(GPIO_WIFI_IRQ);
 	ret = wl12xx_set_platform_data(&omap4_sdp4430_wlan_data);
@@ -1664,20 +1684,6 @@ static void __init omap_4430sdp_init(void)
 	
 	omap4_twl6030_hsmmc_init(mmc);
 
-	//***********************WiFI level translator power on and init *****************************/
-	int ret;
-	ret = gpio_request(GPIO_WIFI_PWEN, "wifi_pwen");
-	if (ret < 0) {
-		pr_err("%s: can't reserve GPIO: %d\n", __func__,
-			GPIO_WIFI_PWEN);
-	}
-	gpio_direction_output(GPIO_WIFI_PWEN, 0);
-	
-	gpio_set_value(GPIO_WIFI_PWEN, 1); 
-	udelay(800);
-	printk ("GPIO_WIFI_PWEN on\n");
-	
-/************************WiFI level translator power on and init end *************************/
 	omap4_sdp4430_wifi_init();
 // 	/* blaze_modem_init shall be called before omap4_ehci_ohci_init */
 // 	if (!strcmp(modem_ipc, "hsi"))
