@@ -303,10 +303,6 @@ static void gcpwr_disable_pulse_skipping(struct gccorecontext *gccorecontext)
 	if (gccorecontext->pulseskipping) {
 		union gcclockcontrol gcclockcontrol;
 
-		/* opp device scale */
-		gcxxx_device_scale(gccorecontext,
-				   gccorecontext->opp_count - 1);
-
 		/* Enable loading and set to maximum value. */
 		gcclockcontrol.reg.pulsecount = 64;
 		gcclockcontrol.reg.pulseset = true;
@@ -321,6 +317,10 @@ static void gcpwr_disable_pulse_skipping(struct gccorecontext *gccorecontext)
 		/* Pulse skipping disabled. */
 		gccorecontext->pulseskipping = false;
 	}
+
+	/* opp device scale */
+	gcxxx_device_scale(gccorecontext,
+			   gccorecontext->opp_count - 1);
 
 	GCDBG(GCZONE_POWER, "pulse skipping %s.\n",
 		gccorecontext->pulseskipping ? "enabled" : "disabled");
@@ -691,6 +691,38 @@ exit:
 		gcmap->gcerror);
 }
 EXPORT_SYMBOL(gc_unmap);
+
+void gc_release(void)
+{
+	struct gccorecontext *gccorecontext = &g_context;
+	struct list_head *ctxhead;
+	struct gcmmucontext *temp = NULL;
+	pid_t pid;
+
+	GCENTER(GCZONE_CONTEXT);
+
+	GCLOCK(&gccorecontext->mmucontextlock);
+
+	pid = current->tgid;
+	GCDBG(GCZONE_CONTEXT, "scanning context records for pid %d.\n", pid);
+
+	list_for_each(ctxhead, &gccorecontext->mmuctxlist) {
+		temp = list_entry(ctxhead, struct gcmmucontext, link);
+		if (temp->pid == pid) {
+			GCDBG(GCZONE_CONTEXT, "context is found @ 0x%08X\n",
+			      (unsigned int) temp);
+
+			gcmmu_destroy_context(gccorecontext, temp);
+			list_move(ctxhead, &gccorecontext->mmuctxvac);
+			break;
+		}
+	}
+
+	GCUNLOCK(&gccorecontext->mmucontextlock);
+
+	GCEXIT(GCZONE_CONTEXT);
+}
+EXPORT_SYMBOL(gc_release);
 
 static int gc_probe_opp(struct platform_device *pdev)
 {
