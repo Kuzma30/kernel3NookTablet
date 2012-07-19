@@ -353,8 +353,10 @@ static int rprm_gpio_request(struct rprm_elem *e, struct rprm_gpio *obj)
 		return -ENOMEM;
 
 	ret = gpio_request(obj->id , "rpmsg_resmgr");
+	if(obj->id = 83)
+		ret = 0; //ugly hack for ducati requesting camera GPIO...
 	if (ret) {
-		pr_err("%s: error providing gpio %d\n", __func__, obj->id);
+		pr_err("%s: error providing gpio %d, ret: %d\n", __func__, obj->id, ret);
 		return ret;
 	}
 
