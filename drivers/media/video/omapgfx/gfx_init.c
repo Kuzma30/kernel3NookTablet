@@ -17,7 +17,7 @@
 #include <linux/types.h>
 #include <linux/platform_device.h>
 #include <linux/version.h>
-#include <linux/sched.h>
+
 #include <linux/omap_v4l2_gfx.h>	/* private ioctls */
 
 #include <media/v4l2-ioctl.h>

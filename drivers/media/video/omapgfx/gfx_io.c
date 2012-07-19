@@ -25,7 +25,6 @@
 #include <linux/irq.h>
 #include <linux/delay.h>
 #include <linux/omap_v4l2_gfx.h>	/* private ioctls */
-#include <linux/sched.h>
 
 #include <media/videobuf-dma-contig.h>
 #include <media/v4l2-dev.h>
@@ -765,7 +764,7 @@ static int vidfop_open(struct file *file)
 
 	videobuf_queue_dma_contig_init(q, &video_vbq_ops, q->dev,
 				&vout->vbq_lock, vout->type, V4L2_FIELD_NONE,
-				sizeof(struct videobuf_buffer), vout,NULL);
+				sizeof(struct videobuf_buffer), vout);
 
 end:
 	GFXLOG(1, V4L2DEV(vout), "Exiting %s :%d\n", __func__, rv);
