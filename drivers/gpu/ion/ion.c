@@ -394,6 +394,7 @@ int ion_phys_frm_dev(struct ion_device *dev, struct ion_handle *handle,
 }
 EXPORT_SYMBOL(ion_phys_frm_dev);
 
+
 void *ion_map_kernel(struct ion_client *client, struct ion_handle *handle)
 {
 	struct ion_buffer *buffer;
