@@ -395,7 +395,6 @@
     #endif /* ABS_MT_TOUCH_MAJOR */
 #endif /* ABS_MT_TOUCH_MAJOR and FT_USE_MT_SIGNALS */
 
-#define FT_USE_MT_TRACK_ID
 #if defined(ABS_MT_TRACKING_ID)  && defined(FT_USE_MT_TRACK_ID)
     #define FT_USE_TRACKING_ID  1
 #else
@@ -451,10 +450,10 @@
 #define FT_NUM_ST_TCH_ID        2
 
 /* maximum number of concurrent MT track IDs */
-#define FT_NUM_MT_TCH_ID        5
+#define FT_NUM_MT_TCH_ID        4
 
 /* maximum number of track IDs */
-#define FT_NUM_TRK_ID           15
+#define FT_NUM_TRK_ID           16
 
 #define FT_NTCH                 0   /* no touch (lift off) */
 #define FT_TCH                  1   /* active touch (touchdown) */
