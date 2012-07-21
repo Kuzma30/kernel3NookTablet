@@ -407,7 +407,6 @@ void driver_detach(struct device_driver *drv)
  */
 void *dev_get_drvdata(const struct device *dev)
 {
-	printk("%s: dev: %p, dev->p: %p\n", __FUNCTION__, dev, (dev?dev->p:0));
 	if (dev && dev->p)
 		return dev->p->driver_data;
 	return NULL;
