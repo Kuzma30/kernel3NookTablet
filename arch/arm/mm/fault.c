@@ -481,6 +481,8 @@ do_sect_fault(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
 static int
 do_bad(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
 {
+	extern void printascii(const char *);
+printascii("ALARMA DOO BAD!");
 	return 1;
 }
 

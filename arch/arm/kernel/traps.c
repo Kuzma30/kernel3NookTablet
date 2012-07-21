@@ -36,7 +36,7 @@
 #include "signal.h"
 
 static const char *handler[]= { "prefetch abort", "data abort", "address exception", "interrupt" };
-
+extern void printascii(const char *);
 void *vectors_page;
 
 #ifdef CONFIG_DEBUG_USER
@@ -676,6 +676,7 @@ baddataabort(int code, unsigned long instr, struct pt_regs *regs)
 	unsigned long addr = instruction_pointer(regs);
 	siginfo_t info;
 
+	printascii("ALARMA");
 #ifdef CONFIG_DEBUG_USER
 	if (user_debug & UDBG_BADABORT) {
 		printk(KERN_ERR "[%d] %s: bad data abort: code %d instr 0x%08lx\n",
@@ -695,6 +696,7 @@ baddataabort(int code, unsigned long instr, struct pt_regs *regs)
 
 void __attribute__((noreturn)) __bug(const char *file, int line)
 {
+	printascii("ALARMA");
 	printk(KERN_CRIT"kernel BUG at %s:%d!\n", file, line);
 	*(int *)0 = 0;
 
@@ -734,6 +736,7 @@ EXPORT_SYMBOL(__div0);
 
 void abort(void)
 {
+	printascii("ALARMA");
 	BUG();
 
 	/* if that doesn't kill us, halt */

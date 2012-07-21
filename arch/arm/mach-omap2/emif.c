@@ -1565,7 +1565,7 @@ late_initcall(omap_init_emif_timings);
 
 int sdram_vendor(void)
 {
-        int ddr_manufact_id =0;         
+        int ddr_manufact_id =0;
         void __iomem *base;
 
         base = emif[EMIF1].base;
