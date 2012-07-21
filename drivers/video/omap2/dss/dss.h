@@ -477,7 +477,7 @@ int dispc_setup_plane(enum omap_plane plane,
 		      u8 rotation, bool mirror,
 		      u8 global_alpha, u8 pre_mult_alpha,
 		      enum omap_channel channel,
-		      u32 puv_addr);
+		      u32 puv_addr, bool source_of_wb);
 int dispc_scaling_decision(u16 width, u16 height,
 		u16 out_width, u16 out_height,
 		enum omap_plane plane,
@@ -534,6 +534,7 @@ int dispc_get_clock_div(enum omap_channel channel,
 		struct dispc_clock_info *cinfo);
 u32 sa_calc_wrap(struct dispc_config *dispc_reg_config, u32 channel_no);
 int dispc_setup_wb(struct writeback_cache_data *wb);
+void dispc_setup_wb_source(enum omap_writeback_source source);
 void dispc_go_wb(void);
 
 /* VENC */

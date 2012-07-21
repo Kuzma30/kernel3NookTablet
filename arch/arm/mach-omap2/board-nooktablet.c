@@ -1761,15 +1761,6 @@ static struct omap_dss_device sdp4430_boxer_device = {
 			},
 			.dispc_fclk_src = OMAP_DSS_CLK_SRC_DSI2_PLL_HSDIV_DISPC,
 		},
-#if 0
-		.dsi	= {
-			.regn		= 16, /*it is (N+1)*/
-			.regm		= 115,
-			.regm_dispc	= 3,
-			.regm_dsi	= 3,
-			.dsi_fclk_src   = OMAP_DSS_CLK_SRC_DSI2_PLL_HSDIV_DSI,
-		},
-#endif
 	},
         .panel          = {
 		.config		= OMAP_DSS_LCD_TFT | OMAP_DSS_LCD_IVS |
@@ -1780,13 +1771,13 @@ static struct omap_dss_device sdp4430_boxer_device = {
 			.pixel_clock    = 46000, /* in kHz */
 			.hfp            = 160,   /* HFP fix 160 */
 			.hsw            = 10,    /* HSW = 1~140 */
-			.hbp            = 150,   /* HSW + HBP = 160 */
-			.vfp            = 12,    /* VFP fix 12 */
-			.vsw            = 3,     /* VSW = 1~20 */
-			.vbp            = 20,    /* VSW + VBP = 23 */
+			.hbp            = 160, //150,   /* HSW + HBP = 160 */
+			.vfp            = 10,//12,    /* VFP fix 12 */
+			.vsw            = 2,//3,     /* VSW = 1~20 */
+			.vbp            = 23,//20,    /* VSW + VBP = 23 */
 		},
-        	.width_in_um = 158000,
-        	.height_in_um = 92000,
+        	.width_in_um = 153000,//158000,
+        	.height_in_um = 90000,//92000,
         },
 #if 0
 	.ctrl = {

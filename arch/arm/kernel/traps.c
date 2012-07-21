@@ -675,8 +675,9 @@ baddataabort(int code, unsigned long instr, struct pt_regs *regs)
 {
 	unsigned long addr = instruction_pointer(regs);
 	siginfo_t info;
-
+#ifdef CONFIG_DEBUG_LL
 	printascii("ALARMA");
+#endif
 #ifdef CONFIG_DEBUG_USER
 	if (user_debug & UDBG_BADABORT) {
 		printk(KERN_ERR "[%d] %s: bad data abort: code %d instr 0x%08lx\n",
@@ -696,7 +697,9 @@ baddataabort(int code, unsigned long instr, struct pt_regs *regs)
 
 void __attribute__((noreturn)) __bug(const char *file, int line)
 {
+#ifdef CONFIG_DEBUG_LL
 	printascii("ALARMA");
+#endif
 	printk(KERN_CRIT"kernel BUG at %s:%d!\n", file, line);
 	*(int *)0 = 0;
 
@@ -736,7 +739,9 @@ EXPORT_SYMBOL(__div0);
 
 void abort(void)
 {
+#ifdef CONFIG_DEBUG_LL
 	printascii("ALARMA");
+#endif
 	BUG();
 
 	/* if that doesn't kill us, halt */

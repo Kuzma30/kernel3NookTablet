@@ -475,6 +475,9 @@ struct omap_overlay_manager_info {
 
 	bool alpha_enabled;
 
+	/* if true, manager is used in MEM2MEM mode */
+	bool wb_only;
+
 	struct omapdss_ovl_cb cb;
 
 	bool cpr_enable;
@@ -688,6 +691,9 @@ struct omap_dss_device {
 
 		u32 width_in_um;
 		u32 height_in_um;
+		u16 fb_xres;
+		u16 fb_yres;
+		u32 hdmi_default_cea_code;
 	} panel;
 
 	struct {

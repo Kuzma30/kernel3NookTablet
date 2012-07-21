@@ -147,10 +147,8 @@ static int dss_initialize_debugfs(void)
 	debugfs_create_file("venc", S_IRUGO, dss_debugfs_dir,
 			&venc_dump_regs, &dss_debug_fops);
 #endif
-#ifdef CONFIG_OMAP4_DSS_HDMI
 	debugfs_create_file("hdmi", S_IRUGO, dss_debugfs_dir,
 			&hdmi_dump_regs, &dss_debug_fops);
-#endif
 	return 0;
 }
 
@@ -263,6 +261,9 @@ static int omap_dss_probe(struct platform_device *pdev)
 	for (i = 0; i < pdata->num_devices; ++i) {
 		struct omap_dss_device *dssdev = pdata->devices[i];
 
+		if (def_disp_name && strcmp(def_disp_name, dssdev->name) == 0)
+			pdata->default_device = dssdev;
+
 		r = omap_dss_register_device(dssdev);
 		if (r) {
 			DSSERR("device %d %s register failed %d\n", i,
@@ -273,9 +274,6 @@ static int omap_dss_probe(struct platform_device *pdev)
 
 			goto err_register;
 		}
-
-		if (def_disp_name && strcmp(def_disp_name, dssdev->name) == 0)
-			pdata->default_device = dssdev;
 	}
 
 	return 0;

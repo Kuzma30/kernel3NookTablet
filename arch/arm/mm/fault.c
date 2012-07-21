@@ -292,6 +292,10 @@ do_page_fault(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
 	if (in_atomic() || !mm)
 		goto no_context;
 
+
+	//extern void printascii(const char *);
+	//printascii("ALARMA do_page_fault!");
+
 	/*
 	 * As per x86, we may deadlock here.  However, since the kernel only
 	 * validly references user space from well defined areas of the code,
@@ -406,6 +410,10 @@ do_translation_fault(unsigned long addr, unsigned int fsr,
 	pud_t *pud, *pud_k;
 	pmd_t *pmd, *pmd_k;
 
+/*
+	extern void printascii(const char *);
+printascii("ALARMA do_translation_fault!");
+*/
 	if (addr < TASK_SIZE)
 		return do_page_fault(addr, fsr, regs);
 
@@ -481,8 +489,10 @@ do_sect_fault(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
 static int
 do_bad(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
 {
+#ifdef CONFIG_DEBUG_LL
 	extern void printascii(const char *);
 printascii("ALARMA DOO BAD!");
+#endif
 	return 1;
 }
 

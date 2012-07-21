@@ -1063,11 +1063,6 @@ int dsi_runtime_get(struct platform_device *dsidev)
 	int r;
 	struct dsi_data *dsi = dsi_get_dsidrv_data(dsidev);
 
-	if(dsi == NULL)
-	{
-		printk(KERN_ERR "%s HOHO NULL dsi!\n", __FUNCTION__);
-		return -1;
-	}
 	mutex_lock(&dsi->runtime_lock);
 
 	if (dsi->runtime_count++ == 0) {
