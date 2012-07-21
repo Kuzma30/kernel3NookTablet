@@ -526,8 +526,6 @@ static struct kobj_type overlay_ktype = {
 int dss_check_overlay(struct omap_overlay *ovl, struct omap_dss_device *dssdev)
 {
 	struct omap_overlay_info *info;
-	struct omap_writeback_info wb_info;
-	struct omap_writeback *wb;
 	u16 outw, outh;
 	u16 dw, dh;
 
@@ -544,16 +542,7 @@ int dss_check_overlay(struct omap_overlay *ovl, struct omap_dss_device *dssdev)
 		return -EINVAL;
 	}
 
-	wb = omap_dss_get_wb(0);
-
-	wb->get_wb_info(wb, &wb_info);
-
-	if (wb && wb_info.enabled && wb_info.mode == OMAP_WB_MEM2MEM_MODE &&
-					ovl->manager->id == wb_info.source) {
-		dw = wb_info.width;
-		dh = wb_info.height;
-	} else
-		dssdev->driver->get_resolution(dssdev, &dw, &dh);
+	dssdev->driver->get_resolution(dssdev, &dw, &dh);
 
 	DSSDBG("check_overlay %d: (%d,%d %dx%d -> %dx%d) disp (%dx%d)\n",
 			ovl->id,
