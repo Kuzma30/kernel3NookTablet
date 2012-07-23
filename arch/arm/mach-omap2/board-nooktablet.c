@@ -1540,6 +1540,7 @@ static struct omapfb_platform_data acclaim_fb_pdata = {
 		},
 	},
 };
+ 
 
 void acclaim_panel_init(void)
 {
