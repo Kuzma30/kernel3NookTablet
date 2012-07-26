@@ -30,7 +30,7 @@
      *  The default can be overridden if the driver is compiled as a module
      */
 
-#define VIDEOMEMSIZE	(1*1024*1024)	/* 1 MB */
+#define VIDEOMEMSIZE	(16*1024*1024)	/* 1 MB */
 
 static void *videomemory;
 static u_long videomemorysize = VIDEOMEMSIZE;

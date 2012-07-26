@@ -81,6 +81,7 @@ static int dpi_set_dsi_clk(struct omap_dss_device *dssdev, bool is_tft,
 		return r;
 
 	dss_select_dispc_clk_source(dssdev->clocks.dispc.dispc_fclk_src);
+	dss_select_lcd_clk_source(dssdev->manager->id, dssdev->clocks.dispc.channel.lcd_clk_src);
 
 	r = dispc_set_clock_div(dssdev->manager->id, &dispc_cinfo);
 	if (r)
@@ -356,6 +357,7 @@ int dpi_init_display(struct omap_dss_device *dssdev)
 		enum omap_dss_clk_source dispc_fclk_src =
 			dssdev->clocks.dispc.dispc_fclk_src;
 		dpi.dsidev = dpi_get_dsidev(dispc_fclk_src);
+		printk(KERN_DEBUG "%s using dsi_pll, dpi.dsidev = %p\n", __FUNCTION__, dpi.dsidev);
 	}
 
 	return 0;

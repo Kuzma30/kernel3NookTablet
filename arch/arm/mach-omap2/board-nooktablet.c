@@ -603,8 +603,8 @@ static struct platform_device btwilink_device = {
 /*******************************************************/
 static struct regulator_consumer_supply tp_supply[] = {
 	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dss"),
-	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dsi1"),
-	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dsi2"),
+	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dsi.0"),
+	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dsi.1"),
 };
 
 static struct regulator_init_data tp_vinit = {
@@ -761,13 +761,13 @@ static struct regulator_consumer_supply sdp4430_vmmc_supply[] = {
  	},
 };
 
-/* Internal EMMC memory */
+/* Internal EMMC memory *//*
 static struct regulator_consumer_supply sdp4430_vemmc_supply[] = {
 	{
 		.supply = "vmmc",
 		.dev_name = "omap_hsmmc.1",
 	},
-};
+};*/
 
 static struct regulator_consumer_supply sdp4430_vwlan_supply[] = {
 	{
@@ -860,7 +860,7 @@ static struct regulator_init_data sdp4430_vaux1 = {
 		.always_on	= true,
 	},
 };
-
+/*
 static struct regulator_init_data sdp4430_vaux2 = {
 	.constraints = {
 		.min_uV			= 1200000,
@@ -877,7 +877,7 @@ static struct regulator_init_data sdp4430_vaux2 = {
 		},
 	},
 };
-
+*/
 static struct regulator_init_data sdp4430_vaux3 = {
 	.constraints = {
 		.min_uV			= 1800000,
@@ -985,7 +985,7 @@ static struct regulator_init_data sdp4430_vcxio = {
 		.always_on	= true,
 	},
 };
-
+/*
 static struct regulator_init_data sdp4430_vdac = {
 	.constraints = {
 		.min_uV			= 1800000,
@@ -1001,7 +1001,7 @@ static struct regulator_init_data sdp4430_vdac = {
 		},
 	},
 };
-
+*/
 static struct regulator_consumer_supply vusb_supply[] = {
 	REGULATOR_SUPPLY("vusb", "twl6030_usb"),
 };
@@ -1724,13 +1724,6 @@ static void sdp4430_panel_get_resource(void)
 	}
 }
 
-static struct boxer_panel_data boxer_panel;
-
-static inline struct boxer_panel_data * get_panel_data(struct omap_dss_device *dssdev)
-{
-	return dssdev->data;
-}
-
 #ifdef TEMP_HACK
 static int nooktablet_panel_enable_lcd(struct omap_dss_device *dssdev)
 {
@@ -1775,15 +1768,14 @@ static struct omap_dss_device sdp4430_boxer_device = {
 			.vfp            = 10,//12,    /* VFP fix 12 */
 			.vsw            = 2,//3,     /* VSW = 1~20 */
 			.vbp            = 23,//20,    /* VSW + VBP = 23 */
+	//		.hbp            = 160, //150,   /* HSW + HBP = 160 */
+	//		.vfp            = 10,//12,    /* VFP fix 12 */
+	//		.vsw            = 2,//3,     /* VSW = 1~20 */
+	//		.vbp            = 23,//20,    /* VSW + VBP = 23 */
 		},
         	.width_in_um = 153000,//158000,
         	.height_in_um = 90000,//92000,
         },
-#if 0
-	.ctrl = {
-		.pixel_size = 24,
-	},
-#endif
 	.name			= "lcd2",
 	.driver_name		= "boxer_panel",
 	.type			= OMAP_DISPLAY_TYPE_DPI,
@@ -1831,12 +1823,12 @@ void acclaim_panel_init(void)
 	acclaim4430_init_display_led();
 	omapfb_set_platform_data(&blaze_fb_pdata); 
 	omap_display_init(&sdp4430_dss_data);
-	int ret;
+//	int ret;
 	
 	spi_register_board_info(tablet_spi_board_info,ARRAY_SIZE(tablet_spi_board_info));
 
-//	omap_mux_enable_wkup("sys_nirq1");
-//	omap_mux_enable_wkup("sys_nirq2");
+	//omap_mux_enable_wkup("sys_nirq1");
+	//omap_mux_enable_wkup("sys_nirq2");
 #ifndef TEMP_HACK
 	platform_add_devices(sdp4430_panel_devices, ARRAY_SIZE(sdp4430_panel_devices));
 #endif

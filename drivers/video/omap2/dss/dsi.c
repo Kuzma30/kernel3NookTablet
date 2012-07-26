@@ -377,12 +377,7 @@ struct platform_device *dsi_get_dsidev_from_id(int module)
 
 static int dsi_get_dsidev_id(struct platform_device *dsidev)
 {
-	/* TEMP: Pass 0 as the dsi module index till the time the dsi platform
-	 * device names aren't changed to the form "omapdss_dsi.0",
-	 * "omapdss_dsi.1" and so on */
-	BUG_ON(dsidev->id != -1);
-
-	return 0;
+	return dsidev->id;
 }
 
 static inline void dsi_write_reg(struct platform_device *dsidev,
@@ -4984,8 +4979,7 @@ static void dsi_put_clocks(struct platform_device *dsidev)
 		clk_put(dsi->sys_clk);
 }
 
-/* DSI1 HW IP initialisation */
-static int omap_dsi1hw_probe(struct platform_device *dsidev)
+static int omap_dsihw_probe(struct platform_device *dsidev)
 {
 	struct omap_display_platform_data *dss_plat_data;
 	struct omap_dss_board_info *board_info;
@@ -5097,7 +5091,7 @@ err_alloc:
 	return r;
 }
 
-static int omap_dsi1hw_remove(struct platform_device *dsidev)
+static int omap_dsihw_remove(struct platform_device *dsidev)
 {
 	struct dsi_data *dsi = dsi_get_dsidrv_data(dsidev);
 
@@ -5125,23 +5119,24 @@ static int omap_dsi1hw_remove(struct platform_device *dsidev)
 	return 0;
 }
 
-static struct platform_driver omap_dsi1hw_driver = {
-	.probe          = omap_dsi1hw_probe,
-	.remove         = omap_dsi1hw_remove,
+//will get bound to 2 eventual platform devices omapdss_dsi.0 and omapdss_dsi.1
+static struct platform_driver omap_dsihw_driver = {
+	.probe          = omap_dsihw_probe,
+	.remove         = omap_dsihw_remove,
 	.driver         = {
-		.name   = "omapdss_dsi1",
+		.name   = "omapdss_dsi",
 		.owner  = THIS_MODULE,
 	},
 };
 
 int dsi_init_platform_driver(void)
 {
-	return platform_driver_register(&omap_dsi1hw_driver);
+	return platform_driver_register(&omap_dsihw_driver);
 }
 
 void dsi_uninit_platform_driver(void)
 {
-	return platform_driver_unregister(&omap_dsi1hw_driver);
+	return platform_driver_unregister(&omap_dsihw_driver);
 }
 
 /* set extra videomode settings */
