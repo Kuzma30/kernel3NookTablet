@@ -358,7 +358,7 @@ void dss_select_dsi_clk_source(int dsi_module,
 		BUG();
 	}
 
-	pos = dsi_module == 0 ? 0 : 10;
+	pos = dsi_module == 0 ? 1 : 10;
 
 	REG_FLD_MOD(DSS_CONTROL, b, pos, pos);	/* DSIx_CLK_SWITCH */
 
