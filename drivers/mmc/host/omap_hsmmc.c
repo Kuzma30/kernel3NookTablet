@@ -2433,6 +2433,10 @@ static int __init omap_hsmmc_probe(struct platform_device *pdev)
 	if (cpu_is_omap44xx())
 		host->errata |= OMAP_HSMMC_ERRATA_I761;
 
+	host->errata = 0;
+	if (cpu_is_omap44xx())
+		host->errata |= OMAP_HSMMC_ERRATA_I761;
+
 	host->master_clock = OMAP_MMC_MASTER_CLOCK;
 	if (mmc_slot(host).features & HSMMC_HAS_48MHZ_MASTER_CLK)
 		host->master_clock = OMAP_MMC_MASTER_CLOCK / 2;

@@ -17,6 +17,7 @@
 #include <linux/spinlock.h>
 
 #ifdef CONFIG_OMAP4_DPLL_CASCADING
+#include <linux/console.h>
 #include <linux/slab.h>
 #include <linux/cpufreq.h>
 #include "dvfs.h"
@@ -537,14 +538,13 @@ static int omap4_dpll_low_power_cascade_enter(void)
 
 	if (!dpll_cascading_inited) {
 		pr_warn("%s: failed to get all necessary clocks\n", __func__);
-		ret = -ENODEV;
-		goto out;
+		return -ENODEV;
 	}
 
-	atomic_set(&in_dpll_cascading, true);
 	omap_sr_disable(vdd_mpu);
 	omap_sr_disable(vdd_iva);
 	omap_sr_disable(vdd_core);
+	atomic_set(&in_dpll_cascading, true);
 
 	/* prevent DPLL_ABE & DPLL_CORE from idling */
 	omap3_dpll_deny_idle(dpll_abe_ck);
@@ -763,7 +763,6 @@ sr_enable:
 	omap_sr_enable(vdd_mpu, omap_voltage_get_curr_vdata(vdd_mpu));
 	omap_sr_enable(vdd_iva, omap_voltage_get_curr_vdata(vdd_iva));
 	omap_sr_enable(vdd_core, omap_voltage_get_curr_vdata(vdd_core));
-out:
 	return ret;
 }
 
@@ -774,8 +773,8 @@ static int omap4_dpll_low_power_cascade_exit(void)
 
 	if (!dpll_cascading_inited) {
 		pr_warn("%s: failed to get all necessary clocks\n", __func__);
-		ret = -ENODEV;
-		goto out;
+		atomic_set(&in_dpll_cascading, false);
+		return -ENODEV;
 	}
 
 	omap_sr_disable(vdd_mpu);
@@ -905,11 +904,10 @@ static int omap4_dpll_low_power_cascade_exit(void)
 	__raw_writel(state.clkreqctrl, OMAP4430_PRM_CLKREQCTRL);
 
 	recalculate_root_clocks();
+	atomic_set(&in_dpll_cascading, false);
 	omap_sr_enable(vdd_mpu, omap_voltage_get_curr_vdata(vdd_mpu));
 	omap_sr_enable(vdd_iva, omap_voltage_get_curr_vdata(vdd_iva));
 	omap_sr_enable(vdd_core, omap_voltage_get_curr_vdata(vdd_core));
-out:
-	atomic_set(&in_dpll_cascading, false);
 	return ret;
 }
 
@@ -1490,6 +1488,14 @@ int omap4_dpll_cascading_blocker_hold(struct device *dev)
 	if (!dev)
 		return -EINVAL;
 
+	/*
+	 * We need take a console lock due to change uart frequency.
+	 * We cannot do it under omap_dvfs_lock because it can lead to
+	 * deadlock in situation when some thread has taken the console
+	 * lock and trying to scale waiting for the omap_dvfs_lock that has
+	 * been taken already by dpll_cascading.
+	 */
+	console_lock();
 	mutex_lock(&omap_dvfs_lock);
 
 	if (list_empty(&dpll_cascading_blocker_list))
@@ -1522,6 +1528,7 @@ int omap4_dpll_cascading_blocker_hold(struct device *dev)
 	}
 out:
 	mutex_unlock(&omap_dvfs_lock);
+	console_unlock();
 	return ret;
 }
 EXPORT_SYMBOL(omap4_dpll_cascading_blocker_hold);
@@ -1539,6 +1546,14 @@ int omap4_dpll_cascading_blocker_release(struct device *dev)
 	if (!dev)
 		return -EINVAL;
 
+	/*
+	 * We need take a console lock due to change uart frequency.
+	 * We cannot do it under omap_dvfs_lock because it can lead to
+	 * deadlock in situation when some thread has taken the console
+	 * lock and trying to scale waiting for the omap_dvfs_lock that has
+	 * been taken already by dpll_cascading.
+	 */
+	console_lock();
 	mutex_lock(&omap_dvfs_lock);
 
 	/* bail early if list is empty */
@@ -1574,6 +1589,7 @@ int omap4_dpll_cascading_blocker_release(struct device *dev)
 	}
 out:
 	mutex_unlock(&omap_dvfs_lock);
+	console_unlock();
 	return ret;
 }
 EXPORT_SYMBOL(omap4_dpll_cascading_blocker_release);
