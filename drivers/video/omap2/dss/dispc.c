@@ -4362,7 +4362,7 @@ done:
 #ifdef CONFIG_OMAP2_DSS_FAKE_VSYNC
 void dispc_fake_vsync_irq(void)
 {
-	u32 irqstatus = DISPC_IRQ_VSYNC;
+	u32 irqstatus = DISPC_IRQ_VSYNC2;
 	int i;
 
 	WARN_ON(!in_interrupt());
