@@ -1276,7 +1276,7 @@ static struct omap_device_pad blaze_uart1_pads[] __initdata = {
 	{
 		.name	= "uart1_rts.uart1_rts",
 		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
-	},*/
+	},
 	{
 		.name	= "uart1_tx.uart1_tx",
 		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
@@ -1286,7 +1286,7 @@ static struct omap_device_pad blaze_uart1_pads[] __initdata = {
 		.flags	= OMAP_DEVICE_PAD_REMUX | OMAP_DEVICE_PAD_WAKEUP,
 		.enable	= OMAP_PIN_INPUT_PULLUP | OMAP_PIN_OFF_WAKEUPENABLE | OMAP_MUX_MODE0,
 		.idle	= OMAP_PIN_INPUT_PULLUP | OMAP_PIN_OFF_WAKEUPENABLE | OMAP_MUX_MODE0,
-	},
+	},*/
 };
 
 
