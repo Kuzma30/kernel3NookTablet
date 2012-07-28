@@ -1269,14 +1269,14 @@ static __initdata struct emif_device_details emif_devices_512_elpida = {
 };
 
 static struct omap_device_pad blaze_uart1_pads[] __initdata = {
-	{
+	/*{
 		.name	= "uart1_cts.uart1_cts",
 		.enable	= OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE0,
 	},
 	{
 		.name	= "uart1_rts.uart1_rts",
 		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
-	},
+	},*/
 	{
 		.name	= "uart1_tx.uart1_tx",
 		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
