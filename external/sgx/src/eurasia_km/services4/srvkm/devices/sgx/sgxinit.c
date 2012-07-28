@@ -1097,6 +1097,7 @@ IMG_VOID SGXDumpDebugInfo (PVRSRV_SGXDEV_INFO	*psDevInfo,
 		}
 
 #if !defined(SGX_FEATURE_MULTIPLE_MEM_CONTEXTS) && !defined(FIX_HW_BRN_31620)
+		if (bDumpSGXRegs)
 		{
 			IMG_UINT32 ui32RegVal;
 			IMG_UINT32 ui32PDDevPAddr;
