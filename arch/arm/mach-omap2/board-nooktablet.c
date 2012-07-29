@@ -1269,24 +1269,16 @@ static __initdata struct emif_device_details emif_devices_512_elpida = {
 };
 
 static struct omap_device_pad blaze_uart1_pads[] __initdata = {
-	/*{
-		.name	= "uart1_cts.uart1_cts",
-		.enable	= OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE0,
+	{
+		.name	= "uart3_cts_rctx.uart1_tx",
+		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE1,
 	},
 	{
-		.name	= "uart1_rts.uart1_rts",
-		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
-	},
-	{
-		.name	= "uart1_tx.uart1_tx",
-		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
-	},
-	{
-		.name	= "uart1_rx.uart1_rx",
+		.name	= "mcspi1_cs1.uart1_rx",
 		.flags	= OMAP_DEVICE_PAD_REMUX | OMAP_DEVICE_PAD_WAKEUP,
-		.enable	= OMAP_PIN_INPUT_PULLUP | OMAP_PIN_OFF_WAKEUPENABLE | OMAP_MUX_MODE0,
-		.idle	= OMAP_PIN_INPUT_PULLUP | OMAP_PIN_OFF_WAKEUPENABLE | OMAP_MUX_MODE0,
-	},*/
+		.enable	= OMAP_PIN_INPUT_PULLUP | OMAP_PIN_OFF_WAKEUPENABLE | OMAP_MUX_MODE1,
+		.idle	= OMAP_PIN_INPUT_PULLUP | OMAP_PIN_OFF_WAKEUPENABLE | OMAP_MUX_MODE1,
+	},
 };
 
 
@@ -1303,7 +1295,7 @@ static struct omap_device_pad blaze_uart2_pads[] __initdata = {
 		.flags  = OMAP_DEVICE_PAD_REMUX,
 		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
 	//	.idle   = OMAP_PIN_OFF_INPUT_PULLUP | OMAP_MUX_MODE7,
-	},*/
+	},
 	{
 		.name	= "uart2_tx.uart2_tx",
 		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
@@ -1311,7 +1303,7 @@ static struct omap_device_pad blaze_uart2_pads[] __initdata = {
 	{
 		.name	= "uart2_rx.uart2_rx",
 		.enable	= OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE0,
-	},
+	},*/
 };
 
 static struct omap_device_pad blaze_uart3_pads[] __initdata = {
@@ -1322,7 +1314,7 @@ static struct omap_device_pad blaze_uart3_pads[] __initdata = {
 	{
 		.name	= "uart3_rts_sd.uart3_rts_sd",
 		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
-	},*/
+	},
 	{
 		.name	= "uart3_tx_irtx.uart3_tx_irtx",
 		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
@@ -1332,7 +1324,7 @@ static struct omap_device_pad blaze_uart3_pads[] __initdata = {
 //		.flags	= OMAP_DEVICE_PAD_REMUX,// | OMAP_DEVICE_PAD_WAKEUP,
 		.enable	= OMAP_PIN_INPUT | OMAP_MUX_MODE0,
 		.idle	= OMAP_PIN_INPUT | OMAP_MUX_MODE0,
-	},
+	},*/
 };
 
 static struct omap_device_pad blaze_uart4_pads[] __initdata = {
@@ -1367,8 +1359,8 @@ static inline void board_serial_init(void)
 		ARRAY_SIZE(blaze_uart1_pads), &blaze_uart_info_uncon);
 //	omap_serial_init_port_pads(1, blaze_uart2_pads,
 //		ARRAY_SIZE(blaze_uart2_pads), &blaze_uart_info);
-//	omap_serial_init_port_pads(2, blaze_uart3_pads,
-//		ARRAY_SIZE(blaze_uart3_pads), &blaze_uart_info);
+	omap_serial_init_port_pads(2, blaze_uart3_pads,
+		ARRAY_SIZE(blaze_uart3_pads), &blaze_uart_info);
 //	omap_serial_init_port_pads(3, blaze_uart4_pads,
 //		ARRAY_SIZE(blaze_uart4_pads), &blaze_uart_info_uncon);
 }
