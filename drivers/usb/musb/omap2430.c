@@ -259,7 +259,8 @@ static void musb_otg_notifier_work(struct work_struct *data_notifier_work)
 
 	/* avoid duplicate notifications */
 	if (last_event == xceiv_event) {
-		WARN(1, "Duplicated event(%d): ignored\n", xceiv_event);
+		/*WARN(1, "Duplicated event(%d): ignored\n", xceiv_event);*/
+		/*ignore it silently*/
 		return;
 	}
 	/* check for incorrect transitions */
