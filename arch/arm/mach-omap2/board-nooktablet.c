@@ -1134,41 +1134,40 @@ static __initdata struct emif_device_details emif_devices_512_elpida = {
 
 static struct omap_device_pad acclaim_uart1_pads[] __initdata = {
 	{
-		.name	= "uart1_cts.uart1_cts",
-		.enable	= OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE0,
+		.name	= "uart3_cts_rctx.uart1_tx",
+		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE1,
 	},
 	{
-		.name	= "uart1_rts.uart1_rts",
-		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
+		.name	= "mcspi1_cs1.uart1_rx",
+		.flags	= OMAP_DEVICE_PAD_REMUX	| OMAP_DEVICE_PAD_WAKEUP,
+		.enable	= OMAP_PIN_INPUT_PULLUP
+			| OMAP_PIN_OFF_WAKEUPENABLE
+			| OMAP_MUX_MODE1,
+		.idle	= OMAP_PIN_INPUT_PULLUP
+			| OMAP_PIN_OFF_WAKEUPENABLE
+			 |OMAP_MUX_MODE1,
 	},
-	{
-		.name	= "uart1_tx.uart1_tx",
-		.enable	= OMAP_PIN_OUTPUT | OMAP_MUX_MODE0,
-	},
-	{
-		.name	= "uart1_rx.uart1_rx",
-		.flags	= OMAP_DEVICE_PAD_REMUX | OMAP_DEVICE_PAD_WAKEUP,
-		.enable	= (OMAP_PIN_INPUT_PULLUP
-			   | OMAP_PIN_OFF_WAKEUPENABLE
-			   | OMAP_MUX_MODE0),
-		.idle	= (OMAP_PIN_INPUT_PULLUP
-			   | OMAP_PIN_OFF_WAKEUPENABLE
-			   | OMAP_MUX_MODE0),
-	}
 };
 
-static struct omap_uart_port_info acclaim_uart_info_uncon __initdata = {
+static struct omap_device_pad acclaim_uart3_pads[] __initdata = {
+};
+
+static struct omap_uart_port_info acclaim_uart_info __initdata = {
 	.use_dma	= 0,
+	.dma_rx_timeout = DEFAULT_RXDMA_TIMEOUT,
+	.dma_rx_poll_rate = DEFAULT_RXDMA_POLLRATE,
+	.dma_rx_buf_size = DEFAULT_RXDMA_BUFSIZE,
 	.auto_sus_timeout = DEFAULT_AUTOSUSPEND_DELAY,
-	.wer = 0,
+	.wer = (OMAP_UART_WER_TX | OMAP_UART_WER_RX | OMAP_UART_WER_CTS),
 };
 
 static inline void acclaim_serial_init(void)
 {
 	pr_info(KERN_INFO "Board serial init\n");
 	omap_serial_init_port_pads(0, acclaim_uart1_pads,
-				   ARRAY_SIZE(acclaim_uart1_pads), 
-				   &acclaim_uart_info_uncon);
+		ARRAY_SIZE(acclaim_uart1_pads), &acclaim_uart_info);
+	omap_serial_init_port_pads(2, acclaim_uart3_pads,
+		ARRAY_SIZE(acclaim_uart3_pads), &acclaim_uart_info);
 }
 
 static struct wl12xx_platform_data omap4_acclaim_wlan_data __initdata = {
