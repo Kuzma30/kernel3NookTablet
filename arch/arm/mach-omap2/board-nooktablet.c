@@ -1396,17 +1396,33 @@ static void __init acclaim_init(void)
 
 }
 
-
-static void acclaim4430_init_display_led(void)
+static void acclaim_init_display_led(void)
 {
-	printk(KERN_INFO "Temporary Hack for LCD PWM LED\n");
-	printk(KERN_INFO "WARNING: brigthness control disabled now\n");
-	omap_mux_init_signal("abe_dmic_din2.gpio_121", OMAP_MUX_MODE3);
+	if (acclaim_board_type() >= EVT2) {
+		printk(KERN_INFO "init_display_led: evt2 hardware\n");
+		omap_mux_init_signal("abe_dmic_din2.dmtimer11_pwm_evt",
+				     OMAP_MUX_MODE5);
+	} else {
+		printk(KERN_INFO "init_display_led: evt1 hardware\n"
+		       "brigthness control disabled on EVT1 hardware\n");
+		/*
+		   mux the brightness control pin as gpio, because on EVT1
+		   it is connected to timer8 and we cannot use timer8
+		   because of audio conflicts causing crash
+		*/
+		omap_mux_init_signal("usbb1_ulpitll_dat4.gpio_92",
+				     OMAP_MUX_MODE3);
+		if (gpio_request(92, "EVT1 BACKLIGHT"))
+			printk(KERN_ERR
+			       "ERROR: failed to request backlight gpio\n");
+		else
+			gpio_direction_output(92, 0);
+	}
 }
 
 static void 
-acclaim4430_disp_backlight_setpower(struct omap_pwm_led_platform_data *pdata, 
-				    int on_off)
+acclaim_disp_backlight_setpower(struct omap_pwm_led_platform_data *pdata,
+				int on_off)
 {
 	printk(KERN_INFO "Backlight set power, on_off = %d\n",on_off);
 	if (on_off) {
@@ -1423,6 +1439,30 @@ acclaim4430_disp_backlight_setpower(struct omap_pwm_led_platform_data *pdata,
 
 	printk(KERN_INFO "Backlight set power end\n");
 }
+
+static struct omap_pwm_led_platform_data acclaim_disp_backlight_data = {
+	.name 		 = "lcd-backlight",
+	.default_trigger  = "backlight",
+	.intensity_timer = 11,
+	.bkl_max    = 254,
+	.bkl_min    = 5,
+	.bkl_freq    = 128*2,
+	.invert     = 1,
+	.def_brightness	 = DEFAULT_BACKLIGHT_BRIGHTNESS,
+	.set_power	 = acclaim_disp_backlight_setpower,
+};
+
+static struct platform_device acclaim_disp_led = {
+	.name	=	"omap_pwm_led",
+	.id	=	0,
+	.dev	= {
+		.platform_data = &acclaim_disp_backlight_data,
+	},
+};
+
+static struct platform_device *acclaim_panel_devices[] __initdata = {
+	&acclaim_disp_led,
+};
 
 static void acclaim_panel_get_resource(void)
 {
@@ -1448,19 +1488,6 @@ static inline struct boxer_panel_data *
 get_panel_data(struct omap_dss_device *dssdev)
 {
 	return dssdev->data;
-}
-
-static int nooktablet_panel_enable_lcd(struct omap_dss_device *dssdev)
-{
-	acclaim4430_disp_backlight_setpower(NULL,1);
-	pr_info("NookTablet LCD enable!\n");
-	return 0;
-}
-
-static void nooktablet_panel_disable_lcd(struct omap_dss_device *dssdev)
-{
-	acclaim4430_disp_backlight_setpower(NULL,0);
-	pr_info("NookTablet LCD disable!\n");
 }
 
 static struct omap_dss_device acclaim_boxer_device = {
@@ -1501,8 +1528,6 @@ static struct omap_dss_device acclaim_boxer_device = {
 	.driver_name		= "boxer_panel",
 	.type			= OMAP_DISPLAY_TYPE_DPI,
 	.channel		= OMAP_DSS_CHANNEL_LCD2,
-	.platform_enable  = nooktablet_panel_enable_lcd,
-	.platform_disable  = nooktablet_panel_disable_lcd,
 };
 
 static struct omap_dss_device *acclaim_dss_devices[] = {
@@ -1539,11 +1564,13 @@ static struct omapfb_platform_data acclaim_fb_pdata = {
 void acclaim_panel_init(void)
 {
 	acclaim_panel_get_resource();
-	acclaim4430_init_display_led();
+	acclaim_init_display_led();
 	omapfb_set_platform_data(&acclaim_fb_pdata); 
 	omap_display_init(&acclaim_dss_data);
 	spi_register_board_info(tablet_spi_board_info,
 				ARRAY_SIZE(tablet_spi_board_info));
+	platform_add_devices(acclaim_panel_devices,
+			     ARRAY_SIZE(acclaim_panel_devices));
 }
 
 static void __init acclaim_map_io(void)
