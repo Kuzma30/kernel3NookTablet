@@ -1149,9 +1149,6 @@ static struct omap_device_pad acclaim_uart1_pads[] __initdata = {
 	},
 };
 
-static struct omap_device_pad acclaim_uart3_pads[] __initdata = {
-};
-
 static struct omap_uart_port_info acclaim_uart_info __initdata = {
 	.use_dma	= 0,
 	.dma_rx_timeout = DEFAULT_RXDMA_TIMEOUT,
@@ -1166,8 +1163,6 @@ static inline void acclaim_serial_init(void)
 	pr_info(KERN_INFO "Board serial init\n");
 	omap_serial_init_port_pads(0, acclaim_uart1_pads,
 		ARRAY_SIZE(acclaim_uart1_pads), &acclaim_uart_info);
-	omap_serial_init_port_pads(2, acclaim_uart3_pads,
-		ARRAY_SIZE(acclaim_uart3_pads), &acclaim_uart_info);
 }
 
 static struct wl12xx_platform_data omap4_acclaim_wlan_data __initdata = {
