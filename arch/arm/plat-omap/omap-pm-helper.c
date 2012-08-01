@@ -12,7 +12,6 @@
  * Raju, Anand Sawant, Igor Stoppa, Paul Walmsley, Richard Woodruff
  */
 
-#undef DEBUG
 
 #include <linux/init.h>
 #include <linux/cpufreq.h>
@@ -238,7 +237,7 @@ static unsigned long remove_req_tput(struct device *dev)
 	}
 	if (!found) {
 		/* No such user exists */
-		pr_err("Invalid Device Structure, name: %s\n", dev->init_name);
+		pr_err("Invalid Device Structure, dev name: %s, driver name: %s\n", dev_name(dev), dev->driver->name);
 		dump_stack();
 		ret = 0;
 		goto unlock;
