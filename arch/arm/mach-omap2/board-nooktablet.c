@@ -759,12 +759,11 @@ static struct regulator_init_data acclaim_vaux1 = {
 		.max_uV			= 3000000,
 		.apply_uV		= true,
 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
-		| REGULATOR_MODE_STANDBY,
+					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask	 = REGULATOR_CHANGE_VOLTAGE
-		| REGULATOR_CHANGE_MODE
-		| REGULATOR_CHANGE_STATUS,
+					| REGULATOR_CHANGE_MODE
+					| REGULATOR_CHANGE_STATUS,
 		.state_mem = {
-			.enabled	= false,
 			.disabled	= true,
 		},
 		.always_on	= true,
@@ -777,12 +776,11 @@ static struct regulator_init_data acclaim_vaux3 = {
 		.max_uV			= 1800000,
 		.apply_uV		= true,
 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
-		| REGULATOR_MODE_STANDBY,
+					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask	 = REGULATOR_CHANGE_VOLTAGE
-		| REGULATOR_CHANGE_MODE
-		| REGULATOR_CHANGE_STATUS,
+					| REGULATOR_CHANGE_MODE
+					| REGULATOR_CHANGE_STATUS,
 		.state_mem = {
-			.enabled	= false,
 			.disabled	= true,
 		},
 		.always_on	= true,
@@ -797,12 +795,11 @@ static struct regulator_init_data acclaim_vmmc = {
 		.max_uV			= 3000000,
 		.apply_uV		= true,
 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
-		| REGULATOR_MODE_STANDBY,
+					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask	 = REGULATOR_CHANGE_VOLTAGE
-		| REGULATOR_CHANGE_MODE
-		| REGULATOR_CHANGE_STATUS,
+					| REGULATOR_CHANGE_MODE
+					| REGULATOR_CHANGE_STATUS,
 		.state_mem = {
-			.enabled	= false,
 			.disabled	= true,
 		},
 	},
@@ -816,14 +813,14 @@ static struct regulator_init_data acclaim_vpp = {
 		.max_uV			= 2500000,
 		.apply_uV		= true,
 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
-		| REGULATOR_MODE_STANDBY,
+					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask	 = REGULATOR_CHANGE_VOLTAGE
-		| REGULATOR_CHANGE_MODE
-		| REGULATOR_CHANGE_STATUS,
+					| REGULATOR_CHANGE_MODE
+					| REGULATOR_CHANGE_STATUS,
 		.state_mem = {
-			.enabled	= false,
 			.disabled	= true,
 		},
+		.initial_state          = PM_SUSPEND_MEM,
 	},
 };
 
@@ -833,14 +830,14 @@ static struct regulator_init_data acclaim_vusim = {
 		.max_uV			= 2900000,
 		.apply_uV		= true,
 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
-		| REGULATOR_MODE_STANDBY,
+					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask	 = REGULATOR_CHANGE_VOLTAGE
-		| REGULATOR_CHANGE_MODE
-		| REGULATOR_CHANGE_STATUS,
+				| REGULATOR_CHANGE_MODE
+				| REGULATOR_CHANGE_STATUS,
 		.state_mem = {
-			.enabled	= false,
 			.disabled	= true,
 		},
+		.initial_state          = PM_SUSPEND_MEM,
 	},
 	.num_consumer_supplies  = 1,
 	.consumer_supplies      = audio_supply,
@@ -852,13 +849,13 @@ static struct regulator_init_data acclaim_vana = {
 		.max_uV			= 2100000,
 		//.apply_uV		= true,
 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
-		| REGULATOR_MODE_STANDBY,
+					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask	 = REGULATOR_CHANGE_MODE
-		| REGULATOR_CHANGE_STATUS,
+					| REGULATOR_CHANGE_STATUS,
 		.state_mem = {
-			.enabled	= false,
 			.disabled	= true,
 		},
+		.initial_state          = PM_SUSPEND_MEM,
 	},
 };
 
@@ -872,9 +869,9 @@ static struct regulator_init_data acclaim_vcxio = {
 		.valid_ops_mask	 = REGULATOR_CHANGE_MODE
 		| REGULATOR_CHANGE_STATUS,
 		.state_mem = {
-			.enabled	= false,
 			.disabled	= true,
 		},
+		.initial_state          = PM_SUSPEND_MEM,
 		.always_on	= true,
 	},
 };
@@ -904,7 +901,6 @@ static struct regulator_init_data acclaim_vusb = {
 
 static struct regulator_init_data acclaim_clk32kg = {
 	.constraints = {
-		.valid_modes_mask	= REGULATOR_MODE_NORMAL,
 		.valid_ops_mask	 = REGULATOR_CHANGE_STATUS,
 		.always_on	= true,
 	},
