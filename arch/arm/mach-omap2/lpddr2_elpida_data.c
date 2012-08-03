@@ -132,7 +132,7 @@ struct lpddr2_device_info lpddr2_elpida_2G_S4_dev = {
 	.type		= LPDDR2_TYPE_S4,
 	.density	= LPDDR2_DENSITY_2Gb,
 	.io_width	= LPDDR2_IO_WIDTH_32,
-	//.emif_ddr_selfrefresh_cycles = 262144,
+	.emif_ddr_selfrefresh_cycles = 262144,
 };
 
 struct lpddr2_device_info lpddr2_elpida_4G_S4_dev = {
@@ -146,5 +146,5 @@ struct lpddr2_device_info lpddr2_elpida_4G_S4_dev = {
 	.type		= LPDDR2_TYPE_S4,
 	.density	= LPDDR2_DENSITY_4Gb,
 	.io_width	= LPDDR2_IO_WIDTH_32,
-	//.emif_ddr_selfrefresh_cycles = 262144,
+	.emif_ddr_selfrefresh_cycles = 262144,
 };
