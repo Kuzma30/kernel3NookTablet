@@ -11,7 +11,7 @@
  * License version 2, as published by the Free Software Foundation, and
  * may be copied, distributed, and modified under those terms.
  */
-
+#define DEBUG
 
 #include <linux/kernel.h>
 #include <linux/module.h>

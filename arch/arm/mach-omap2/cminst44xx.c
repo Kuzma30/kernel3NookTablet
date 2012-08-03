@@ -223,6 +223,7 @@ int omap4_cm_wait_module_ready(void __iomem *clkctrl_reg)
 
 	if (!clkctrl_reg)
 		return 0;
+	//printk("%s executing\n", __func__);
 
 	omap_test_timeout((
 		((__raw_readl(clkctrl_reg) & OMAP4430_IDLEST_MASK) == 0) ||
