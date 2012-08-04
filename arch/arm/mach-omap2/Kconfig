@@ -407,11 +407,15 @@ config MACH_OMAP4_PANDA
 	select OMAP_RAM_CONSOLE
 
 config MACH_OMAP4_NOOKTABLET
-        bool "B@N NookTablet"
-        default y
-        depends on ARCH_OMAP4
+    bool "B@N NookTablet"
+    default y
+	depends on ARCH_OMAP4
+	select OMAP_PACKAGE_CBL
 	select OMAP_PACKAGE_CBS
-	select REGULATOR_FIXED_VOLTAGE
+	select KEYBOARD_GPIO
+	select OMAP_REBOOT_REASON
+	select OMAP_RAM_CONSOLE
+	select CDC_TCXO
 	
 config OMAP3_EMU
 	bool "OMAP3 debugging peripherals"
