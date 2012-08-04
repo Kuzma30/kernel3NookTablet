@@ -33,8 +33,12 @@ static int omap_reboot_notifier_call(struct notifier_block *this,
 		return notifier_from_errno(-ENOMEM);
 
 	/* Save reboot mode in scratch memory */
-	if (code == SYS_RESTART && cmd != NULL && strlen(cmd))
-		reason = cmd;
+	if (code == SYS_RESTART){
+		if(cmd != NULL && strlen(cmd))
+			reason = cmd;
+		else
+			reason = "reboot";
+	}
 	else if (code == SYS_POWER_OFF)
 		reason = "off";
 
