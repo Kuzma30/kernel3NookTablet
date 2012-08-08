@@ -84,7 +84,7 @@ static struct {
 static const char * const dss_generic_clk_source_names[] = {
 	[OMAP_DSS_CLK_SRC_DSI_PLL_HSDIV_DISPC]	= "DSI_PLL_HSDIV_DISPC",
 	[OMAP_DSS_CLK_SRC_DSI_PLL_HSDIV_DSI]	= "DSI_PLL_HSDIV_DSI",
-	[OMAP_DSS_CLK_SRC_FCK]					= "DSS_FCK",
+	[OMAP_DSS_CLK_SRC_FCK]			= "DSS_FCK",
 	[OMAP_DSS_CLK_SRC_DSI2_PLL_HSDIV_DISPC] = "DSI2_PLL_HSDIV_DISPC",
 	[OMAP_DSS_CLK_SRC_DSI2_PLL_HSDIV_DSI]  = "DSI2_PLL_HSDIV_DSI",
 };
@@ -358,7 +358,7 @@ void dss_select_dsi_clk_source(int dsi_module,
 		BUG();
 	}
 
-	pos = dsi_module == 0 ? 0 : 10;
+	pos = dsi_module == 0 ? 1 : 10;
 
 	REG_FLD_MOD(DSS_CONTROL, b, pos, pos);	/* DSIx_CLK_SWITCH */
 

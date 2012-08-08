@@ -21,7 +21,6 @@
  * GNU General Public License for more details.
  */
 
-#define DEBUG
 #define pr_fmt(fmt)    "%s: " fmt, __func__
 
 #include <linux/kernel.h>
@@ -1020,10 +1019,10 @@ static int rproc_handle_resources(struct rproc *rproc, struct fw_resource *rsc,
 			goto error;
 		}
 	}
-
 	/* post-process pm data types */
 	if (susp_addr)
 		ret = rproc->ops->pm_init(rproc, susp_addr);
+
 error:
 	if (ret && rproc->dbg_dir) {
 		debugfs_remove_recursive(rproc->dbg_dir);

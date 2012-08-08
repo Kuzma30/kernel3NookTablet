@@ -16,6 +16,8 @@
 #include <linux/clk.h>
 #include <linux/delay.h>
 
+#include <plat/usb.h>
+
 #include <mach/omap4-common.h>
 #include <mach/ctrl_module_wkup_44xx.h>
 
@@ -34,6 +36,7 @@
 
 /* OMAP4 modulemode control */
 #define OMAP4430_MODULEMODE_SWCTRL			1
+#define OMAP4430_USBHOST_CTX_NUM			9
 
 static void __iomem *sar_ram_base;
 static void __iomem *omap4_sar_modules[MAX_SAR_MODULES];
@@ -239,6 +242,15 @@ static const u32 omap443x_sar_ram1_layout[][4] = {
 	{L3_CLK3_INDEX, 0x208, 1, 0x000002E4},
 	{L3_CLK3_INDEX, 0x210, 1, 0x000002E8},
 	{CM2_INDEX, OMAP4430_CM2_RESTORE_INST +
+		OMAP4_CM_SDMA_STATICDEP_RESTORE_OFFSET, 1, 0x00000924},
+	/* Due to errata i719 (Multiple OFF Mode Transitions Introduce
+	 * Corruption) the USB host context must only be saved if the USB host
+	 * controller has been resumed since the previous OFF mode transition.
+	 * Therefore move the USB SAR context descriptors to the end of the
+	 * array, following the sDMA context, so we can skip them if we do not
+	 * need to save the USB host context.
+	 */
+	{CM2_INDEX, OMAP4430_CM2_RESTORE_INST +
 	OMAP4_CM_L3INIT_USB_HOST_CLKCTRL_RESTORE_OFFSET, 1, 0x000002EC},
 	{CM2_INDEX, OMAP4430_CM2_RESTORE_INST +
 	OMAP4_CM_L3INIT_USB_TLL_CLKCTRL_RESTORE_OFFSET, 1, 0x000002F0},
@@ -252,8 +264,6 @@ static const u32 omap443x_sar_ram1_layout[][4] = {
 	OMAP4_CM_L3INIT_USB_HOST_CLKCTRL_RESTORE_OFFSET, 1, 0x0000091C},
 	{CM2_INDEX, OMAP4430_CM2_RESTORE_INST +
 	OMAP4_CM_L3INIT_USB_TLL_CLKCTRL_RESTORE_OFFSET, 1, 0x00000920},
-	{CM2_INDEX, OMAP4430_CM2_RESTORE_INST +
-		OMAP4_CM_SDMA_STATICDEP_RESTORE_OFFSET, 1, 0x00000924},
 };
 
 /*
@@ -1180,31 +1190,6 @@ static int omap4_sar_not_accessible(void)
 	u32 usbhost_state, usbtll_state;
 
 	/*
-	 * Errata i719: Multiple OFF Mode Transitions Introduce Corruption
-	 *
-	 * Workaround: Set the CM_L3INIT_HSUSBHOST_CLKCTRL[1:0] MODULEMODE
-	 * bit field to 0x2 (enabled) for 1 ms before save sequence
-	 */
-	if (cpu_is_omap443x()) {
-		u32 val;
-		val = omap4_cminst_read_inst_reg(OMAP4430_CM2_PARTITION,
-				OMAP4430_CM2_L3INIT_INST,
-				OMAP4_CM_L3INIT_USB_HOST_CLKCTRL_OFFSET);
-
-		if (!(val & BIT(OMAP4430_MODULEMODE_SWCTRL))) {
-			val |= BIT(OMAP4430_MODULEMODE_SWCTRL);
-			omap4_cminst_write_inst_reg(val, OMAP4430_CM2_PARTITION,
-				OMAP4430_CM2_L3INIT_INST,
-				OMAP4_CM_L3INIT_USB_HOST_CLKCTRL_OFFSET);
-			mdelay(1);
-			val &= ~BIT(OMAP4430_MODULEMODE_SWCTRL);
-			omap4_cminst_write_inst_reg(val, OMAP4430_CM2_PARTITION,
-				OMAP4430_CM2_L3INIT_INST,
-				OMAP4_CM_L3INIT_USB_HOST_CLKCTRL_OFFSET);
-		}
-	}
-
-	/*
 	 * Make sure that USB host and TLL modules are not
 	 * enabled before attempting to save the context
 	 * registers, otherwise this will trigger an exception.
@@ -1234,6 +1219,8 @@ static int omap4_sar_not_accessible(void)
   */
 int omap4_sar_save(void)
 {
+	unsigned uhh_save = 1;
+
 	/*
 	 * Not supported on ES1.0 silicon
 	 */
@@ -1248,13 +1235,19 @@ int omap4_sar_save(void)
 		return -EBUSY;
 	}
 
+	if (cpu_is_omap443x() && !omap4430_usbhs_update_sar()) {
+		pr_debug("%s: NOT saving USB SAR context!\n", __func__);
+		uhh_save = 0;
+	}
+
 	/*
 	 * SAR bits and clocks needs to be enabled
 	 */
 	clkdm_wakeup(l3init_clkdm);
-	pwrdm_enable_hdwr_sar(l3init_pwrdm);
-	clk_enable(usb_host_ck);
+	if (uhh_save)
+		pwrdm_enable_hdwr_sar(l3init_pwrdm);
 	clk_enable(usb_tll_ck);
+	clk_enable(usb_host_ck);
 
 	/* Save SAR BANK1 */
 	if (cpu_is_omap446x())
@@ -1264,12 +1257,14 @@ int omap4_sar_save(void)
 		sar_save(ARRAY_SIZE(omap447x_sar_ram1_layout), SAR_BANK1_OFFSET,
 			 omap447x_sar_ram1_layout);
 	else
-		sar_save(ARRAY_SIZE(omap443x_sar_ram1_layout), SAR_BANK1_OFFSET,
-			 omap443x_sar_ram1_layout);
+		sar_save((ARRAY_SIZE(omap443x_sar_ram1_layout) -
+			(uhh_save ? 0 : OMAP4430_USBHOST_CTX_NUM)),
+			SAR_BANK1_OFFSET, omap443x_sar_ram1_layout);
 
 	clk_disable(usb_host_ck);
 	clk_disable(usb_tll_ck);
-	pwrdm_disable_hdwr_sar(l3init_pwrdm);
+	if (uhh_save)
+		pwrdm_disable_hdwr_sar(l3init_pwrdm);
 	clkdm_allow_idle(l3init_clkdm);
 
 	/* Save SAR BANK2 */
@@ -1319,7 +1314,8 @@ void omap4_sar_overwrite(void)
 	__raw_writel(val, sar_ram_base + SAR_BANK1_OFFSET + 0x100);
 	/* CM1 CM_SHADOW_FREQ_CONFIG1, Enable FREQ UPDATE */
 	val = __raw_readl(OMAP4430_CM_SHADOW_FREQ_CONFIG1);
-	val |= 1 << OMAP4430_FREQ_UPDATE_SHIFT;
+	val |= (1 << OMAP4430_FREQ_UPDATE_SHIFT) |
+		(1 << OMAP4430_DLL_RESET_SHIFT);
 	val &= ~OMAP4430_DLL_OVERRIDE_MASK;
 	__raw_writel(val, sar_ram_base + SAR_BANK1_OFFSET + 0x104);
 	/* CM2 MEMIF_CLKTRCTRL = HW_AUTO, after FREQ UPDATE */
@@ -1347,6 +1343,18 @@ void omap4_sar_overwrite(void)
 	/* CM2 CM_SDMA_STATICDEP : Clear the static depedency */
 	__raw_writel(0x00000040,
 		     sar_ram_base + SAR_BANK1_OFFSET + 0x924 + offset);
+
+	/* XXX: WA: The wrong value of
+	 *   CM_L3INIT_CLKSTCTRL.CLKTRCTRL = 2 (SW_WKUP) has been stored
+	 *   in SAR during omap4_sar_save() execution and causes power
+	 *   over consumption on OFF mode due to C2C operation.
+	 *   It happens because the L3INIT CD need to be enabled
+	 *   during omap4_sar_save() execution for proper USBHOST
+	 *   module context storing.
+	 *   As WA overwrite
+	 *   CM_L3INIT_CLKSTCTRL.CLKTRCTRL = 0x1 (SW_SLEEP). */
+	__raw_writel(0x00000001,
+		     sar_ram_base + SAR_BANK1_OFFSET + 0x0000012C + offset);
 
 	/* readback to ensure data reaches to SAR RAM */
 	barrier();

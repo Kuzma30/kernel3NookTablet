@@ -28,7 +28,6 @@
 #include <linux/smp.h>
 #include <linux/fs.h>
 #include <linux/proc_fs.h>
-#include <linux/gpio.h>
 #include <linux/memblock.h>
 
 #include <asm/unified.h>
@@ -94,9 +93,6 @@ EXPORT_SYMBOL(system_serial_low);
 
 unsigned int system_serial_high;
 EXPORT_SYMBOL(system_serial_high);
-
-unsigned int system_modelid;
-EXPORT_SYMBOL(system_modelid);
 
 unsigned int elf_hwcap __read_mostly;
 EXPORT_SYMBOL(elf_hwcap);
@@ -603,34 +599,8 @@ static int __init parse_tag_core(const struct tag *tag)
 
 __tagtable(ATAG_CORE, parse_tag_core);
 
-static ulong sdram_size = 0;
-ulong get_sdram_size(void)
-{
-	return sdram_size;
-}
-
-#ifdef CONFIG_MACH_OMAP4_NOOKTABLET
-static int get_board_hwid(void)
-{
-	int hwid;
-
-	hwid = !!gpio_get_value(33);
-	hwid |= (!!gpio_get_value(34)) << 1;
-	hwid |= (!!gpio_get_value(35)) << 2;
-	hwid |= (!!gpio_get_value(40)) << 3;
-	hwid |= (!!gpio_get_value(41)) << 4;
-	hwid |= (!!gpio_get_value(49)) << 5;
-	hwid |= (!!gpio_get_value(50)) << 6;
-	hwid |= (!!gpio_get_value(51)) << 7;
-
-	return hwid;
-
-}
-#endif
-
 static int __init parse_tag_mem32(const struct tag *tag)
 {
-	sdram_size = tag->u.mem.size;
 	return arm_add_memory(tag->u.mem.start, tag->u.mem.size);
 }
 
@@ -725,14 +695,6 @@ static int __init parse_tag(const struct tag *tag)
 
 	return t < &__tagtable_end;
 }
-
-static int __init parse_tag_modelid(const struct tag *tag)
-{
-	system_modelid = tag->u.modelid.id;
-	return 0;
-}
-
-__tagtable(ATAG_MODELID , parse_tag_modelid);
 
 /*
  * Parse all tags in the list, checking both the global and architecture
@@ -907,7 +869,7 @@ static struct machine_desc * __init setup_machine_tags(unsigned int nr)
 
 	/* parse_early_param needs a boot_command_line */
 	strlcpy(boot_command_line, from, COMMAND_LINE_SIZE);
-//	early_print("Setup machine tags finished\n");
+
 	return mdesc;
 }
 
@@ -925,7 +887,6 @@ void __init setup_arch(char **cmdline_p)
 	machine_desc = mdesc;
 	machine_name = mdesc->name;
 
-//	printk("Mashine NAME=%s",machine_name);
 	if (mdesc->soft_reboot)
 		reboot_setup("s");
 
@@ -1078,9 +1039,6 @@ static int c_show(struct seq_file *m, void *v)
 
 	seq_printf(m, "Hardware\t: %s\n", machine_name);
 	seq_printf(m, "Revision\t: %04x\n", system_rev);
-#ifdef CONFIG_MACH_OMAP4_NOOKTABLET
-	seq_printf(m, "HWID\t\t: %04x\n", get_board_hwid());
-#endif
 	seq_printf(m, "Serial\t\t: %08x%08x\n",
 		   system_serial_high, system_serial_low);
 

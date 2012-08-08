@@ -396,7 +396,6 @@ int twl6030_mmc_card_detect(struct device *dev, int slot)
 {
 	int ret = -EIO;
 	u8 read_reg = 0;
-	int polarity=0;
 	struct platform_device *pdev = to_platform_device(dev);
 
 	if (pdev->id) {
@@ -411,18 +410,9 @@ int twl6030_mmc_card_detect(struct device *dev, int slot)
 	 * 0 - Card not present ,1 - Card present
 	 */
 	ret = twl_i2c_read_u8(TWL6030_MODULE_ID0, &read_reg,
-				 TWL6030_MMCCTRL);
-	if ( read_reg & 0x04 )
-		polarity = 1;
+						TWL6030_MMCCTRL);
 	if (ret >= 0)
 		ret = read_reg & STS_MMC;
-	if (polarity == 1 )
-		ret ^= 1;
-
-//	ret = twl_i2c_read_u8(TWL6030_MODULE_ID0, &read_reg,
-//						TWL6030_MMCCTRL);
-//	if (ret >= 0)
-//		ret = read_reg & STS_MMC;
 	return ret;
 }
 EXPORT_SYMBOL(twl6030_mmc_card_detect);
@@ -555,12 +545,14 @@ int twl6030_init_irq(int irq_num, unsigned irq_base, unsigned irq_end,
 		pr_err("twl6030: could not claim irq%d: %d\n", irq_num, status);
 		goto fail_irq;
 	}
+
 	twl_irq = irq_num;
 	register_pm_notifier(&twl6030_irq_pm_notifier_block);
 
 	status = twl6030_vlow_init(twl6030_irq_base + TWL_VLOW_INTR_OFFSET);
 	if (status < 0)
 		goto fail_vlow;
+
 	return status;
 
 fail_vlow:

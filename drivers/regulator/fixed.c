@@ -47,8 +47,7 @@ static int fixed_voltage_is_enabled(struct regulator_dev *dev)
 static int fixed_voltage_enable(struct regulator_dev *dev)
 {
 	struct fixed_voltage_data *data = rdev_get_drvdata(dev);
-	
-	printk("Fixed voltage enable GPIO = %d\n", data->gpio);
+
 	if (gpio_is_valid(data->gpio)) {
 		gpio_set_value_cansleep(data->gpio, data->enable_high);
 		data->is_enabled = true;
@@ -60,8 +59,7 @@ static int fixed_voltage_enable(struct regulator_dev *dev)
 static int fixed_voltage_disable(struct regulator_dev *dev)
 {
 	struct fixed_voltage_data *data = rdev_get_drvdata(dev);
-	
-	printk("Fixed voltage disable GPIO = %d\n", data->gpio);
+
 	if (gpio_is_valid(data->gpio)) {
 		gpio_set_value_cansleep(data->gpio, !data->enable_high);
 		data->is_enabled = false;

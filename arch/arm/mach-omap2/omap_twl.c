@@ -17,7 +17,6 @@
 #include <linux/io.h>
 #include <linux/kernel.h>
 #include <linux/i2c/twl.h>
-#include <asm/setup.h>
 
 #include "voltage.h"
 

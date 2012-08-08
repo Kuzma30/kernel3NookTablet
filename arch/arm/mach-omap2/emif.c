@@ -649,17 +649,6 @@ static void setup_registers(u32 emif_nr, struct emif_regs *regs, u32 volt_state)
 	mask_n_set(temp, OMAP44XX_REG_DDR_PHY_CTRL_1_SHDW_SHIFT,
 		   OMAP44XX_REG_DDR_PHY_CTRL_1_SHDW_MASK,
 		   regs->emif_ddr_phy_ctlr_1_final);
-
-	/*
-	 * Set Read Latency value RL=0xB according to OMAP4470 LPDDR
-	 * interface configuration update for 466 MHz
-	 */
-	if (regs->freq == 466666666) {
-		mask_n_set(temp, OMAP44XX_REG_READ_LATENCY_SHDW_SHIFT,
-			OMAP44XX_REG_READ_LATENCY_SHDW_MASK,
-			regs->RL_final);
-	}
-
 	__raw_writel(temp, base + OMAP44XX_EMIF_DDR_PHY_CTRL_1_SHDW);
 
 	__raw_writel(regs->temp_alert_config,
@@ -1562,18 +1551,3 @@ static int __init omap_init_emif_timings(void)
 	return ret;
 }
 late_initcall(omap_init_emif_timings);
-
-int sdram_vendor(void)
-{
-        int ddr_manufact_id =0;
-        void __iomem *base;
-
-        base = emif[EMIF1].base;
-
-        __raw_writel(LPDDR2_MR5, base + OMAP44XX_EMIF_LPDDR2_MODE_REG_CFG);
-        ddr_manufact_id =  __raw_readb(base  +  OMAP44XX_EMIF_LPDDR2_MODE_REG_DATA);
-
-        return ddr_manufact_id ;
-
-}
-

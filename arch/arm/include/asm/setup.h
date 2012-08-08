@@ -126,12 +126,6 @@ struct tag_cmdline {
 	char	cmdline[1];	/* this is the minimum size */
 };
 
-#define ATAG_MODELID	0x54410010
-
-struct tag_modelid {
-	__u32	id;
-};
-
 /* acorn RiscPC specific information */
 #define ATAG_ACORN	0x41000101
 
@@ -161,7 +155,6 @@ struct tag {
 		struct tag_revision	revision;
 		struct tag_videolfb	videolfb;
 		struct tag_cmdline	cmdline;
-		struct tag_modelid	modelid;
 
 		/*
 		 * Acorn specific
