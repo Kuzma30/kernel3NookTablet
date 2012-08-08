@@ -941,6 +941,11 @@ static int dsi_register_isr(struct platform_device *dsidev, omap_dsi_isr_t isr,
 
 	spin_unlock_irqrestore(&dsi->irq_lock, flags);
 
+	might_sleep();
+
+	/* See notes for dispc.c:omap_dispc_unregister_isr() . */
+	synchronize_irq(dsi->irq);
+
 	return r;
 }
 
@@ -960,6 +965,11 @@ static int dsi_unregister_isr(struct platform_device *dsidev,
 		_omap_dsi_set_irqs(dsidev);
 
 	spin_unlock_irqrestore(&dsi->irq_lock, flags);
+
+	might_sleep();
+
+	/* See notes for dispc.c:omap_dispc_unregister_isr() . */
+	synchronize_irq(dsi->irq);
 
 	return r;
 }
@@ -1003,6 +1013,11 @@ static int dsi_unregister_isr_vc(struct platform_device *dsidev, int channel,
 
 	spin_unlock_irqrestore(&dsi->irq_lock, flags);
 
+	might_sleep();
+
+	/* See notes for dispc.c:omap_dispc_unregister_isr() . */
+	synchronize_irq(dsi->irq);
+
 	return r;
 }
 
@@ -1042,6 +1057,11 @@ static int dsi_unregister_isr_cio(struct platform_device *dsidev,
 		_omap_dsi_set_irqs_cio(dsidev);
 
 	spin_unlock_irqrestore(&dsi->irq_lock, flags);
+
+	might_sleep();
+
+	/* See notes for dispc.c:omap_dispc_unregister_isr() . */
+	synchronize_irq(dsi->irq);
 
 	return r;
 }
@@ -4542,8 +4562,8 @@ static void dsi_display_uninit_dispc(struct omap_dss_device *dssdev)
 		DISPC_IRQ_FRAMEDONE : DISPC_IRQ_FRAMEDONE2;
 
 	if(dssdev->phy.dsi.type == OMAP_DSS_DSI_TYPE_CMD_MODE)
-		omap_dispc_unregister_isr(dsi_framedone_irq_callback, (void *) dssdev,
-					  irq);
+		omap_dispc_unregister_isr_sync(dsi_framedone_irq_callback,
+					(void *) dssdev, irq);
 }
 
 static int dsi_configure_dsi_clocks(struct omap_dss_device *dssdev)

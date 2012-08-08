@@ -135,7 +135,7 @@ static int omap_dss_wb_set_info(struct omap_writeback *wb,
 static void wb_irq_handler(void *data, u32 mask)
 {
 	complete((struct completion *)data);
-	omap_dispc_unregister_isr(wb_irq_handler,
+	omap_dispc_unregister_isr_nosync(wb_irq_handler,
 		(struct completion *)data, DISPC_IRQ_FRAMEDONE_WB);
 }
 

@@ -2423,7 +2423,7 @@ int omapfb_enable_vsync(struct omapfb2_device *fbdev, enum omap_channel ch,
 		r = omap_dispc_register_isr(omapfb_vsync_isr, fbdev,
 			masks[ch]);
 	else
-		r = omap_dispc_unregister_isr(omapfb_vsync_isr, fbdev,
+		r = omap_dispc_unregister_isr_sync(omapfb_vsync_isr, fbdev,
 			masks[ch]);
 
 	return r;
