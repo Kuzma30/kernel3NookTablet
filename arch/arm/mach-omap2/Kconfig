@@ -361,6 +361,18 @@ config MACH_OMAP_BLAZE
 	select OMAP_RAM_CONSOLE
 	select CDC_TCXO
 
+config MACH_OMAP_ACCLAIM
+	bool "OMAP 4430 Acclaim Board"
+	default y
+	depends on ARCH_OMAP4
+	select OMAP_PACKAGE_CBL
+	select OMAP_PACKAGE_CBS
+	select KEYBOARD_GPIO
+	select REGULATOR_FIXED_VOLTAGE
+	select HWMON
+	select OMAP_REBOOT_REASON
+	select WIRELESS_EXT
+
 config MACH_OMAP4_PANDA
 	bool "OMAP4 Panda Board"
 	default y
