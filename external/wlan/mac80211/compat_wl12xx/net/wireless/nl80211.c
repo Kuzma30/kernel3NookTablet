@@ -699,27 +699,6 @@ nla_put_failure:
 	return -ENOBUFS;
 }
 
-static int nl80211_put_device_capa_flags(struct wiphy *wiphy,
-					  struct sk_buff *msg)
-{
-	u32 capa_flags = 0;
-
-	if (wiphy->flags & WIPHY_FLAG_SUPPORTS_CANCEL_SCAN)
-		capa_flags |= NL80211_DEV_CAPA_SUPPORTS_CANCEL_SCAN;
-
-	if (wiphy->flags & WIPHY_FLAG_SUPPORTS_IM_SCAN_EVENT)
-		capa_flags |= NL80211_DEV_CAPA_SUPPORTS_IM_SCAN_EVENT;
-
-
-	/* map new flags above here */
-
-	NLA_PUT_U32(msg, NL80211_ATTR_CAPABILITIES,  capa_flags);
-
-	return 0;
-nla_put_failure:
-	return -ENOBUFS;
-}
-
 static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
 			      struct cfg80211_registered_device *dev)
 {
@@ -1057,9 +1036,6 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
 		goto nla_put_failure;
 
 	if (nl80211_put_iface_combinations(&dev->wiphy, msg))
-		goto nla_put_failure;
-
-	if (nl80211_put_device_capa_flags(&dev->wiphy, msg))
 		goto nla_put_failure;
 
 	if (dev->wiphy.flags & WIPHY_FLAG_HAVE_AP_SME)

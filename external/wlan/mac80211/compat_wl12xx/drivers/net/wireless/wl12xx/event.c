@@ -280,7 +280,7 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
 				wlvif->sta.first_bcn_loss = now;
 				ieee80211_cqm_rssi_notify(
 					vif,
-					NL80211_CQM_RSSI_BEACON_LOSS,
+					NL80211_CQM_RSSI_BEACON_LOSS_EVENT,
 					GFP_KERNEL);
 
 			} else if (time_after(now,
