@@ -21,129 +21,105 @@
 #include <plat/omap_apps_brd_id.h>
 
 #include "mux.h"
-#include "board-44xx-tablet.h"
+#include "board-acclaim.h"
 
-#define TABLET2_GREEN_LED_GPIO		174
-#define TABLET2_GREEN_DBG2_LED_GPIO	173
 
-static struct gpio_led tablet_gpio_leds[] = {
+static const int acclaim_keymap[] = {
+	KEY(0, 0, KEY_VOLUMEUP),
+	KEY(1, 0, KEY_VOLUMEDOWN),
+};
+
+static struct matrix_keymap_data acclaim_keymap_data = {
+	.keymap			= acclaim_keymap,
+	.keymap_size		= ARRAY_SIZE(acclaim_keymap),
+};
+
+void keypad_pad_wkup(int enable)
+{
+ 	int (*set_wkup_fcn)(const char *muxname);
+
+ 	/* PAD wakup for keyboard is needed for off mode
+ 	 * due to IO isolation.
+ 	 */
+ 	if (!off_mode_enabled)
+ 		return;
+
+ 	if (enable)
+ 		set_wkup_fcn = omap_mux_enable_wkup;
+ 	else
+ 		set_wkup_fcn = omap_mux_disable_wkup;
+
+ 	set_wkup_fcn("kpd_col0.kpd_col0");
+ 	set_wkup_fcn("kpd_row0.kpd_row0");
+ 	set_wkup_fcn("kpd_row1.kpd_row1");
+}
+
+void keyboard_mux_init(void)
+{
+	// Column mode
+	omap_mux_init_signal("kpd_col0.kpd_col0",
+			OMAP_WAKEUP_EN | OMAP_MUX_MODE0);
+	// Row mode
+	omap_mux_init_signal("kpd_row0.kpd_row0",
+			OMAP_PULL_ENA | OMAP_PULL_UP |
+			OMAP_WAKEUP_EN | OMAP_MUX_MODE0 |
+			OMAP_INPUT_EN);
+	omap_mux_init_signal("kpd_row1.kpd_row1",
+			OMAP_PULL_ENA | OMAP_PULL_UP |
+			OMAP_WAKEUP_EN | OMAP_MUX_MODE0 |
+			OMAP_INPUT_EN);
+}
+
+static struct omap4_keypad_platform_data acclaim_keypad_data = {
+	.keymap_data		= &acclaim_keymap_data,
+	.rows				= 2,
+	.cols				= 1,
+	.keypad_pad_wkup    = keypad_pad_wkup,
+};
+
+static struct gpio_keys_button acclaim_gpio_keys[] = {
 	{
-		.name	= "omap4:green:debug2",
-		.gpio	= 7,
+		.code 		= KEY_POWER,
+		.gpio 		= 29,
+		.desc 		= "POWER",
+		.active_low = 0,
+		.wakeup 	= 1,
 	},
 	{
-		.name	= "omap4:green:debug4",
-		.gpio	= 50,
-	},
-	{
-		.name	= "blue",
-		.default_trigger = "timer",
-		.gpio	= 169,
-	},
-	{
-		.name	= "red",
-		.default_trigger = "timer",
-		.gpio	= 170,
-	},
-	{
-		.name	= "green",
-		.default_trigger = "timer",
-		.gpio	= 139,
-	},
 
+		.code 		= KEY_HOME,
+		.gpio 		= 32,
+		.desc 		= "HOME",
+		.active_low = 1,
+		.wakeup 	= 1,
+	}
 };
 
-static struct gpio_led_platform_data tablet_led_data = {
-	.leds	= tablet_gpio_leds,
-	.num_leds = ARRAY_SIZE(tablet_gpio_leds),
+static struct gpio_keys_platform_data acclaim_gpio_keys_info = {
+	.buttons	= acclaim_gpio_keys,
+	.nbuttons	= ARRAY_SIZE ( acclaim_gpio_keys ),
 };
 
-static struct led_pwm tablet_pwm_leds[] = {
-	{
-		.name		= "omap4:green:chrg",
-		.pwm_id		= 1,
-		.max_brightness	= 255,
-		.pwm_period_ns	= 7812500,
-	},
-};
-
-static struct led_pwm_platform_data tablet_pwm_data = {
-	.num_leds	= ARRAY_SIZE(tablet_pwm_leds),
-	.leds		= tablet_pwm_leds,
-};
-
-static struct platform_device tablet_leds_pwm = {
-	.name	= "leds_pwm",
-	.id	= -1,
-	.dev	= {
-		.platform_data = &tablet_pwm_data,
-	},
-};
-
-static struct platform_device tablet_leds_gpio = {
-	.name	= "leds-gpio",
-	.id	= -1,
-	.dev	= {
-		.platform_data = &tablet_led_data,
-	},
-};
-
-/* GPIO_KEY for Tablet */
-static struct gpio_keys_button tablet_gpio_keys_buttons[] = {
-	[0] = {
-		.code			= KEY_VOLUMEUP,
-		.gpio			= 43,
-		.desc			= "SW1",
-		.active_low		= 1,
-	},
-	[1] = {
-		.code			= KEY_HOME,
-		.gpio			= 46,
-		.desc			= "SW2",
-		.active_low		= 1,
-		.wakeup			= 1,
-	},
-	[2] = {
-		.code			= KEY_VOLUMEDOWN,
-		.gpio			= 47,
-		.desc			= "SW3",
-		.active_low		= 1,
-		},
-	};
-
-static struct gpio_keys_platform_data tablet_gpio_keys = {
-	.buttons		= tablet_gpio_keys_buttons,
-	.nbuttons		= ARRAY_SIZE(tablet_gpio_keys_buttons),
-	.rep			= 0,
-};
-
-static struct platform_device tablet_gpio_keys_device = {
+static struct platform_device acclaim_gpio_keys_device = {
 	.name		= "gpio-keys",
-	.id		= -1,
+	.id			= -1,
 	.dev		= {
-		.platform_data	= &tablet_gpio_keys,
+				.platform_data = &acclaim_gpio_keys_info,
 	},
 };
+
 
 static struct platform_device *tablet_devices[] __initdata = {
-	&tablet_leds_gpio,
-	&tablet_leds_pwm,
-	&tablet_gpio_keys_device,
+	&acclaim_gpio_keys_device,
 };
 
-int __init tablet_button_init(void)
+int __init acclaim_button_init(void)
 {
-	if (omap_is_board_version(OMAP4_TABLET_2_0) ||
-		omap_is_board_version(OMAP4_TABLET_2_1) ||
-		omap_is_board_version(OMAP4_TABLET_2_1_1)) {
-
-		omap_mux_init_gpio(TABLET2_GREEN_DBG2_LED_GPIO,
-			OMAP_MUX_MODE3 | OMAP_PIN_OUTPUT);
-		omap_mux_init_gpio(TABLET2_GREEN_LED_GPIO,
-			OMAP_MUX_MODE3 | OMAP_PIN_OUTPUT);
-		tablet_gpio_leds[0].gpio = TABLET2_GREEN_DBG2_LED_GPIO;
-		tablet_gpio_leds[4].gpio = TABLET2_GREEN_LED_GPIO;
-	}
+	int status;
+ 	keyboard_mux_init();
+	status = omap4_keyboard_init(&sdp4430_keypad_data);
+	if (status)
+		pr_err("Keypad initialization failed: %d\n", status);
 
 	platform_add_devices(tablet_devices, ARRAY_SIZE(tablet_devices));
 	return 0;
