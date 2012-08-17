@@ -112,7 +112,7 @@ static void omap_pwm_led_power_on(struct omap_pwm_led *led)
 		      OMAP_TIMER_TRIGGER_OVERFLOW_AND_COMPARE);
 
 	timer_fclk = omap_dm_timer_get_fclk(led->intensity_timer);
-	period = clk_get_rate(timer_fclk) / 128;
+	period = clk_get_rate(timer_fclk) / (128*2);
 
 	val = 0xFFFFFFFF+1-period;
 	omap_dm_timer_set_load(led->intensity_timer, 1, val);
