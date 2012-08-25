@@ -621,9 +621,11 @@ static int kxtf9_disable(struct kxtf9_data *tf9)
 {
 	aprintk("kxtf9: kxtf9_disable ...\n");
 
-	atomic_set(&tf9->enabled, 0);
-	cancel_delayed_work_sync(&tf9->input_work);
-	kxtf9_device_power_off(tf9);
+	//atomic_set(&tf9->enabled, 0);
+	if (atomic_cmpxchg(&tf9->enabled, 1, 0)) {
+		cancel_delayed_work_sync(&tf9->input_work);
+		kxtf9_device_power_off(tf9);
+	}
 	return 0;
 }
 
