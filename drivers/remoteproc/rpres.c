@@ -11,6 +11,7 @@
  * may be copied, distributed, and modified under those terms.
  */
 
+#define DEBUG
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/slab.h>
