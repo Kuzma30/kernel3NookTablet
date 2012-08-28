@@ -39,6 +39,9 @@
 #include <linux/notifier.h>
 #include <linux/pm_qos_params.h>
 
+#define	DUCATI_WDT_TIMER_1	10
+#define	DUCATI_WDT_TIMER_2	9
+
 /* Must match the BIOS version embeded in the BIOS firmware image */
 #define RPROC_BIOS_VERSION	2
 

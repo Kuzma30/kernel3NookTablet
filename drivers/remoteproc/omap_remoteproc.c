@@ -35,8 +35,6 @@
 #include "../../arch/arm/mach-omap2/dvfs.h"
 #include "../../arch/arm/mach-omap2/clockdomain.h"
 
-#include "linux/temphack.h"
-
 #define PM_SUSPEND_MBOX		0xffffff07
 #define PM_SUSPEND_MBOX_FORCE	0xffffff09
 #define PM_SUSPEND_TIMEOUT	300
