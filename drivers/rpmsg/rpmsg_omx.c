@@ -16,6 +16,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+#define DEBUG
 
 #define pr_fmt(fmt) "%s: " fmt, __func__
 
@@ -848,6 +849,7 @@ static int rpmsg_omx_probe(struct rpmsg_channel *rpdev)
 	int ret, major, minor;
 	struct rpmsg_omx_service *omxserv = NULL, *tmp;
 
+	dev_dbg(&rpdev->dev, "starting rpmsg_omx_probe\n");
 	if (!idr_pre_get(&rpmsg_omx_services, GFP_KERNEL)) {
 		dev_err(&rpdev->dev, "idr_pre_get failes\n");
 		return -ENOMEM;
