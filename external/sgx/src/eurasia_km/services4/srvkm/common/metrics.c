@@ -37,7 +37,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 
 #include "services_headers.h"
@@ -142,7 +141,6 @@ IMG_VOID PVRSRVSetupMetricTimers(IMG_VOID *pvDevInfo)
 		asTimers[ui32Loop].ui32Count = 0;
 	}
 
-
 	#if defined(__sh__)
 
 		/* timer control register */
@@ -164,7 +162,6 @@ IMG_VOID PVRSRVSetupMetricTimers(IMG_VOID *pvDevInfo)
 		pui32TimerRegister = 0;
 
 	#endif /* defined(__sh__) */
-
 }
 
 

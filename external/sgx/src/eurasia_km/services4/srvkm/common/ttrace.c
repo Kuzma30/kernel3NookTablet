@@ -37,16 +37,19 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 #if defined (TTRACE)
 
 #include "services_headers.h"
 #include "ttrace.h"
 
+#if defined(PVRSRV_NEED_PVR_DPF)
 #define CHECKSIZE(n,m) \
 	if ((n & m) != n) \
-		PVR_DPF((PVR_DBG_ERROR,"Size check failed for " #m)) \
+		PVR_DPF((PVR_DBG_ERROR,"Size check failed for " #m))
+#else
+#define CHECKSIZE(n,m)
+#endif
 
 #define TIME_TRACE_HASH_TABLE_SIZE	32
 

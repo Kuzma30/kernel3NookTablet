@@ -37,7 +37,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 
 #include "ion.h"
@@ -61,7 +60,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define MAX_HANDLES_PER_FD 2
 extern struct ion_client *gpsIONClient;
 
-void PVRSRVExportFDToIONHandles(int fd, struct ion_client **client,
+int PVRSRVExportFDToIONHandles(int fd, struct ion_client **client,
 								struct ion_handle **handles,
 								unsigned int *num_handles)
 {
@@ -72,6 +71,7 @@ void PVRSRVExportFDToIONHandles(int fd, struct ion_client **client,
 	struct file *psFile;
 	int i;
 	unsigned int ui32NumHandles = *num_handles;
+	int ret = -EINVAL;
 
 	/* Take the bridge mutex so the handle won't be freed underneath us */
 	LinuxLockMutex(&gPVRSRVLock);
@@ -109,7 +109,24 @@ void PVRSRVExportFDToIONHandles(int fd, struct ion_client **client,
 		goto err_fput;
 	}
 
-	for (i = 0; (i < ui32NumHandles) && (i < MAX_HANDLES_PER_FD); i++)
+	/* Client is requesting fewer handles then we have */
+	if(ui32NumHandles < psLinuxMemArea->uData.sIONTilerAlloc.ui32NumValidPlanes) {
+
+		PVR_DPF((PVR_DBG_ERROR, "%s: Client requested %u handles, but we have %u",
+								__func__,
+								ui32NumHandles,
+								psLinuxMemArea->uData.sIONTilerAlloc.ui32NumValidPlanes));
+
+		/* Clear client handles */
+		for (i = 0; i < ui32NumHandles; i++)
+			handles[i] = NULL;
+
+		/* Return number of handles to client */
+		*num_handles = psLinuxMemArea->uData.sIONTilerAlloc.ui32NumValidPlanes;
+		goto err_fput;
+	}
+
+	for (i = 0; (i < psLinuxMemArea->uData.sIONTilerAlloc.ui32NumValidPlanes) && (i < MAX_HANDLES_PER_FD); i++)
 		handles[i] = psLinuxMemArea->uData.sIONTilerAlloc.psIONHandle[i];
 
 	*num_handles = i;
@@ -117,11 +134,15 @@ void PVRSRVExportFDToIONHandles(int fd, struct ion_client **client,
 	if(client)
 		*client = gpsIONClient;
 
+	ret = 0;
+
 err_fput:
 	fput(psFile);
 err_unlock:
 	/* Allow PVRSRV clients to communicate with srvkm again */
 	LinuxUnLockMutex(&gPVRSRVLock);
+
+	return ret;
 }
 
 struct ion_handle *

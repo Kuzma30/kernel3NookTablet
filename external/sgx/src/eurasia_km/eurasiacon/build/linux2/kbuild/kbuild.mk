@@ -36,7 +36,6 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#   
 ### ###########################################################################
 
 $(if $(strip $(KERNELDIR)),,$(error KERNELDIR must be set))
@@ -63,11 +62,6 @@ kbuild: $(TARGET_OUT)/kbuild/Makefile
 		EXTRA_CFLAGS="$(ALL_KBUILD_CFLAGS)" \
 		V=$(V) W=$(W) \
 		TOP=$(TOP)
-ifeq ($(DEBUGLINK),1)
-	@for kernel_module in $(addprefix $(TARGET_OUT)/kbuild/,$(INTERNAL_KBUILD_OBJECTS:.o=.ko)); do \
-		$(patsubst @%,%,$(STRIP)) --strip-unneeded $$kernel_module; \
-	done
-endif
 	@for kernel_module in $(addprefix $(TARGET_OUT)/kbuild/,$(INTERNAL_KBUILD_OBJECTS:.o=.ko)); do \
 		cp $$kernel_module $(TARGET_OUT); \
 	done

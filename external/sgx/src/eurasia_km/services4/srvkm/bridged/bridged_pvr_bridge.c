@@ -39,7 +39,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 
 
@@ -4292,6 +4291,10 @@ PVRSRVInitSrvDisconnectBW(IMG_UINT32 ui32BridgeID,
 
 	psPerProc->bInitProcess = IMG_FALSE;
 
+#if defined(SUPPORT_PDUMP_MULTI_PROCESS)
+    psPerProc->bPDumpActive = IMG_FALSE;
+#endif
+
 	PVRSRVSetInitServerState(PVRSRV_INIT_SERVER_RUNNING, IMG_FALSE);
 	PVRSRVSetInitServerState(PVRSRV_INIT_SERVER_RAN, IMG_TRUE);
 
@@ -5114,7 +5117,7 @@ PVRSRVAllocSyncInfoBW(IMG_UINT32                                         ui32Bri
 											   RESMAN_TYPE_SYNC_INFO,
 											   psSyncInfo,
 											   0,
-											   FreeSyncInfoCallback);
+											   &FreeSyncInfoCallback);
 
 	/* Success */
 	goto allocsyncinfo_commit;

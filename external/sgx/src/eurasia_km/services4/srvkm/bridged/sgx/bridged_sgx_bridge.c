@@ -39,7 +39,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 
 
@@ -589,7 +588,7 @@ SGXDoKickBW(IMG_UINT32 ui32BridgeID,
 	sCCBKickKM.ui32CCBOffset         = psDoKickIN->sCCBKick.ui32CCBOffset;
 	sCCBKickKM.bTADependency         = psDoKickIN->sCCBKick.bTADependency;
 
-#if (defined(NO_HARDWARE) || defined(PDUMP))
+#if defined(NO_HARDWARE) || defined(PDUMP)
 	sCCBKickKM.bTerminateOrAbort = psDoKickIN->sCCBKick.bTerminateOrAbort;
 #endif
 #if defined(PDUMP)
@@ -1351,6 +1350,7 @@ SGXDevInitPart2BW(IMG_UINT32 ui32BridgeID,
 						   PVRSRV_HANDLE_TYPE_MEM_INFO);
 	if (eError != PVRSRV_OK)
 	{
+		PVR_DPF((PVR_DBG_ERROR, "SGXDevInitPart2BW: Failed to look up HWPerf meminfo (possibly due to SUPPORT_SGX_HWPERF option mismatch)"));
 		bLookupFailed = IMG_TRUE;
 	}
 #endif
@@ -1535,7 +1535,7 @@ SGXDevInitPart2BW(IMG_UINT32 ui32BridgeID,
 
 	if (bLookupFailed)
 	{
-		PVR_DPF((PVR_DBG_ERROR, "DevInitSGXPart2BW: A handle lookup failed"));
+		PVR_DPF((PVR_DBG_ERROR, "SGXDevInitPart2BW: A handle lookup failed"));
 		psSGXDevInitPart2OUT->eError = PVRSRV_ERROR_INIT2_PHASE_FAILED;
 		return 0;
 	}
@@ -1898,7 +1898,7 @@ SGXDevInitPart2BW(IMG_UINT32 ui32BridgeID,
 
 	if (bReleaseFailed)
 	{
-		PVR_DPF((PVR_DBG_ERROR, "DevInitSGXPart2BW: A handle release failed"));
+		PVR_DPF((PVR_DBG_ERROR, "SGXDevInitPart2BW: A handle release failed"));
 		psSGXDevInitPart2OUT->eError = PVRSRV_ERROR_INIT2_PHASE_FAILED;
 		/*
 		 * Given that we checked the handles before release, a release
@@ -2221,7 +2221,7 @@ SGXDevInitPart2BW(IMG_UINT32 ui32BridgeID,
 
 		}
 
-		PVR_DPF((PVR_DBG_ERROR, "DevInitSGXPart2BW: A dissociate failed"));
+		PVR_DPF((PVR_DBG_ERROR, "SGXDevInitPart2BW: A dissociate failed"));
 
 		psSGXDevInitPart2OUT->eError = PVRSRV_ERROR_INIT2_PHASE_FAILED;
 

@@ -38,7 +38,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 #ifndef _PDUMP_KM_H_
 #define _PDUMP_KM_H_
@@ -381,7 +380,7 @@ extern IMG_UINT32 g_ui32EveryLineCounter;
 	#define PDUMPRESUME				PDumpResumeKM
 
 #else
-#if (((defined(LINUX) || defined(__QNXNTO__)) || defined(GCC_IA32)) || defined(GCC_ARM))
+#if defined LINUX || defined (__QNXNTO__) || defined GCC_IA32 || defined GCC_ARM
 			#define PDUMPMEMPOL(args...)
 			#define PDUMPMEM(args...)
 			#define PDUMPMEMPTENTRIES(args...)
