@@ -37,10 +37,7 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#   
 ### ###########################################################################
-
-TARGET_PRODUCT ?= blaze
 
 ifeq ($(TARGET_SGX),544sc)
  SGXCORE := 544
@@ -55,9 +52,6 @@ else ifeq ($(TARGET_SGX),544)
  SGX_FEATURE_MP := 1
  SGX_FEATURE_SYSTEM_CACHE := 1
  SGX_FEATURE_MP_CORE_COUNT := 2
- # APM is currently causing problems for OMAP5
- # Remove once this is functional
- SUPPORT_ACTIVE_POWER_MANAGEMENT := 0
 else
  #default config
  SGXCORE := 540
@@ -74,6 +68,11 @@ DISPLAY_CONTROLLER := omaplfb
 
 PVR_SYSTEM := omap4
 HAL_VARIANT := $(PVR_SYSTEM)
+
+# We have more memory on OMAP platforms, so we can spare to make the
+# pool larger, and have higher resolutions which benefit from it.
+#
+PVR_LINUX_MEM_AREA_POOL_MAX_PAGES ?= 10800
 
 include ../common/android/paths.mk
 include ../common/android/armv7-a.mk

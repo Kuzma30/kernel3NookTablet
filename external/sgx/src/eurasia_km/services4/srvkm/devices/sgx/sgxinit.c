@@ -37,7 +37,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 
 #include <stddef.h>
@@ -1240,6 +1239,20 @@ static IMG_VOID SGXDumpDebugReg (PVRSRV_SGXDEV_INFO	*psDevInfo,
 	PVR_LOG(("(P%u) %s%08X", ui32CoreNum, pszName, ui32RegVal));
 }
 
+#if defined(SGX_FEATURE_MULTIPLE_MEM_CONTEXTS) || defined(FIX_HW_BRN_31620)
+static INLINE IMG_UINT32 GetDirListBaseReg(IMG_UINT32 ui32Index)
+{
+	if (ui32Index == 0)
+	{
+		return EUR_CR_BIF_DIR_LIST_BASE0;
+	}
+	else
+	{
+		return (EUR_CR_BIF_DIR_LIST_BASE1 + ((ui32Index - 1) * 0x4));
+	}
+}
+#endif
+
 void dsscomp_kdump(void);
 /*!
 *******************************************************************************
@@ -1301,7 +1314,7 @@ IMG_VOID SGXDumpDebugInfo (PVRSRV_SGXDEV_INFO	*psDevInfo,
 			SGXDumpDebugReg(psDevInfo, ui32CoreNum, "EUR_CR_EVENT_STATUS2:    ", EUR_CR_EVENT_STATUS2);
 			SGXDumpDebugReg(psDevInfo, ui32CoreNum, "EUR_CR_BIF_CTRL:         ", EUR_CR_BIF_CTRL);
 		#if defined(EUR_CR_BIF_BANK0)
-			SGXDumpDebugReg(psDevInfo, ui32CoreNum, "EUR_CR_BIF_BANK0:        ", EUR_CR_BIF_BANK0);
+			SGXDumpDebugReg(psDevInfo, ui32CoreNum, "EUR_CR_BIF_BANK0:        ", EUR_CR_BIF_BANK0);	
 		#endif
 			SGXDumpDebugReg(psDevInfo, ui32CoreNum, "EUR_CR_BIF_INT_STAT:     ", EUR_CR_BIF_INT_STAT);
 			SGXDumpDebugReg(psDevInfo, ui32CoreNum, "EUR_CR_BIF_FAULT:        ", EUR_CR_BIF_FAULT);
@@ -1342,31 +1355,89 @@ IMG_VOID SGXDumpDebugInfo (PVRSRV_SGXDEV_INFO	*psDevInfo,
 
 #endif
 		}
-	}
 
-/* This code only works for _real_ single memory context chips */
-#if !defined(SGX_FEATURE_MULTIPLE_MEM_CONTEXTS) && !defined(FIX_HW_BRN_31620)
-	if (bDumpSGXRegs)
-	{
-		IMG_UINT32 ui32RegVal;
-		IMG_UINT32 ui32PDDevPAddr;
-
-		/*
-			If there was a SGX pagefault check the page table too see if the
-			host thinks the fault is correct
-		*/
-		ui32RegVal = OSReadHWReg(psDevInfo->pvRegsBaseKM, EUR_CR_BIF_INT_STAT);
-		if (ui32RegVal & EUR_CR_BIF_INT_STAT_PF_N_RW_MASK)
+	#if !defined(SGX_FEATURE_MULTIPLE_MEM_CONTEXTS) && !defined(FIX_HW_BRN_31620)
 		{
-			ui32RegVal = OSReadHWReg(psDevInfo->pvRegsBaseKM, EUR_CR_BIF_FAULT);
-			ui32RegVal &= EUR_CR_BIF_FAULT_ADDR_MASK;
-			ui32PDDevPAddr = OSReadHWReg(psDevInfo->pvRegsBaseKM, EUR_CR_BIF_DIR_LIST_BASE0);
-			ui32PDDevPAddr &= EUR_CR_BIF_DIR_LIST_BASE0_ADDR_MASK;
-			MMU_CheckFaultAddr(psDevInfo, ui32PDDevPAddr, ui32RegVal);
+			IMG_UINT32 ui32RegVal;
+			IMG_UINT32 ui32PDDevPAddr;
+	
+			/*
+				If there was a SGX pagefault check the page table too see if the
+				host thinks the fault is correct
+			*/
+			ui32RegVal = OSReadHWReg(psDevInfo->pvRegsBaseKM, EUR_CR_BIF_INT_STAT);
+			if (ui32RegVal & EUR_CR_BIF_INT_STAT_PF_N_RW_MASK)
+			{
+				ui32RegVal = OSReadHWReg(psDevInfo->pvRegsBaseKM, EUR_CR_BIF_FAULT);
+				ui32RegVal &= EUR_CR_BIF_FAULT_ADDR_MASK;
+				ui32PDDevPAddr = OSReadHWReg(psDevInfo->pvRegsBaseKM, EUR_CR_BIF_DIR_LIST_BASE0);
+				ui32PDDevPAddr &= EUR_CR_BIF_DIR_LIST_BASE0_ADDR_MASK;
+				MMU_CheckFaultAddr(psDevInfo, ui32PDDevPAddr, ui32RegVal);
+			}
 		}
+	#else
+		{
+			IMG_UINT32 ui32FaultAddress;
+			IMG_UINT32 ui32Bank0;
+			IMG_UINT32 ui32DirListIndex;
+			IMG_UINT32 ui32PDDevPAddr;
+	
+			ui32FaultAddress = OSReadHWReg(psDevInfo->pvRegsBaseKM,
+											EUR_CR_BIF_FAULT);
+			ui32FaultAddress = ui32FaultAddress & EUR_CR_BIF_FAULT_ADDR_MASK;
+	
+			ui32Bank0 = OSReadHWReg(psDevInfo->pvRegsBaseKM, EUR_CR_BIF_BANK0);
+	
+			/* Check the EDM's's memory context */
+			ui32DirListIndex = (ui32Bank0 & EUR_CR_BIF_BANK0_INDEX_EDM_MASK) >> EUR_CR_BIF_BANK0_INDEX_EDM_SHIFT;
+			ui32PDDevPAddr = OSReadHWReg(psDevInfo->pvRegsBaseKM,
+											GetDirListBaseReg(ui32DirListIndex));
+			PVR_LOG(("Checking EDM memory context (index = %d, PD = 0x%08x)", ui32DirListIndex, ui32PDDevPAddr));
+			MMU_CheckFaultAddr(psDevInfo, ui32PDDevPAddr, ui32FaultAddress);
+	
+			/* Check the TA's memory context */
+			ui32DirListIndex = (ui32Bank0 & EUR_CR_BIF_BANK0_INDEX_TA_MASK) >> EUR_CR_BIF_BANK0_INDEX_TA_SHIFT;
+			ui32PDDevPAddr = OSReadHWReg(psDevInfo->pvRegsBaseKM,
+											GetDirListBaseReg(ui32DirListIndex));
+			PVR_LOG(("Checking TA memory context (index = %d, PD = 0x%08x)", ui32DirListIndex, ui32PDDevPAddr));
+			MMU_CheckFaultAddr(psDevInfo, ui32PDDevPAddr, ui32FaultAddress);
+	
+			/* Check the 3D's memory context */
+			ui32DirListIndex = (ui32Bank0 & EUR_CR_BIF_BANK0_INDEX_3D_MASK) >> EUR_CR_BIF_BANK0_INDEX_3D_SHIFT;
+			ui32PDDevPAddr = OSReadHWReg(psDevInfo->pvRegsBaseKM,
+											GetDirListBaseReg(ui32DirListIndex));
+			PVR_LOG(("Checking 3D memory context (index = %d, PD = 0x%08x)", ui32DirListIndex, ui32PDDevPAddr));
+			MMU_CheckFaultAddr(psDevInfo, ui32PDDevPAddr, ui32FaultAddress);
+	
+	#if defined(EUR_CR_BIF_BANK0_INDEX_2D_MASK)
+			/* Check the 2D's memory context */
+			ui32DirListIndex = (ui32Bank0 & EUR_CR_BIF_BANK0_INDEX_2D_MASK) >> EUR_CR_BIF_BANK0_INDEX_2D_SHIFT;
+			ui32PDDevPAddr = OSReadHWReg(psDevInfo->pvRegsBaseKM,
+											GetDirListBaseReg(ui32DirListIndex));
+			PVR_LOG(("Checking 2D memory context (index = %d, PD = 0x%08x)", ui32DirListIndex, ui32PDDevPAddr));
+			MMU_CheckFaultAddr(psDevInfo, ui32PDDevPAddr, ui32FaultAddress);
+	#endif
+	
+	#if defined(EUR_CR_BIF_BANK0_INDEX_PTLA_MASK)
+			/* Check the 2D's memory context */
+			ui32DirListIndex = (ui32Bank0 & EUR_CR_BIF_BANK0_INDEX_PTLA_MASK) >> EUR_CR_BIF_BANK0_INDEX_PTLA_SHIFT;
+			ui32PDDevPAddr = OSReadHWReg(psDevInfo->pvRegsBaseKM,
+											GetDirListBaseReg(ui32DirListIndex));
+			PVR_LOG(("Checking PTLA memory context (index = %d, PD = 0x%08x)", ui32DirListIndex, ui32PDDevPAddr));
+			MMU_CheckFaultAddr(psDevInfo, ui32PDDevPAddr, ui32FaultAddress);
+	#endif
+	
+	#if defined(EUR_CR_BIF_BANK0_INDEX_HOST_MASK)
+			/* Check the Host's memory context */
+			ui32DirListIndex = (ui32Bank0 & EUR_CR_BIF_BANK0_INDEX_HOST_MASK) >> EUR_CR_BIF_BANK0_INDEX_HOST_SHIFT;
+			ui32PDDevPAddr = OSReadHWReg(psDevInfo->pvRegsBaseKM,
+											GetDirListBaseReg(ui32DirListIndex));
+			PVR_LOG(("Checking Host memory context (index = %d, PD = 0x%08x)", ui32DirListIndex, ui32PDDevPAddr));
+			MMU_CheckFaultAddr(psDevInfo, ui32PDDevPAddr, ui32FaultAddress);
+	#endif
+		}
+	#endif
 	}
-#endif	
-
 	/*
 		Dump out the outstanding queue items.
 	*/

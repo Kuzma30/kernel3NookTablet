@@ -38,7 +38,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 #ifndef __IMG_TYPES_H__
 #define __IMG_TYPES_H__
@@ -75,13 +74,13 @@ typedef signed long		IMG_INT32,	*IMG_PINT32;
 	#define IMG_UINT32_MAX 0xFFFFFFFFUL
 #endif
 
-#if defined(USE_CODE)
+#if  defined(USE_CODE)
 
 typedef unsigned __int64	IMG_UINT64, *IMG_PUINT64;
 typedef __int64				IMG_INT64,  *IMG_PINT64;
 
 #else
-	#if ((defined(LINUX) || defined(__METAG)) || defined(__QNXNTO__))
+ #if defined(LINUX) || defined(__METAG) || defined (__QNXNTO__)
 		typedef unsigned long long		IMG_UINT64,	*IMG_PUINT64;
 		typedef long long 				IMG_INT64,	*IMG_PINT64;
 	#else

@@ -38,7 +38,6 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#   
 ### ###########################################################################
 
 LANG=C
@@ -84,7 +83,7 @@ log=${ccof}.log
 
 if [ "x$BIT_CHECK" = "x1" ]; then
 	do_cc $ccof $log ""
-	file $ccof | grep -q 64-bit
+	file $ccof | grep 64-bit >/dev/null 2>&1
 	[ "$?" = "0" ] && echo true || echo false
 else
 	[ "x$1" = "x" ] && usage

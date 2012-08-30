@@ -38,7 +38,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 
 #include "services_headers.h"
@@ -322,13 +321,13 @@ IMG_VOID PVRSRVPerProcessDataDisconnect(IMG_UINT32	ui32PID)
 			PVR_DPF((PVR_DBG_MESSAGE, "PVRSRVPerProcessDataDisconnect: "
 					"Last close from process 0x%x received", ui32PID));
 
+			/* Close the Resource Manager connection */
+			PVRSRVResManDisconnect(psPerProc->hResManContext, IMG_FALSE);
+
 #if defined (TTRACE)
 			PVRSRVTimeTraceBufferDestroy(ui32PID);
 #endif
 
-			/* Close the Resource Manager connection */
-			PVRSRVResManDisconnect(psPerProc->hResManContext, IMG_FALSE);
-			
 			/* Free the per-process data */
 			eError = FreePerProcessData(psPerProc);
 			if (eError != PVRSRV_OK)

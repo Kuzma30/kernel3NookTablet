@@ -38,7 +38,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 #if !defined (__SGXINFO_H__)
 #define __SGXINFO_H__
@@ -292,7 +291,7 @@ typedef struct _SGX_CCB_KICK_
 #endif
 
 	IMG_BOOL	bFirstKickOrResume;
-#if (defined(NO_HARDWARE) || defined(PDUMP))
+#if defined(NO_HARDWARE) || defined(PDUMP)
 	IMG_BOOL	bTerminateOrAbort;
 #endif
 	IMG_BOOL	bLastInScene;

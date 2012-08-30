@@ -36,7 +36,6 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#   
 ### ###########################################################################
 
 include ../common/android/platform_version.mk
@@ -45,8 +44,6 @@ include ../common/android/platform_version.mk
 #
 SUPPORT_ANDROID_PLATFORM := 1
 SUPPORT_OPENGLES1_V1_ONLY := 1
-SUPPORT_OPENVG := 0
-SUPPORT_OPENGL := 0
 
 # Meminfo IDs are required for buffer stamps
 #
@@ -91,6 +88,17 @@ SUPPORT_PVRSRV_GET_DC_SYSTEM_BUFFER := 0
 #
 SUPPORT_LARGE_GENERAL_HEAP := 1
 
+# Enable a page pool for uncached memory allocations. This improves
+# the performance of such allocations because the pages are temporarily
+# not returned to Linux and therefore do not have to be re-invalidated
+# (fewer cache invalidates are needed).
+#
+# Default the cache size to a maximum of 5400 pages (~21MB). If using
+# newer Linux kernels (>=3.0) the cache may be reclaimed and become
+# smaller than this maximum during runtime.
+#
+PVR_LINUX_MEM_AREA_POOL_MAX_PAGES ?= 5400
+
 ##############################################################################
 # EGL connect/disconnect hooks only available since Froyo
 # Obsolete in future versions
@@ -127,7 +135,7 @@ ifeq ($(is_at_least_gingerbread),1)
 UNITTEST_INCLUDES += $(ANDROID_ROOT)/frameworks/base/native/include
 endif
 
-ifeq ($(is_future_version),1)
+ifeq ($(is_at_least_jellybean),1)
 UNITTEST_INCLUDES += \
  $(ANDROID_ROOT)/frameworks/native/include \
  $(ANDROID_ROOT)/frameworks/native/opengl/include \
@@ -300,7 +308,7 @@ endif
 # ICS and earlier should rate-limit composition by waiting for 3D renders
 # to complete in the compositor's eglSwapBuffers().
 #
-ifeq ($(is_future_version),0)
+ifeq ($(is_at_least_jellybean),0)
 PVR_ANDROID_COMPOSITOR_WAIT_FOR_RENDER := 1
 endif
 

@@ -38,7 +38,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 
 #ifndef __SGXAPI_KM_H__
@@ -118,7 +117,7 @@ extern "C" {
 /* note: there is implicitly 1 3D Dst Sync */
 #else
 /* sync info structure array size */
-#define SGX_MAX_SRC_SYNCS_TA				8
+#define SGX_MAX_SRC_SYNCS_TA				32
 #define SGX_MAX_DST_SYNCS_TA				1
 /* note: there is implicitly 1 3D Dst Sync */
 #define SGX_MAX_SRC_SYNCS_TQ				8

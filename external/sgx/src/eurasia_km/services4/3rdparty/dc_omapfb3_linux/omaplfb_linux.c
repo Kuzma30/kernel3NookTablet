@@ -37,7 +37,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 
 /**************************************************************************
@@ -272,6 +271,9 @@ static void WorkQueueHandler(struct work_struct *psWork)
 OMAPLFB_ERROR OMAPLFBCreateSwapQueue(OMAPLFB_SWAPCHAIN *psSwapChain)
 {
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,37))
+#if (LINUX_VERSION_CODE == KERNEL_VERSION(2,6,37))
+#define WQ_FREEZABLE WQ_FREEZEABLE
+#endif
 	/*
 	 * Calling alloc_ordered_workqueue with the WQ_FREEZABLE and
 	 * WQ_MEM_RECLAIM flags set, (currently) has the same effect as

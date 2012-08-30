@@ -1,6 +1,12 @@
 /*************************************************************************/ /*!
 @Title          Self scaling hash tables.
 @Copyright      Copyright (c) Imagination Technologies Ltd. All Rights Reserved
+@Description
+   Implements simple self scaling hash tables. Hash collisions are
+   handled by chaining entries together. Hash tables are increased in
+   size when they become more than (50%?) full and decreased in size
+   when less than (25%?) full. Hash tables are never decreased below
+   their initial size.
 @License        Dual MIT/GPLv2
 
 The contents of this file are subject to the MIT license as set out below.
@@ -37,13 +43,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
-@Description
-   Implements simple self scaling hash tables. Hash collisions are
-   handled by chaining entries together. Hash tables are increased in
-   size when they become more than (50%?) full and decreased in size
-   when less than (25%?) full. Hash tables are never decreased below
-   their initial size.
 */ /**************************************************************************/
 
 #include "pvr_debug.h"

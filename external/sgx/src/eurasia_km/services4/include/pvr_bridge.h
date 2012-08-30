@@ -38,7 +38,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 
 #ifndef __PVR_BRIDGE_H__
@@ -67,7 +66,7 @@ extern "C" {
 
 #else /* __linux__ */
 
-		#if defined(__QNXNTO__)
+ #if  defined(__QNXNTO__)
 			#define PVRSRV_IOC_GID      (0x0UL)
 		#else
 			#error Unknown platform: Cannot define ioctls
