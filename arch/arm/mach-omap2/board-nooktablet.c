@@ -1281,7 +1281,7 @@ static void acclaim_set_osc_timings(void)
 	omap_pm_set_osc_lp_time(4000, 1);
 }
 
-static void acclaim_ram_init(void)
+static void __init acclaim_ram_init(void)
 {
 	ulong sdram_size = get_sdram_size();
 
