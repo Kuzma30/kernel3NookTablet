@@ -716,10 +716,6 @@ acclaim_twl6030_hsmmc_init(struct omap2_hsmmc_info *controllers)
 	return 0;
 }
 
-static struct regulator_consumer_supply audio_supply[] = {
-        { .supply = "audio-pwr", },
-};
-
 static struct regulator_init_data acclaim_vaux1 = {
 	.constraints = {
 		.min_uV			= 1000000,
@@ -789,25 +785,6 @@ static struct regulator_init_data acclaim_vpp = {
 		},
 		.initial_state          = PM_SUSPEND_MEM,
 	},
-};
-
-static struct regulator_init_data acclaim_vusim = {
-	.constraints = {
-		.min_uV			= 1200000,
-		.max_uV			= 2900000,
-		.apply_uV		= true,
-		.valid_modes_mask	= REGULATOR_MODE_NORMAL
-					| REGULATOR_MODE_STANDBY,
-		.valid_ops_mask	 = REGULATOR_CHANGE_VOLTAGE
-				| REGULATOR_CHANGE_MODE
-				| REGULATOR_CHANGE_STATUS,
-		.state_mem = {
-			.disabled	= true,
-		},
-		.initial_state          = PM_SUSPEND_MEM,
-	},
-	.num_consumer_supplies  = 1,
-	.consumer_supplies      = audio_supply,
 };
 
 static struct regulator_init_data acclaim_vana = {
@@ -907,7 +884,6 @@ static struct twl4030_platform_data acclaim_twldata = {
 	/* Regulators */
 	.vmmc		= &acclaim_vmmc,
 	.vpp		= &acclaim_vpp,
-	.vusim		= &acclaim_vusim,
 	.vana		= &acclaim_vana,
 	.vcxio		= &acclaim_vcxio,
 	.vusb		= &acclaim_vusb,

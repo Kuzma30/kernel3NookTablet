@@ -67,7 +67,6 @@
 #include <sound/soc.h>
 #include <sound/soc-dapm.h>
 #include <sound/initval.h>
-#include <linux/regulator/consumer.h>
 #include "tlv320aic31xx.h"
 #include <linux/clk.h>
 #include <sound/tlv.h>
@@ -78,7 +77,6 @@
  *****************************************************************************/
 
 static struct i2c_client *tlv320aic31xx_client;
-struct regulator *audio_regulator;
 static struct i2c_board_info tlv320aic31xx_hwmon_info = {
 	I2C_BOARD_INFO("tlv320aic3110", 0x18),
 };
@@ -2221,18 +2219,6 @@ static int __devinit tlv320aic31xx_codec_probe(struct platform_device *pdev)
 	aic3100_hp_power_down (codec);*/
 #endif
 
-#if 1
-	audio_regulator = regulator_get(NULL, "audio-pwr");
-	if (IS_ERR(audio_regulator))
-		DBG("%s: regulator_get error\n", __func__);
-
-	err = regulator_set_voltage(audio_regulator, REGU_MIN_VOL,
-						REGU_MAX_VOL);
-	if (err)
-		DBG("%s: regulator_set 3V error\n", __func__);
-
-	regulator_enable(audio_regulator);
-#endif
 	ret =  snd_soc_register_codec(&pdev->dev,
 		&soc_codec_dev_aic31xx, tlv320aic31xx_dai, \
 		ARRAY_SIZE(tlv320aic31xx_dai));
@@ -2248,10 +2234,6 @@ static int __devinit tlv320aic31xx_codec_probe(struct platform_device *pdev)
 static int __devexit aic31xx_codec_remove(struct platform_device *pdev)
 {
 	snd_soc_unregister_codec(&pdev->dev);
-#if 1
-	regulator_disable(audio_regulator);
-	regulator_put(audio_regulator);
-#endif
 	return 0;
 }
 
