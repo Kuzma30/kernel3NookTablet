@@ -37,7 +37,6 @@
 #include <linux/workqueue.h>
 #include <linux/earlysuspend.h>
 #include <linux/firmware.h>
-#include <linux/regulator/consumer.h>
 #include <linux/input/ft5x06.h>
 
 #define FT5x06_CPTM_ID_COMPANY        0x79
@@ -86,7 +85,6 @@ struct ft5x06 {
 	/* Ensures that only one function can specify the Device Mode at a time. */
 	struct mutex device_mode_mutex;
 	struct early_suspend early_suspend;
-	struct regulator *vtp;
 };
 
 typedef struct ft506 {
@@ -130,8 +128,6 @@ static void ft5x06_late_resume(struct early_suspend *handler);
 
 extern int ft5x06_dev_init(int resource);
 
-extern void register_ft_i2c_adapter(struct i2c_adapter *adapter);
-extern void unregister_ft_i2c_adapter(struct i2c_adapter *adapter);
 /*****************************************************************************
  * Global Variables
  ****************************************************************************/
@@ -3006,8 +3002,6 @@ static int __devinit ft5x06_probe(struct i2c_client *client,
 	ts->platform_data = client->dev.platform_data;
 	i2c_set_clientdata(client, ts);
 
-	register_ft_i2c_adapter(client->adapter);
-
 	retval =
 		i2c_smbus_read_i2c_block_data(ts->client, 0, sizeof(u8), &buffer);
 	if (0 > retval) {
@@ -3080,7 +3074,6 @@ static int ft5x06_resume(struct i2c_client *client)
 /* Function to manage low power suspend */
 static int ft5x06_suspend(struct i2c_client *client, pm_message_t message)
 {
-	int retval = 0;
 	struct ft5x06 *ts = NULL;
 
 	ts = (struct ft5x06 *)i2c_get_clientdata(client);
@@ -3129,8 +3122,6 @@ static int __devexit ft5x06_remove(struct i2c_client *client)
 	/* clientdata registered on probe */
 	ts = i2c_get_clientdata(client);
 	device_remove_file(&ts->client->dev, &dev_attr_irq_enable);
-
-	unregister_ft_i2c_adapter(client->adapter);
 
 	/* Start cleaning up by removing any delayed work and the timer */
 	if (cancel_delayed_work_sync((struct delayed_work *)&ts->work) < 0) {
