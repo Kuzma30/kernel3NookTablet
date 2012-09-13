@@ -529,69 +529,37 @@ static struct platform_device acclaim_aic3110 = {
 };
 
 /*******************************************************/
-static struct regulator_consumer_supply tp_supply[] = {
+static struct regulator_consumer_supply acclaim_lcd_supply[] = {
 	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dss"),
 	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dsi1"),
 	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dsi2"),
 };
 
-static struct regulator_init_data tp_vinit = {
+static struct regulator_init_data acclaim_lcd_vinit = {
 	.constraints = {
 		.min_uV = 3300000,
 		.max_uV = 3300000,
 		.valid_modes_mask = REGULATOR_MODE_NORMAL,
 		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
 	},
-	.num_consumer_supplies = ARRAY_SIZE(tp_supply),
-	.consumer_supplies = tp_supply,
+	.num_consumer_supplies = ARRAY_SIZE(acclaim_lcd_supply),
+	.consumer_supplies = acclaim_lcd_supply,
 };
 
-static struct fixed_voltage_config touch_reg_data = {
-	.supply_name = "vdd_lcdtp",
+static struct fixed_voltage_config acclaim_lcd_reg = {
+	.supply_name = "lcd",
 	.microvolts = 3300000,
 	.gpio = 36,
 	.enable_high = 1,
 	.enabled_at_boot = 1,
-	.init_data = &tp_vinit,
+	.init_data = &acclaim_lcd_vinit,
 };
 
-static struct platform_device touch_regulator_device = {
+static struct platform_device acclaim_lcd_regulator = {
 	.name   = "reg-fixed-voltage",
 	.id     = 0,
 	.dev    = {
-		.platform_data = &touch_reg_data,
-	},
-};
-
-static struct regulator_consumer_supply lcd_supply[] = {
-	{ .supply = "leds_pwm"},
-};
-
-static struct regulator_init_data lcd_vinit = {
-	.constraints = {
-		.min_uV = 3300000,
-		.max_uV = 3300000,
-		.valid_modes_mask = REGULATOR_MODE_NORMAL,
-		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
-	},
-	.num_consumer_supplies = ARRAY_SIZE(lcd_supply),
-	.consumer_supplies = lcd_supply,
-};
-
-static struct fixed_voltage_config lcd_reg_data = {
-	.supply_name = "vdd_lcd",
-	.microvolts = 3300000,
-	.gpio = 121,
-	.enable_high = 1,
-	.enabled_at_boot = 1,
-	.init_data = &lcd_vinit,
-};
-
-static struct platform_device lcd_regulator_device = {
-	.name   = "reg-fixed-voltage",
-	.id     = -1,
-	.dev    = {
-		.platform_data = &lcd_reg_data,
+		.platform_data = &acclaim_lcd_reg,
 	},
 };
 
@@ -599,8 +567,7 @@ static struct platform_device lcd_regulator_device = {
 static struct platform_device *acclaim_devices[] __initdata = {
 	&acclaim_aic3110,
 	&acclaim_keys_gpio,
-	&lcd_regulator_device,
-	&touch_regulator_device,
+	&acclaim_lcd_regulator,
 };
 
 static void __init acclaim_init_early(void)
