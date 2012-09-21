@@ -65,11 +65,13 @@ wlcore_hw_get_rx_buf_align(struct wl1271 *wl, u32 rx_desc)
 	return wl->ops->get_rx_buf_align(wl, rx_desc);
 }
 
-static inline void
+static inline int
 wlcore_hw_prepare_read(struct wl1271 *wl, u32 rx_desc, u32 len)
 {
 	if (wl->ops->prepare_read)
-		wl->ops->prepare_read(wl, rx_desc, len);
+		return wl->ops->prepare_read(wl, rx_desc, len);
+
+	return 0;
 }
 
 static inline u32
@@ -81,16 +83,18 @@ wlcore_hw_get_rx_packet_len(struct wl1271 *wl, void *rx_data, u32 data_len)
 	return wl->ops->get_rx_packet_len(wl, rx_data, data_len);
 }
 
-static inline void wlcore_hw_tx_delayed_completion(struct wl1271 *wl)
+static inline int wlcore_hw_tx_delayed_compl(struct wl1271 *wl)
 {
-	if (wl->ops->tx_delayed_completion)
-		wl->ops->tx_delayed_completion(wl);
+	if (wl->ops->tx_delayed_compl)
+		return wl->ops->tx_delayed_compl(wl);
+
+	return 0;
 }
 
-static inline void wlcore_hw_tx_immediate_completion(struct wl1271 *wl)
+static inline void wlcore_hw_tx_immediate_compl(struct wl1271 *wl)
 {
-	if (wl->ops->tx_immediate_completion)
-		wl->ops->tx_immediate_completion(wl);
+	if (wl->ops->tx_immediate_compl)
+		wl->ops->tx_immediate_compl(wl);
 }
 
 static inline int
@@ -165,6 +169,36 @@ wlcore_handle_static_data(struct wl1271 *wl, void *static_data)
 		return wl->ops->handle_static_data(wl, static_data);
 
 	return 0;
+}
+
+static inline int
+wlcore_hw_get_spare_blocks(struct wl1271 *wl, bool is_gem)
+{
+	if (!wl->ops->get_spare_blocks)
+		BUG_ON(1);
+
+	return wl->ops->get_spare_blocks(wl, is_gem);
+}
+
+static inline int
+wlcore_hw_set_key(struct wl1271 *wl, enum set_key_cmd cmd,
+		  struct ieee80211_vif *vif,
+		  struct ieee80211_sta *sta,
+		  struct ieee80211_key_conf *key_conf)
+{
+	if (!wl->ops->set_key)
+		BUG_ON(1);
+
+	return wl->ops->set_key(wl, cmd, vif, sta, key_conf);
+}
+
+static inline u32
+wlcore_hw_pre_pkt_send(struct wl1271 *wl, u32 buf_offset, u32 last_len)
+{
+	if (wl->ops->pre_pkt_send)
+		return wl->ops->pre_pkt_send(wl, buf_offset, last_len);
+
+	return buf_offset;
 }
 
 #endif

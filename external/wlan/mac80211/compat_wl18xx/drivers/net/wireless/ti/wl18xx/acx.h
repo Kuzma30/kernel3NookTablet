@@ -25,8 +25,28 @@
 #include "../wlcore/wlcore.h"
 #include "../wlcore/acx.h"
 
+enum {
+	ACX_CLEAR_STATISTICS		 = 0x0047,
+};
+
 /* numbers of bits the length field takes (add 1 for the actual number) */
 #define WL18XX_HOST_IF_LEN_SIZE_FIELD 15
+
+#define WL18XX_ACX_EVENTS_VECTOR	(WL1271_ACX_INTR_WATCHDOG	| \
+					 WL1271_ACX_INTR_INIT_COMPLETE	| \
+					 WL1271_ACX_INTR_EVENT_A	| \
+					 WL1271_ACX_INTR_EVENT_B	| \
+					 WL1271_ACX_INTR_CMD_COMPLETE	| \
+					 WL1271_ACX_INTR_HW_AVAILABLE	| \
+					 WL1271_ACX_INTR_DATA		| \
+					 WL1271_ACX_SW_INTR_WATCHDOG)
+
+#define WL18XX_INTR_MASK		(WL1271_ACX_INTR_WATCHDOG	| \
+					 WL1271_ACX_INTR_EVENT_A	| \
+					 WL1271_ACX_INTR_EVENT_B	| \
+					 WL1271_ACX_INTR_HW_AVAILABLE	| \
+					 WL1271_ACX_INTR_DATA		| \
+					 WL1271_ACX_SW_INTR_WATCHDOG)
 
 struct wl18xx_acx_host_config_bitmap {
 	struct acx_header header;
@@ -61,6 +81,15 @@ struct wl18xx_acx_checksum_state {
 	u8 pad[3];
 } __packed;
 
+
+struct wl18xx_acx_error_stats {
+	u32 error_frame;
+	u32 error_null_Frame_tx_start;
+	u32 error_numll_frame_cts_start;
+	u32 error_bar_retry;
+	u32 error_frame_cts_nul_flid;
+} __packed;
+
 struct wl18xx_acx_debug_stats {
 	u32 debug1;
 	u32 debug2;
@@ -76,6 +105,8 @@ struct wl18xx_acx_ring_stats {
 } __packed;
 
 struct wl18xx_acx_tx_stats {
+	u32 tx_prepared_descs;
+	u32 tx_cmplt;
 	u32 tx_template_prepared;
 	u32 tx_data_prepared;
 	u32 tx_template_programmed;
@@ -112,7 +143,8 @@ struct wl18xx_acx_tx_stats {
 } __packed;
 
 struct wl18xx_acx_rx_stats {
-	u32 rx_out_of_mem;
+	u32 rx_beacon_early_term;
+	u32 rx_out_of_mpdu_nodes;
 	u32 rx_hdr_overflow;
 	u32 rx_dropped_frame;
 	u32 rx_done_stage;
@@ -124,6 +156,9 @@ struct wl18xx_acx_rx_stats {
 	u32 rx_cmplt_task;
 	u32 rx_phy_hdr;
 	u32 rx_timeout;
+	u32 rx_timeout_wa;
+	u32 rx_wa_density_dropped_frame;
+	u32 rx_wa_ba_not_expected;
 	u32 rx_frame_checksum;
 	u32 rx_checksum_result;
 	u32 defrag_called;
@@ -134,6 +169,7 @@ struct wl18xx_acx_rx_stats {
 	u32 defrag_decrypt_failed;
 	u32 decrypt_key_not_found;
 	u32 defrag_need_decrypt;
+	u32 rx_tkip_replays;
 } __packed;
 
 struct wl18xx_acx_isr_stats {
@@ -173,19 +209,24 @@ struct wl18xx_acx_rx_filter_stats {
 	u32 data_filter;
 	u32 ibss_filter;
 	u32 protection_filter;
+	u32 accum_arp_pend_requests;
+	u32 max_arp_queue_dep;
 } __packed;
 
 struct wl18xx_acx_rx_rate_stats {
 	u32 rx_frames_per_rates[50];
 } __packed;
 
-#define AGGR_STATS_TX_SIZE_LEN 11
-#define AGGR_STATS_RX_SIZE_LEN 11
+#define AGGR_STATS_TX_AGG	16
+#define AGGR_STATS_TX_RATE	16
+#define AGGR_STATS_RX_SIZE_LEN	16
 
 struct wl18xx_acx_aggr_stats {
-	u32 tx_size[AGGR_STATS_TX_SIZE_LEN];
+	u32 tx_agg_vs_rate[AGGR_STATS_TX_AGG * AGGR_STATS_TX_RATE];
 	u32 rx_size[AGGR_STATS_RX_SIZE_LEN];
 } __packed;
+
+#define PIPE_STATS_HW_FIFO	11
 
 struct wl18xx_acx_pipeline_stats {
 	u32 hs_tx_stat_fifo_int;
@@ -206,6 +247,7 @@ struct wl18xx_acx_pipeline_stats {
 	u32 dec_packet_out;
 	u32 cs_rx_packet_in;
 	u32 cs_rx_packet_out;
+	u16 pipeline_fifo_full[PIPE_STATS_HW_FIFO];
 } __packed;
 
 struct wl18xx_acx_mem_stats {
@@ -218,13 +260,12 @@ struct wl18xx_acx_mem_stats {
 struct wl18xx_acx_statistics {
 	struct acx_header header;
 
-	struct wl18xx_acx_ring_stats		ring;
+	struct wl18xx_acx_error_stats		error;
 	struct wl18xx_acx_debug_stats		debug;
 	struct wl18xx_acx_tx_stats		tx;
 	struct wl18xx_acx_rx_stats		rx;
 	struct wl18xx_acx_isr_stats		isr;
 	struct wl18xx_acx_pwr_stats		pwr;
-	struct wl18xx_acx_event_stats		event;
 	struct wl18xx_acx_ps_poll_stats		ps_poll;
 	struct wl18xx_acx_rx_filter_stats	rx_filter;
 	struct wl18xx_acx_rx_rate_stats		rx_rate;
@@ -233,9 +274,14 @@ struct wl18xx_acx_statistics {
 	struct wl18xx_acx_mem_stats		mem;
 } __packed;
 
+struct wl18xx_acx_clear_statistics {
+	struct acx_header header;
+};
+
 int wl18xx_acx_host_if_cfg_bitmap(struct wl1271 *wl, u32 host_cfg_bitmap,
 				  u32 sdio_blk_size, u32 extra_mem_blks,
 				  u32 len_field_size);
 int wl18xx_acx_set_checksum_state(struct wl1271 *wl);
+int wl18xx_acx_clear_statistics(struct wl1271 *wl);
 
 #endif /* __WL18XX_ACX_H__ */
