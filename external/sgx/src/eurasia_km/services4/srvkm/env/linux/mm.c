@@ -812,7 +812,7 @@ FreePagePool(IMG_VOID)
 	PagePoolLock();
 
 #if (PVR_LINUX_MEM_AREA_POOL_MAX_PAGES != 0)
-	PVR_TRACE(("%s: Freeing %d pages from pool", __FUNCTION__, atomic_read(&g_sPagePoolEntryCount)));
+	PVR_DPF((PVR_DBG_MESSAGE,"%s: Freeing %d pages from pool", __FUNCTION__, atomic_read(&g_sPagePoolEntryCount)));
 #else
 	PVR_ASSERT(atomic_read(&g_sPagePoolEntryCount) == 0);
 	PVR_ASSERT(list_empty(&g_sPagePoolList));
@@ -848,8 +848,8 @@ ShrinkPagePool(struct shrinker *psShrinker, struct shrink_control *psShrinkContr
 	{
 		LinuxPagePoolEntry *psPagePoolEntry, *psTempPoolEntry;
 
-		PVR_TRACE(("%s: Number to scan: %ld", __FUNCTION__, uNumToScan));
-		PVR_TRACE(("%s: Pages in pool before scan: %d", __FUNCTION__, atomic_read(&g_sPagePoolEntryCount)));
+		PVR_DPF((PVR_DBG_MESSAGE,"%s: Number to scan: %ld", __FUNCTION__, uNumToScan));
+		PVR_DPF((PVR_DBG_MESSAGE,"%s: Pages in pool before scan: %d", __FUNCTION__, atomic_read(&g_sPagePoolEntryCount)));
 
 		if (!PagePoolTrylock())
 		{
@@ -877,7 +877,7 @@ ShrinkPagePool(struct shrinker *psShrinker, struct shrink_control *psShrinkContr
 
 		PagePoolUnlock();
 
-		PVR_TRACE(("%s: Pages in pool after scan: %d", __FUNCTION__, atomic_read(&g_sPagePoolEntryCount)));
+		PVR_DPF((PVR_DBG_MESSAGE,"%s: Pages in pool after scan: %d", __FUNCTION__, atomic_read(&g_sPagePoolEntryCount)));
 	}
 
 	return atomic_read(&g_sPagePoolEntryCount);

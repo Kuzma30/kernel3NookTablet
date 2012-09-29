@@ -61,6 +61,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "lists.h"
 
 IMG_UINT32	g_ui32InitFlags;
+extern int powering_down;
 
 /* mark which parts of Services were initialised */
 #define		INIT_DATA_ENABLE_PDUMPINIT	0x1U
@@ -1485,8 +1486,9 @@ IMG_BOOL IMG_CALLCONV PVRSRVDeviceLISR(PVRSRV_DEVICE_NODE *psDeviceNode)
 		{
 			bStatus = (*psDeviceNode->pfnDeviceISR)(psDeviceNode->pvISRData);
 		}
-
-		SysClearInterrupts(psSysData, psDeviceNode->ui32SOCInterruptBit);
+		if(!powering_down) {
+			SysClearInterrupts(psSysData, psDeviceNode->ui32SOCInterruptBit);
+		}
 	}
 
 out:
