@@ -48,7 +48,7 @@
 
 #define OMAP4_MAX_STATES	4
 
-static bool disallow_smp_idle = 1;
+static bool disallow_smp_idle;
 module_param(disallow_smp_idle, bool, S_IRUGO | S_IWUSR);
 MODULE_PARM_DESC(disallow_smp_idle,
 	"Don't enter idle if multiple cpus are active");
