@@ -607,7 +607,7 @@ static struct omap2_hsmmc_info mmc[] = {
 		| MMC_CAP_1_8V_DDR,
 		.gpio_cd	= -EINVAL,
 		.gpio_wp	= -EINVAL,
-		.ocr_mask	= MMC_VDD_165_195,
+		.ocr_mask	= MMC_VDD_29_30,
 		.nonremovable   = true,
 #ifdef CONFIG_PM_RUNTIME
 		.power_saving	= true,
@@ -1448,20 +1448,20 @@ static struct omap_dss_device acclaim_boxer_device = {
 	},
 	.panel          = {
 		.config		= OMAP_DSS_LCD_TFT | OMAP_DSS_LCD_IVS |
-		OMAP_DSS_LCD_IHS,
+		OMAP_DSS_LCD_IHS | OMAP_DSS_LCD_IPC,
 		.timings	= {
 			.x_res          = 1024,
 			.y_res          = 600,
 			.pixel_clock    = 46000, /* in kHz */
 			.hfp            = 160,   /* HFP fix 160 */
 			.hsw            = 10,    /* HSW = 1~140 */
-			.hbp            = 150,   /* HSW + HBP = 160 */
-			.vfp            = 12,    /* VFP fix 12 */
-			.vsw            = 3,     /* VSW = 1~20 */
-			.vbp            = 20,    /* VSW + VBP = 23 */
+			.hbp            = 160,   /* HSW + HBP = 160 */
+			.vfp            = 10,    /* VFP fix 12 */
+			.vsw            = 2,     /* VSW = 1~20 */
+			.vbp            = 23,    /* VSW + VBP = 23 */
 		},
-		.width_in_um = 158000,
-		.height_in_um = 92000,
+		.width_in_um = 153000,
+		.height_in_um = 90000,
 	},
 	.name			= "lcd2",
 	.driver_name		= "boxer_panel",
