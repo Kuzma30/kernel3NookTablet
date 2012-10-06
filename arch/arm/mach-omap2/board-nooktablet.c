@@ -913,12 +913,13 @@ static struct i2c_board_info __initdata acclaim_i2c_1_boardinfo[] = {
 		.irq = OMAP_GPIO_IRQ(66),
 	},
 #endif
-
+#ifdef CONFIG_BATTERY_MAX17042
 	{
 		I2C_BOARD_INFO(MAX17042_DEVICE_ID, MAX17042_I2C_SLAVE_ADDRESS),
 		.platform_data = &max17042_platform_data_here,
 		.irq = OMAP_GPIO_IRQ(65),
 	},
+#endif
 };
 
 
@@ -1015,6 +1016,8 @@ static int __init acclaim_i2c_init(void)
 			      ARRAY_SIZE(acclaim_i2c_2_boardinfo));
 	omap_register_i2c_bus(3, 400, NULL, 0);
 	omap_register_i2c_bus(4, 400, NULL, 0);
+
+	omap2_i2c_pullup(3, I2C_PULLUP_STD_860_OM_FAST_500_OM);
 
 	/*
 	 * This will allow unused regulator to be shutdown. This flag
@@ -1130,6 +1133,7 @@ static void __init acclaim_wifi_init(void)
 		goto out;
 	}
 	gpio_direction_output(GPIO_WIFI_PMENA, 0);
+	gpio_export(GPIO_WIFI_PMENA, true);
       
 	ret = gpio_request(GPIO_WIFI_PWEN, "wifi_pwen");
 	if (ret < 0) {
@@ -1138,7 +1142,8 @@ static void __init acclaim_wifi_init(void)
 		goto out;
 	}
 	gpio_direction_output(GPIO_WIFI_PWEN, 0);
-  
+	gpio_export(GPIO_WIFI_PWEN, true);
+
 	ret = gpio_request(GPIO_WIFI_IRQ, "wifi_irq");
 	if (ret < 0) {
 		printk(KERN_ERR "%s: can't reserve GPIO: %d\n", __func__,
