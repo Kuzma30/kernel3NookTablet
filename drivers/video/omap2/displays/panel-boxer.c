@@ -28,20 +28,14 @@
 #include <video/omapdss.h>
 #include <linux/gpio.h>
 
-#define	OMAP_LCD_PWM_PIN	121
-#define	OMAP_LCD_ENABLE_PIN	38
 //#define DEBUG
 /* Delay between Panel configuration and Panel enabling */
 #define LCD_RST_DELAY		100
 #define LCD_INIT_DELAY		200
+#define OMAP_FT5x06_POWER_GPIO  36
 
-static struct workqueue_struct *boxer_panel_wq;
-static struct omap_dss_device *boxer_panel_dssdev;
 static bool first_boot = true;
 static struct spi_device *boxer_spi_device;
-static atomic_t boxer_panel_is_enabled = ATOMIC_INIT(0);
-
-extern u8 quanta_get_mbid(void);
 
 static int spi_send(struct spi_device *spi,
 		    unsigned char reg_addr, unsigned char reg_data)
@@ -100,14 +94,11 @@ static struct attribute_group otter1_panel_attribute_group = {
 	.attrs = otter1_panel_attributes
 };
 
-static void boxer_panel_work_func(struct work_struct *work)
+static void boxer_panel_spi_init (void)
 {
-	printk	("boxer: init display.\n");
+	printk	("%s", __FUNCTION__);
 
-	if (first_boot) {
-		first_boot = false;
-		return;
-	}
+	gpio_direction_output (OMAP_FT5x06_POWER_GPIO, 1);
 
 	msleep(LCD_RST_DELAY);
 
@@ -122,13 +113,7 @@ static void boxer_panel_work_func(struct work_struct *work)
 	spi_send(boxer_spi_device, 0x10, 0x41);
 
 	msleep(LCD_INIT_DELAY);
-
-	if (boxer_panel_dssdev->platform_enable) {
-		boxer_panel_dssdev->platform_enable(boxer_panel_dssdev);
-	}
 }
-
-static DECLARE_WORK(boxer_panel_work, boxer_panel_work_func);
 
 static void boxer_get_resolution(struct omap_dss_device *dssdev,
 				 u16 * xres, u16 * yres)
@@ -141,6 +126,7 @@ static int boxer_panel_probe(struct omap_dss_device *dssdev)
 {
 	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__,
 	       __LINE__);
+
 	omap_writel(0x00020000, 0x4a1005cc);	//PCLK impedance
 	return 0;
 }
@@ -166,11 +152,6 @@ static int boxer_panel_start(struct omap_dss_device *dssdev)
 	if (r)
 		goto err0;
 
-	if (atomic_add_unless(&boxer_panel_is_enabled, 1, 1)) {
-		boxer_panel_dssdev = dssdev;
-		queue_work(boxer_panel_wq, &boxer_panel_work);
-	}
-
 	return 0;
 err0:
 	return r;
@@ -183,18 +164,6 @@ static void boxer_panel_stop(struct omap_dss_device *dssdev)
 
 	if (dssdev->state != OMAP_DSS_DISPLAY_ACTIVE)
 		return;
-
-	if (atomic_dec_and_test(&boxer_panel_is_enabled)) {
-		cancel_work_sync(&boxer_panel_work);
-
-		if (dssdev->platform_disable) {
-			dssdev->platform_disable(dssdev);
-		}
-	} else {
-		printk(KERN_WARNING "%s: attempting to disable panel twice!\n",
-		       __func__);
-		WARN_ON(1);
-	}
 
 	omapdss_dpi_display_disable(dssdev);
 }
@@ -222,12 +191,11 @@ static void boxer_panel_disable(struct omap_dss_device *dssdev)
 	dssdev->state = OMAP_DSS_DISPLAY_DISABLED;
 }
 
-extern int Light_Sensor_Exist;
-
 static int boxer_panel_suspend(struct omap_dss_device *dssdev)
 {
 	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__,
 	       __LINE__);
+
 	boxer_panel_stop(dssdev);
 	dssdev->state = OMAP_DSS_DISPLAY_SUSPENDED;
 	return 0;
@@ -235,13 +203,19 @@ static int boxer_panel_suspend(struct omap_dss_device *dssdev)
 
 static int boxer_panel_resume(struct omap_dss_device *dssdev)
 {
-	int r = 0;
 	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__,
 	       __LINE__);
 
+	if (first_boot) {
+		first_boot = false;
+	}
+	else {
+		boxer_panel_spi_init ();
+	}
+
 	boxer_panel_start(dssdev);
 	dssdev->state = OMAP_DSS_DISPLAY_ACTIVE;
-	return r;
+	return 0;
 }
 
 static void boxer_panel_set_timings(struct omap_dss_device *dssdev,
@@ -280,11 +254,7 @@ static struct omap_dss_driver boxer_driver = {
 	.check_timings = boxer_panel_check_timings,
 
 	.driver = {
-#ifndef CONFIG_MACH_OMAP4_NOOKTABLET
-		   .name = "otter1_panel_drv",
-#else
 		   .name = "boxer_panel",
-#endif
 		   .owner = THIS_MODULE,
 		   },
 };
@@ -297,7 +267,16 @@ static int boxer_spi_probe(struct spi_device *spi)
 	boxer_spi_device = spi;
 	spi_setup(boxer_spi_device);
 
-	sysfs_create_group(&spi->dev.kobj, &otter1_panel_attribute_group);
+	if (sysfs_create_group(&spi->dev.kobj, &otter1_panel_attribute_group))
+		printk ("%s problem creating sysfs group\n", __FUNCTION__);
+
+	if (gpio_request(OMAP_FT5x06_POWER_GPIO,
+			 "ft5x06_touch_power") < 0) {
+		printk(KERN_ERR "can't get ft5x06 power GPIO\n");
+		return -1;
+	}
+
+	boxer_panel_spi_init ();
 
 	return omap_dss_register_driver(&boxer_driver);
 }
@@ -328,8 +307,6 @@ static struct spi_driver boxer_spi_driver = {
 
 static int __init boxer_lcd_init(void)
 {
-	boxer_panel_wq = create_singlethread_workqueue("boxer-panel-wq");
-
 	return spi_register_driver(&boxer_spi_driver);
 }
 

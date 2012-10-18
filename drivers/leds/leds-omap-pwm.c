@@ -26,6 +26,8 @@
 
 #define MAX_GPTIMER_ID		12
 
+static int init_count = 2;
+
 struct omap_pwm_led {
 	struct led_classdev cdev;
 	struct omap_pwm_led_platform_data *pdata;
@@ -127,8 +129,6 @@ static void omap_pwm_led_power_on(struct omap_pwm_led *led)
 
 static void omap_pwm_led_power_off(struct omap_pwm_led *led)
 {
-	
-
 	if (!led->powered)
 		return;
 	led->powered = 0;
@@ -193,6 +193,12 @@ static void omap_pwm_led_set(struct led_classdev *led_cdev,
 	struct omap_pwm_led *led = cdev_to_omap_pwm_led(led_cdev);
 
 	pr_debug("%s: brightness value = %i\n", __func__, value);
+	if (value == 0 && init_count --) {
+		// for some odd reasons, JB startup suspends display twice
+		// and tries to switch us off here, but we'd like to
+		// show boot anim also. Is there a cleaner way to achieve same?
+		return;
+	}
 
 	if (led->brightness != value) {
 		if (led->brightness < led->pdata->bkl_min ||

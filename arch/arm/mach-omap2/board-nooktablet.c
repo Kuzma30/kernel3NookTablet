@@ -107,8 +107,12 @@
 #define GPIO_WIFI_IRQ			115
 
 #define FT5x06_I2C_SLAVEADDRESS  	(0x70 >> 1)
-#define OMAP_FT5x06_GPIO         	37 /*99*/
+#define OMAP_FT5x06_POWER_GPIO   	36
+#define OMAP_FT5x06_IRQ_GPIO     	37 /*99*/
+#define OMAP_LCD_ENABLE_PIN      	38
 #define OMAP_FT5x06_RESET_GPIO   	39 /*46*/
+#define OMAP_BOXER_CABC0         	44
+#define OMAP_BOXER_CABC1         	45
 
 #define TWL6030_RTC_GPIO 		6
 #define CONSOLE_UART			UART1
@@ -121,10 +125,7 @@
 #define KXTF9_GPIO_FOR_IRQ              66
 #define KXTJ9_GPIO_FOR_IRQ              66
 
-#define LCD_RST_DELAY		        100
-#define LCD_INIT_DELAY		        200
-
-#define DEFAULT_BACKLIGHT_BRIGHTNESS	105
+#define DEFAULT_BACKLIGHT_BRIGHTNESS	66
 
 #define ACCLAIM_FB_RAM_SIZE             SZ_16M /* 1920×1080*4 * 2 */
 
@@ -246,14 +247,15 @@ int ft5x06_dev_init(int resource)
 			return -1;
 		}
  
-		if (gpio_request(OMAP_FT5x06_GPIO, "ft5x06_touch") < 0) {
+		if (gpio_request(OMAP_FT5x06_IRQ_GPIO, "ft5x06_touch") < 0) {
 			printk(KERN_ERR "can't get ft5x06 interrupt GPIO\n");
 			return -1;
 		}
  
-		gpio_direction_input(OMAP_FT5x06_GPIO);
+		gpio_direction_input(OMAP_FT5x06_IRQ_GPIO);
 	} else {
-		gpio_free(OMAP_FT5x06_GPIO);
+		gpio_free(OMAP_FT5x06_POWER_GPIO);
+		gpio_free(OMAP_FT5x06_IRQ_GPIO);
 		gpio_free(OMAP_FT5x06_RESET_GPIO);
 	}
  
@@ -549,7 +551,7 @@ static struct regulator_init_data acclaim_lcd_vinit = {
 static struct fixed_voltage_config acclaim_lcd_reg = {
 	.supply_name = "lcd",
 	.microvolts = 3300000,
-	.gpio = 36,
+	.gpio = -EINVAL,
 	.enable_high = 1,
 	.enabled_at_boot = 1,
 	.init_data = &acclaim_lcd_vinit,
@@ -618,6 +620,7 @@ static struct omap2_hsmmc_info mmc[] = {
 		.caps		= MMC_CAP_4_BIT_DATA 
 		| MMC_CAP_8_BIT_DATA
 		| MMC_CAP_1_8V_DDR,
+		.gpio_cd	= -EINVAL,
 		.gpio_wp	= -EINVAL,
 		.nonremovable 	= false,
 #ifdef CONFIG_PM_RUNTIME
@@ -927,7 +930,7 @@ static struct i2c_board_info __initdata acclaim_i2c_2_boardinfo[] = {
 	{
  		I2C_BOARD_INFO(FT_I2C_NAME, FT5x06_I2C_SLAVEADDRESS),
  		.platform_data = &ft5x06_platform_data,
-		.irq = OMAP_GPIO_IRQ(OMAP_FT5x06_GPIO),
+		.irq = OMAP_GPIO_IRQ(OMAP_FT5x06_IRQ_GPIO),
 	},
 };
 
@@ -1371,15 +1374,21 @@ acclaim_disp_backlight_setpower(struct omap_pwm_led_platform_data *pdata,
 	printk(KERN_INFO "Backlight set power, on_off = %d\n",on_off);
 	if (on_off) {
 		msleep(500);
-		gpio_direction_output(38, (acclaim_board_type() >= EVT2)
-				      ? 1 : 0);
+		gpio_direction_output(OMAP_LCD_ENABLE_PIN,
+				      (acclaim_board_type() >= EVT2) ? 1 : 0);
 	} else {
-		gpio_direction_output(38, (acclaim_board_type() >= EVT2) 
-				      ? 0 : 1);
+		gpio_direction_output(OMAP_LCD_ENABLE_PIN,
+				      (acclaim_board_type() >= EVT2) ? 0 : 1);
 	}
-	gpio_direction_output(44, 0);
-	gpio_direction_output(45, 0);
+
+	gpio_direction_output(OMAP_BOXER_CABC0, 0);
+	gpio_direction_output(OMAP_BOXER_CABC1, 0);
 	pr_debug("%s: on_off:%d\n", __func__, on_off);
+
+	if (! on_off) {
+		msleep (100);
+		gpio_direction_output (OMAP_FT5x06_POWER_GPIO, 0);
+	}
 
 	printk(KERN_INFO "Backlight set power end\n");
 }
@@ -1413,16 +1422,16 @@ static void acclaim_panel_get_resource(void)
 	int ret_val = 0;
 
 	pr_info("acclaim_panel_get_resource\n");
-	ret_val = gpio_request(38, "BOXER BL PWR EN");
+	ret_val = gpio_request(OMAP_LCD_ENABLE_PIN, "BOXER BL PWR EN");
 
 	if ( ret_val ) {
 		printk("%s : Could not request bl pwr en\n",__FUNCTION__);
 	}
-	ret_val = gpio_request(44, "BOXER CABC0");
+	ret_val = gpio_request(OMAP_BOXER_CABC0, "BOXER CABC0");
 	if ( ret_val ){
 		printk( "%s : could not request CABC0\n",__FUNCTION__);
 	}
-	ret_val = gpio_request(45, "BOXER CABC1");
+	ret_val = gpio_request(OMAP_BOXER_CABC1, "BOXER CABC1");
 	if ( ret_val ) {
 		printk("%s: could not request CABC1\n",__FUNCTION__);
 	}
