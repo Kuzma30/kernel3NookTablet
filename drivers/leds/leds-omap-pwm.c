@@ -193,10 +193,11 @@ static void omap_pwm_led_set(struct led_classdev *led_cdev,
 	struct omap_pwm_led *led = cdev_to_omap_pwm_led(led_cdev);
 
 	pr_debug("%s: brightness value = %i\n", __func__, value);
-	if (value == 0 && init_count --) {
+	if (init_count && value == 0) {
 		// for some odd reasons, JB startup suspends display twice
 		// and tries to switch us off here, but we'd like to
 		// show boot anim also. Is there a cleaner way to achieve same?
+		-- init_count;
 		return;
 	}
 

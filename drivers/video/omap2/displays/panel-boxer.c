@@ -31,7 +31,6 @@
 //#define DEBUG
 /* Delay between Panel configuration and Panel enabling */
 #define LCD_RST_DELAY		100
-#define LCD_INIT_DELAY		200
 #define OMAP_FT5x06_POWER_GPIO  36
 
 static bool first_boot = true;
@@ -96,7 +95,7 @@ static struct attribute_group otter1_panel_attribute_group = {
 
 static void boxer_panel_spi_init (void)
 {
-	printk	("%s", __FUNCTION__);
+	printk	("%s\n", __FUNCTION__);
 
 	gpio_direction_output (OMAP_FT5x06_POWER_GPIO, 1);
 
@@ -111,8 +110,6 @@ static void boxer_panel_spi_init (void)
 	spi_send(boxer_spi_device, 0x02, 0x43);
 	spi_send(boxer_spi_device, 0x0a, 0x28);
 	spi_send(boxer_spi_device, 0x10, 0x41);
-
-	msleep(LCD_INIT_DELAY);
 }
 
 static void boxer_get_resolution(struct omap_dss_device *dssdev,
@@ -196,6 +193,11 @@ static int boxer_panel_suspend(struct omap_dss_device *dssdev)
 	printk(KERN_INFO " boxer : %s called , line %d\n", __FUNCTION__,
 	       __LINE__);
 
+	if (first_boot) {
+		first_boot = false;
+		return 0;
+	}
+
 	boxer_panel_stop(dssdev);
 	dssdev->state = OMAP_DSS_DISPLAY_SUSPENDED;
 	return 0;
@@ -208,6 +210,7 @@ static int boxer_panel_resume(struct omap_dss_device *dssdev)
 
 	if (first_boot) {
 		first_boot = false;
+		return;
 	}
 	else {
 		boxer_panel_spi_init ();

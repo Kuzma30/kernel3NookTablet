@@ -1373,24 +1373,24 @@ acclaim_disp_backlight_setpower(struct omap_pwm_led_platform_data *pdata,
 {
 	printk(KERN_INFO "Backlight set power, on_off = %d\n",on_off);
 	if (on_off) {
-		msleep(500);
+		msleep (350);  // give the boxer resume some time do spi init
 		gpio_direction_output(OMAP_LCD_ENABLE_PIN,
 				      (acclaim_board_type() >= EVT2) ? 1 : 0);
 	} else {
+		msleep (350); // give the pwm led driver some time do dim
 		gpio_direction_output(OMAP_LCD_ENABLE_PIN,
 				      (acclaim_board_type() >= EVT2) ? 0 : 1);
 	}
 
 	gpio_direction_output(OMAP_BOXER_CABC0, 0);
 	gpio_direction_output(OMAP_BOXER_CABC1, 0);
-	pr_debug("%s: on_off:%d\n", __func__, on_off);
 
 	if (! on_off) {
 		msleep (100);
 		gpio_direction_output (OMAP_FT5x06_POWER_GPIO, 0);
 	}
 
-	printk(KERN_INFO "Backlight set power end\n");
+	pr_debug("%s: on_off:%d\n", __func__, on_off);
 }
 
 static struct omap_pwm_led_platform_data acclaim_disp_backlight_data = {
