@@ -275,7 +275,7 @@ static void ft5x06_platform_resume(void)
 static struct ft5x06_platform_data ft5x06_platform_data = {
 	.maxx = 600,
 	.maxy = 1024,
-	.flags = REVERSE_Y_FLAG,
+	.flags = FLIP_DATA_FLAG | REVERSE_X_FLAG,
 	.reset_gpio = OMAP_FT5x06_RESET_GPIO,
 	.use_st = FT_USE_ST,
 	.use_mt = FT_USE_MT,
