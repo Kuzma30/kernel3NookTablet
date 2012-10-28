@@ -134,8 +134,6 @@ extern int ft5x06_dev_init(int resource);
 
 static struct workqueue_struct *ft5x06_ts_wq;
 
-static struct input_dev *inpt = NULL;
-
 static struct ft5x06_xydata_t g_xy_data;
 
 static const struct i2c_device_id ft5x06_id[] = {
@@ -238,31 +236,13 @@ void ft5x06_xy_worker(struct work_struct *work)
 	ft506_data tch_data;
 	u8 _id;
 	u8 id, tilt, rev_x, rev_y;
-	u8 i, loc;
-	u8 prv_tch = 0;		/* number of previous touches */
 	u8 cur_tch;		/* number of current touches */
-	u16 tmp_trk[FT_NUM_TRK_ID];
-	u16 snd_trk[FT_NUM_TRK_ID];
-	u16 cur_trk[FT_NUM_TRK_ID];
-	u16 cur_st_tch[FT_NUM_ST_TCH_ID];
-	u16 cur_mt_tch[FT_NUM_MT_TCH_ID];
-	/* if NOT FT_USE_TRACKING_ID then
-	 * only uses FT_NUM_MT_TCH_ID positions */
-	u16 cur_mt_pos[FT_NUM_TRK_ID][2];
-	/* if NOT FT_USE_TRACKING_ID then
-	 * only uses FT_NUM_MT_TCH_ID positions */
-	u8 cur_mt_z[FT_NUM_TRK_ID];
 	u8 curr_tool_width;
-	u16 st_x1, st_y1;
-	u8 st_z1;
-	u16 st_x2, st_y2;
-	u8 st_z2;
+	u8 event = 0;
+	u16 x = 0;
+	u16 y = 0;
 	static u8 prev_gest = 0;
 	static u8 gest_count = 0;
-
-	if (inpt == NULL) {
-		inpt = ts->input;
-	}
 
 	g_xy_data.gest_id = 0;
 
@@ -287,50 +267,6 @@ void ft5x06_xy_worker(struct work_struct *work)
 	/* set tool size */
 	curr_tool_width = FT_SMALL_TOOL_WIDTH;
 
-	/* clear current active track ID array and count previous touches */
-	for (id = 0, prv_tch = FT_NTCH; id < FT_NUM_TRK_ID; id++) {
-		cur_trk[id] = FT_NTCH;
-		prv_tch += ts->act_trk[id];
-	}
-
-	/* send no events if no previous touches and no new touches */
-	if ((prv_tch == FT_NTCH)
-	    && (cur_tch == FT_NTCH)) {
-		goto exit_xy_worker;
-	}
-
-	for (id = 0; id < FT_NUM_ST_TCH_ID; id++) {
-		/* clear current single touches array */
-		cur_st_tch[id] = FT_IGNR_TCH;
-	}
-
-	/* clear single touch positions */
-	st_x1 = FT_NTCH;
-	st_y1 = FT_NTCH;
-	st_z1 = FT_NTCH;
-	st_x2 = FT_NTCH;
-	st_y2 = FT_NTCH;
-	st_z2 = FT_NTCH;
-
-	for (id = 0; id < FT_NUM_MT_TCH_ID; id++) {
-		/* clear current multi-touches array and multi-touch positions/z */
-		cur_mt_tch[id] = FT_IGNR_TCH;
-	}
-
-	if (ts->platform_data->use_trk_id) {
-		for (id = 0; id < FT_NUM_MT_TCH_ID; id++) {
-			cur_mt_pos[id][FT_XPOS] = 0;
-			cur_mt_pos[id][FT_YPOS] = 0;
-			cur_mt_z[id] = 0;
-		}
-	} else {
-		for (id = 0; id < FT_NUM_TRK_ID; id++) {
-			cur_mt_pos[id][FT_XPOS] = 0;
-			cur_mt_pos[id][FT_YPOS] = 0;
-			cur_mt_z[id] = 0;
-		}
-	}
-
 	/* Determine if display is tilted */
 	if (FLIP_DATA(ts->platform_data->flags)) {
 		tilt = true;
@@ -352,235 +288,46 @@ void ft5x06_xy_worker(struct work_struct *work)
 	}
 
 	/* process the touches */
-	u8 counter = 0;
-	/* TODO: try to use hardware events. */
-	for(id = 0; id < FT_NUM_MT_TCH_ID, counter < cur_tch; id++)
+	for(id = 0; id < FT_NUM_MT_TCH_ID; id++)
 	{
 		_id = (tch_data.points[id].y_h>>4);
-        cur_mt_pos[id][FT_XPOS] = GET_COORDINATE(tch_data.points[id].x_l, tch_data.points[id].x_h);
-        cur_mt_pos[id][FT_YPOS] = GET_COORDINATE(tch_data.points[id].y_l, tch_data.points[id].y_h);
+         event = tch_data.points[id].x_h >> 6;
+         if (event == FT_EVENT_DOWN || event == FT_EVENT_MOVE) {
+         	x = GET_COORDINATE(tch_data.points[id].x_l, tch_data.points[id].x_h);
+	        y = GET_COORDINATE(tch_data.points[id].y_l, tch_data.points[id].y_h);
 
-        cur_mt_pos[id][FT_YPOS] = cur_mt_pos[id][FT_YPOS] * 600 / 768;
-        if (tilt)
-        {
-            FLIP_XY(cur_mt_pos[id][FT_XPOS], cur_mt_pos[id][FT_YPOS]);
-        }
-        if (rev_x)
-        {
-            cur_mt_pos[id][FT_XPOS] = INVERT_X(cur_mt_pos[id][FT_XPOS], ts->platform_data->maxx);
-        }
-        if (rev_y)
-         {
-             cur_mt_pos[id][FT_YPOS] = INVERT_Y(cur_mt_pos[id][FT_YPOS], ts->platform_data->maxy-1);
+	        y = y * 600 / 768;
+	        if (tilt)
+	        {
+	            FLIP_XY(x, y);
+	        }
+	        if (rev_x)
+	        {
+	            x = INVERT_X(x, ts->platform_data->maxx);
+	        }
+	        if (rev_y)
+	        {
+	            y = INVERT_Y(y, ts->platform_data->maxy-1);
+	        }
+	        /* Fix sluggish scrolling */
+	        if (x == ts->prv_mt_pos[_id][FT_XPOS] &&
+	        	y == ts->prv_mt_pos[_id][FT_YPOS] && cur_tch == 1) {
+	        	continue;
+	        }
+         	input_report_abs(ts->input, ABS_MT_TRACKING_ID, _id);
+			input_report_abs(ts->input, ABS_MT_WIDTH_MAJOR, curr_tool_width);
+			input_report_abs(ts->input, ABS_MT_POSITION_X, x);
+			input_report_abs(ts->input, ABS_MT_POSITION_Y, y);
+			input_report_abs(ts->input, ABS_MT_TOUCH_MAJOR, 0xe);
+	        input_report_key(ts->input, BTN_TOUCH, 1);
+	        input_mt_sync(ts->input);
+	        ts->prv_mt_pos[_id][FT_XPOS] = x;
+	        ts->prv_mt_pos[_id][FT_YPOS] = y;
+         } else if (event == FT_EVENT_UP) {
+         	ts->prv_mt_pos[_id][FT_XPOS] = -1;
+	        ts->prv_mt_pos[_id][FT_YPOS] = -1;
+	        input_mt_sync(ts->input);
          }
-         if (cur_mt_pos[id][FT_XPOS] != 4095) {
-             cur_trk[_id] = FT_TCH;
-             cur_mt_tch[id] = _id;
-             ++counter;
-         }
-	}
-
-	/* handle Multi-touch signals */
-	if (ts->platform_data->use_mt) {
-		if (ts->platform_data->use_trk_id) {
-			/* terminate any previous touch where the track
-			 * is missing from the current event */
-			for (id = 0; id < FT_NUM_TRK_ID; id++) {
-				if ((ts->act_trk[id] != FT_NTCH)
-				    && (cur_trk[id] == FT_NTCH)) {
-					input_report_abs(ts->input,
-							 ABS_MT_TRACKING_ID,
-							 id);
-					input_report_abs(ts->input,
-							 ABS_MT_TOUCH_MAJOR,
-							 FT_NTCH);
-					input_report_abs(ts->input,
-							 ABS_MT_WIDTH_MAJOR,
-							 curr_tool_width);
-					input_report_abs(ts->input,
-							 ABS_MT_POSITION_X,
-							 ts->
-							 prv_mt_pos[id]
-							 [FT_XPOS]);
-					input_report_abs(ts->input,
-							 ABS_MT_POSITION_Y,
-							 ts->
-							 prv_mt_pos[id]
-							 [FT_YPOS]);
-
-					input_report_key(ts->input, BTN_TOUCH,
-							 0);
-
-					FT_MT_SYNC(ts->input);
-
-					ts->act_trk[id] = FT_NTCH;
-					ts->prv_mt_pos[id][FT_XPOS] = 0;
-					ts->prv_mt_pos[id][FT_YPOS] = 0;
-				}
-			}
-
-			/* set Multi-Touch current event signals */
-			for (id = 0; id < FT_NUM_MT_TCH_ID; id++) {
-				if (cur_mt_tch[id] < FT_NUM_TRK_ID) {
-					input_report_abs(ts->input,
-							 ABS_MT_TRACKING_ID,
-							 cur_mt_tch[id]);
-					input_report_abs(ts->input,
-							 ABS_MT_TOUCH_MAJOR,
-							 0xe);
-					input_report_abs(ts->input,
-							 ABS_MT_WIDTH_MAJOR,
-							 curr_tool_width);
-					input_report_abs(ts->input,
-							 ABS_MT_POSITION_X,
-							 cur_mt_pos[id]
-							 [FT_XPOS]);
-					input_report_abs(ts->input,
-							 ABS_MT_POSITION_Y,
-							 cur_mt_pos[id]
-							 [FT_YPOS]);
-
-					input_report_key(ts->input, BTN_TOUCH,
-							 1);
-
-					FT_MT_SYNC(ts->input);
-
-					ts->act_trk[id] = FT_TCH;
-					ts->prv_mt_pos[id][FT_XPOS] =
-					    cur_mt_pos[id][FT_XPOS];
-					ts->prv_mt_pos[id][FT_YPOS] =
-					    cur_mt_pos[id][FT_YPOS];
-				}
-			}
-		} else {
-			/* set temporary track array elements to voids */
-			for (id = 0; id < FT_NUM_MT_TCH_ID; id++) {
-				tmp_trk[id] = FT_IGNR_TCH;
-				snd_trk[id] = FT_IGNR_TCH;
-			}
-
-			/* get what is currently active */
-			for (i = 0, id = 0;
-			     id < FT_NUM_TRK_ID && i < FT_NUM_MT_TCH_ID; id++) {
-				if (cur_trk[id] == FT_TCH) {
-					/* only incr counter if track found */
-					tmp_trk[i] = id;
-					i++;
-				}
-			}
-
-			/* pack in still active previous touches */
-			for (id = 0, prv_tch = 0; id < FT_NUM_MT_TCH_ID; id++) {
-				if (tmp_trk[id] < FT_NUM_TRK_ID) {
-					if (ft5x06_inlist
-					    (ts->prv_mt_tch, tmp_trk[id], &loc,
-					     FT_NUM_MT_TCH_ID)) {
-						loc &= FT_NUM_MT_TCH_ID - 1;
-						snd_trk[loc] = tmp_trk[id];
-						prv_tch++;
-					}
-				}
-			}
-
-			/* pack in new touches */
-			for (id = 0; id < FT_NUM_MT_TCH_ID; id++) {
-				if (tmp_trk[id] < FT_NUM_TRK_ID) {
-					if (!ft5x06_inlist
-					    (snd_trk, tmp_trk[id], &loc,
-					     FT_NUM_MT_TCH_ID)) {
-						if (ft5x06_next_avail_inlist
-						    (snd_trk, &loc,
-						     FT_NUM_MT_TCH_ID)) {
-							loc &=
-							    FT_NUM_MT_TCH_ID -
-							    1;
-							snd_trk[loc] =
-							    tmp_trk[id];
-						}
-					}
-				}
-			}
-
-			/* sync motion event signals for each current touch */
-			for (id = 0; id < FT_NUM_MT_TCH_ID; id++) {
-				/* z will either be 0 (NOTOUCH) or some pressure (TOUCH) */
-				if (snd_trk[id] < FT_NUM_TRK_ID) {
-					input_report_abs(ts->input,
-							 ABS_MT_TOUCH_MAJOR,
-							 0xe);
-					input_report_abs(ts->input,
-							 ABS_MT_WIDTH_MAJOR,
-							 curr_tool_width);
-					input_report_abs(ts->input,
-							 ABS_MT_POSITION_X,
-							 cur_mt_pos[snd_trk[id]]
-							 [FT_XPOS]);
-					input_report_abs(ts->input,
-							 ABS_MT_POSITION_Y,
-							 cur_mt_pos[snd_trk[id]]
-							 [FT_YPOS]);
-
-					input_report_key(ts->input, BTN_TOUCH,
-							 1);
-
-					FT_MT_SYNC(ts->input);
-				} else if (ts->prv_mt_tch[id] < FT_NUM_TRK_ID) {
-					/* void out this touch */
-					input_report_abs(ts->input,
-							 ABS_MT_TOUCH_MAJOR,
-							 FT_NTCH);
-					input_report_abs(ts->input,
-							 ABS_MT_WIDTH_MAJOR,
-							 curr_tool_width);
-					input_report_abs(ts->input,
-							 ABS_MT_POSITION_X,
-							 ts->prv_mt_pos[ts->
-									prv_mt_tch
-									[id]]
-							 [FT_XPOS]);
-					input_report_abs(ts->input,
-							 ABS_MT_POSITION_Y,
-							 ts->prv_mt_pos[ts->
-									prv_mt_tch
-									[id]]
-							 [FT_YPOS]);
-
-					input_report_key(ts->input, BTN_TOUCH,
-							 0);
-
-					FT_MT_SYNC(ts->input);
-					/* ACCLPLAT-821 Do not report the duplicated release events */
-					ts->prv_mt_pos[ts->
-						       prv_mt_tch[id]][FT_XPOS]
-					    = 0;
-					ts->prv_mt_pos[ts->
-						       prv_mt_tch[id]][FT_YPOS]
-					    = 0;
-					ts->prv_mt_tch[id] = FT_IGNR_TCH;
-				}
-			}
-
-			/* save current posted tracks to previous track memory */
-			for (id = 0; id < FT_NUM_MT_TCH_ID; id++) {
-				if (snd_trk[id] < FT_NUM_TRK_ID) {
-					ts->prv_mt_tch[id] = snd_trk[id];
-					ts->prv_mt_pos[snd_trk[id]][FT_XPOS] =
-					    cur_mt_pos[snd_trk[id]][FT_XPOS];
-					ts->prv_mt_pos[snd_trk[id]][FT_YPOS] =
-					    cur_mt_pos[snd_trk[id]][FT_YPOS];
-				}
-			}
-
-			for (id = 0; id < FT_NUM_TRK_ID; id++) {
-				ts->act_trk[id] = FT_NTCH;
-			}
-
-			for (id = 0; id < FT_NUM_MT_TCH_ID; id++) {
-				if (snd_trk[id] < FT_NUM_TRK_ID) {
-					ts->act_trk[snd_trk[id]] = FT_TCH;
-				}
-			}
-		}
 	}
 
 	/* handle gestures */
@@ -609,16 +356,6 @@ void ft5x06_xy_worker(struct work_struct *work)
 	/* signal the view motion event */
 	input_sync(ts->input);
 
-	for (id = 0; id < FT_NUM_TRK_ID; id++) {
-		/* update platform data for the current MT information */
-		ts->act_trk[id] = cur_trk[id];
-	}
-
-exit_xy_worker:
-	if (ts->client->irq != 0) {
-		/* re-enable the interrupt after processing */
-		enable_irq(ts->client->irq);
-	}
 	return;
 }
 
@@ -664,10 +401,12 @@ static irqreturn_t ft5x06_irq(int irq, void *handle)
 	//printk("%s : got irq!\n",__FUNCTION__);
 
 	/* disable further interrupts until this interrupt is processed */
-	disable_irq_nosync(ts->client->irq);
+	// disable_irq_nosync(ts->client->irq);
 
 	/* schedule motion signal handling */
-	queue_work(ft5x06_ts_wq, &ts->work);
+	if (!work_pending(&ts->work)) {
+		queue_work(ft5x06_ts_wq, &ts->work);
+	}
 	return IRQ_HANDLED;
 }
 

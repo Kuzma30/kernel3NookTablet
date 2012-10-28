@@ -470,6 +470,10 @@
 #define FT_SMALL_TOOL_WIDTH     10
 #define FT_LARGE_TOOL_WIDTH     255
 #define FT_MAXZ                 255
+#define FT_EVENT_DOWN 0
+#define FT_EVENT_UP 1
+#define FT_EVENT_MOVE 2
+#define FT_EVENT_RESERVED 3
 
 
 struct i2c_client;
