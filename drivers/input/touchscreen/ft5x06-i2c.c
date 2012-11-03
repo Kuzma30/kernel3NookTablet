@@ -301,7 +301,7 @@ void ft5x06_xy_worker(struct work_struct *work)
 	        	x = x * ts->platform_data->maxx / ts->platform_data->rawx;
 	        }
 	        if (ts->platform_data->maxy != ts->platform_data->rawy) {
-	        	y = y * ts->platform_data->maxx / ts->platform_data->rawy;
+	        	y = y * ts->platform_data->maxy / ts->platform_data->rawy;
 	        }
 	        if (rev_x)
 	        {
