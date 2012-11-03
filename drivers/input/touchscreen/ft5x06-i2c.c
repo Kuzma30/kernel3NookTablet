@@ -73,10 +73,7 @@ struct ft5x06 {
 	//struct timer_list timer;
 	char phys[32];
 	struct ft5x06_platform_data *platform_data;
-	u8 num_prv_st_tch;
-	u16 act_trk[FT_NUM_TRK_ID];
-	u16 prv_st_tch[FT_NUM_ST_TCH_ID];
-	u16 prv_mt_tch[FT_NUM_MT_TCH_ID];
+	u8 prv_tch;
 	u16 prv_mt_pos[FT_NUM_TRK_ID][2];
 	u8 crosstalk_test_type;
 	u8 factory_mode_register;
@@ -296,10 +293,15 @@ void ft5x06_xy_worker(struct work_struct *work)
          	x = GET_COORDINATE(tch_data.points[id].x_l, tch_data.points[id].x_h);
 	        y = GET_COORDINATE(tch_data.points[id].y_l, tch_data.points[id].y_h);
 
-	        y = y * 600 / 768;
 	        if (tilt)
 	        {
 	            FLIP_XY(x, y);
+	        }
+	        if (ts->platform_data->maxx != ts->platform_data->rawx) {
+	        	x = x * ts->platform_data->maxx / ts->platform_data->rawx;
+	        }
+	        if (ts->platform_data->maxy != ts->platform_data->rawy) {
+	        	y = y * ts->platform_data->maxx / ts->platform_data->rawy;
 	        }
 	        if (rev_x)
 	        {
@@ -311,7 +313,7 @@ void ft5x06_xy_worker(struct work_struct *work)
 	        }
 	        /* Fix sluggish scrolling */
 	        if (x == ts->prv_mt_pos[_id][FT_XPOS] &&
-	        	y == ts->prv_mt_pos[_id][FT_YPOS] && cur_tch == 1) {
+	        	y == ts->prv_mt_pos[_id][FT_YPOS] && cur_tch == 1 && ts->prv_tch == cur_tch) {
 	        	continue;
 	        }
          	input_report_abs(ts->input, ABS_MT_TRACKING_ID, _id);
@@ -355,6 +357,8 @@ void ft5x06_xy_worker(struct work_struct *work)
 
 	/* signal the view motion event */
 	input_sync(ts->input);
+
+	ts->prv_tch = cur_tch;
 
 	return;
 }
@@ -1038,6 +1042,9 @@ error_reset:
 	printk(KERN_INFO "%s() - Step 8: Reset the CTPM\n", __FUNCTION__);
 
 	ft5x06_reset_panel_via_gpio(ts->platform_data->reset_gpio);
+	if (ts->platform_data->update_flags) {
+		ts->platform_data->update_flags(ts->platform_data, ts->client);
+	}
 
 	printk(KERN_INFO "%s() - FIRMWARE UPDATE COMPLETE - Update %s\n",
 	       __FUNCTION__, ((0 == retval) ? "Succeeded" : "Failed"));
@@ -2462,20 +2469,11 @@ static int ft5x06_initialize(struct i2c_client *client, struct ft5x06 *ts)
 	input_device->dev.parent = &client->dev;
 
 	/* init the touch structures */
-	ts->num_prv_st_tch = FT_NTCH;
+	ts->prv_tch = FT_NTCH;
 
 	for (id = 0; id < FT_NUM_TRK_ID; id++) {
-		ts->act_trk[id] = FT_NTCH;
 		ts->prv_mt_pos[id][FT_XPOS] = 0;
 		ts->prv_mt_pos[id][FT_YPOS] = 0;
-	}
-
-	for (id = 0; id < FT_NUM_MT_TCH_ID; id++) {
-		ts->prv_mt_tch[id] = FT_IGNR_TCH;
-	}
-
-	for (id = 0; id < FT_NUM_ST_TCH_ID; id++) {
-		ts->prv_st_tch[id] = FT_IGNR_TCH;
 	}
 
 	set_bit(EV_SYN, input_device->evbit);
@@ -2645,6 +2643,10 @@ static int __devinit ft5x06_probe(struct i2c_client *client,
 
 	register_early_suspend(&ts->early_suspend);
 #endif /* CONFIG_HAS_EARLYSUSPEND */
+
+	if (ts->platform_data->update_flags) {
+		ts->platform_data->update_flags(ts->platform_data, ts->client);
+	}
 
 	goto error_return;
 
