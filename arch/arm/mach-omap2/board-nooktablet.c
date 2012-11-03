@@ -271,10 +271,45 @@ static void ft5x06_platform_resume(void)
 {
 	printk("-----------------ft5x06 platform resume-------------\n");
 }
+
+void ft5x06_update_flags(struct ft5x06_platform_data *pd, struct i2c_client *client) {
+	int retval = 0;
+	u8 firmware_id;
+
+	retval =
+		i2c_smbus_read_i2c_block_data(client, FT5x06_WMREG_FW_VER,
+										1, &firmware_id);
+
+	if (retval < 0) {
+		printk(KERN_ERR
+		       "%s() - ERROR: Could not read from the Touch Panel registers.\n",
+		       __FUNCTION__);
+		return;
+	}
+
+	switch (firmware_id) {
+		case 0x13:
+		case 0x14:
+			printk(KERN_INFO "Stock firmware detected.\n");
+			pd->flags = FLIP_DATA_FLAG | REVERSE_Y_FLAG;
+			pd->rawx = 600;
+			break;
+		case 0x0b:
+			printk(KERN_INFO "5-touch firmware detected.\n");
+			pd->flags = FLIP_DATA_FLAG | REVERSE_X_FLAG;
+			pd->rawx = 768;
+			break;
+		default:
+			printk(KERN_ERR "Unknown firmware id. Please report it: %d.\n", firmware_id);
+			printk(KERN_INFO "Leaving flags untouched.\n");
+	}
+}
  
 static struct ft5x06_platform_data ft5x06_platform_data = {
 	.maxx = 600,
 	.maxy = 1024,
+	.rawx = 600,
+	.rawy = 1024,
 	.flags = FLIP_DATA_FLAG | REVERSE_X_FLAG,
 	.reset_gpio = OMAP_FT5x06_RESET_GPIO,
 	.use_st = FT_USE_ST,
@@ -284,6 +319,7 @@ static struct ft5x06_platform_data ft5x06_platform_data = {
 	.use_gestures = 1,
 	.platform_suspend = ft5x06_platform_suspend,
 	.platform_resume = ft5x06_platform_resume,
+	.update_flags = ft5x06_update_flags
 };
 
 #ifdef CONFIG_CHARGER_MAX8903

@@ -481,6 +481,8 @@ struct i2c_client;
 struct ft5x06_platform_data {
        u32 maxx;
        u32 maxy;
+       u32 rawx;
+       u32 rawy;
        u32 flags;
     u32 reset_gpio;
        u8 gen;
@@ -499,6 +501,7 @@ struct ft5x06_platform_data {
        s32 (*resume)(struct i2c_client *client);
        void (*platform_suspend)(void);
        void (*platform_resume)(void);
+       void (*update_flags)(struct ft5x06_platform_data* pd, struct i2c_client *client);
 };
 
 struct ft5x06_xydata_t {
