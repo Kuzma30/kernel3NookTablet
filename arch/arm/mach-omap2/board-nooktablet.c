@@ -698,6 +698,7 @@ static int wl12xx_set_power(struct device *dev, int slot, int on, int vdd)
 		gpio_set_value(GPIO_WIFI_PWEN, on);
 		udelay(800);
 		gpio_set_value(GPIO_WIFI_PMENA, on);
+		mdelay(70);
 	} else {
 		gpio_set_value(GPIO_WIFI_PMENA, on);
 		gpio_set_value(GPIO_WIFI_PWEN, on);
