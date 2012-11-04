@@ -129,7 +129,7 @@
 
 #define ACCLAIM_FB_RAM_SIZE             SZ_16M /* 1920×1080*4 * 2 */
 
-void acclaim_panel_init(void);
+void __init acclaim_panel_init(void);
 
 #ifdef CONFIG_BATTERY_MAX17042
 static void acclaim_max17042_dev_init(void)
@@ -698,6 +698,7 @@ static int wl12xx_set_power(struct device *dev, int slot, int on, int vdd)
 		gpio_set_value(GPIO_WIFI_PWEN, on);
 		udelay(800);
 		gpio_set_value(GPIO_WIFI_PMENA, on);
+		mdelay(70);
 	} else {
 		gpio_set_value(GPIO_WIFI_PMENA, on);
 		gpio_set_value(GPIO_WIFI_PWEN, on);
@@ -1550,7 +1551,7 @@ static struct omapfb_platform_data acclaim_fb_pdata = {
 };
  
 
-void acclaim_panel_init(void)
+void __init acclaim_panel_init(void)
 {
 	acclaim_panel_get_resource();
 	acclaim_init_display_led();
