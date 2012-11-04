@@ -1414,18 +1414,13 @@ acclaim_disp_backlight_setpower(struct omap_pwm_led_platform_data *pdata,
 		gpio_direction_output(OMAP_LCD_ENABLE_PIN,
 				      (acclaim_board_type() >= EVT2) ? 1 : 0);
 	} else {
-		msleep (350); // give the pwm led driver some time do dim
+		msleep (100); // give the pwm led driver some time do dim
 		gpio_direction_output(OMAP_LCD_ENABLE_PIN,
 				      (acclaim_board_type() >= EVT2) ? 0 : 1);
 	}
 
 	gpio_direction_output(OMAP_BOXER_CABC0, 0);
 	gpio_direction_output(OMAP_BOXER_CABC1, 0);
-
-	if (! on_off) {
-		msleep (100);
-		gpio_direction_output (OMAP_FT5x06_POWER_GPIO, 0);
-	}
 
 	pr_debug("%s: on_off:%d\n", __func__, on_off);
 }

@@ -2704,7 +2704,6 @@ static int ft5x06_suspend(struct i2c_client *client, pm_message_t message)
 	       __FUNCTION__);
 #endif
 	/* Wait for woker finish, even if worker enables irq, the irq still is disabled because of the above call */
-	msleep (200);
 	flush_workqueue(ft5x06_ts_wq);
 #if FT5x06_DEBUG_VERBOSE
 	printk(KERN_INFO "%s() - Driver is suspending: flash workqueue.\n",
