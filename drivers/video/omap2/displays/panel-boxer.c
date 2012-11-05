@@ -98,10 +98,9 @@ static void boxer_panel_spi_init (void)
 	printk	("%s\n", __FUNCTION__);
 
 	gpio_direction_output (OMAP_FT5x06_POWER_GPIO, 1);
-
 	msleep(LCD_RST_DELAY);
-/*
-	spi_send(boxer_spi_device, 0x00, 0xad);
+	spi_send(boxer_spi_device, 0x00, 0x21);
+	spi_send(boxer_spi_device, 0x00, 0xa5);
 	spi_send(boxer_spi_device, 0x01, 0x30);
 	spi_send(boxer_spi_device, 0x02, 0x40);
 	spi_send(boxer_spi_device, 0x0e, 0x5f);
@@ -109,17 +108,8 @@ static void boxer_panel_spi_init (void)
 	spi_send(boxer_spi_device, 0x0d, 0x00);
 	spi_send(boxer_spi_device, 0x02, 0x43);
 	spi_send(boxer_spi_device, 0x0a, 0x28);
-	spi_send(boxer_spi_device, 0x10, 0x41);*/
-	spi_send(boxer_spi_device, 0x00, 0x00);
-        spi_send(boxer_spi_device, 0x00, 0xad);
-        spi_send(boxer_spi_device, 0x01, 0x30);
-        spi_send(boxer_spi_device, 0x02, 0x40);
-        spi_send(boxer_spi_device, 0x0e, 0x5f);
-        spi_send(boxer_spi_device, 0x0f, 0xa4);
-        spi_send(boxer_spi_device, 0x0d, 0x00);
-        spi_send(boxer_spi_device, 0x02, 0x43);
-        spi_send(boxer_spi_device, 0x0a, 0x28);
-        spi_send(boxer_spi_device, 0x10, 0x41);
+	spi_send(boxer_spi_device, 0x10, 0x41);
+	spi_send(boxer_spi_device, 0x00, 0xad);
 }
 
 static void boxer_get_resolution(struct omap_dss_device *dssdev,
