@@ -162,6 +162,9 @@ static void boxer_panel_stop(struct omap_dss_device *dssdev)
 	if (dssdev->state != OMAP_DSS_DISPLAY_ACTIVE)
 		return;
 
+	msleep(350);
+	gpio_direction_output (OMAP_FT5x06_POWER_GPIO, 0);
+
 	omapdss_dpi_display_disable(dssdev);
 }
 

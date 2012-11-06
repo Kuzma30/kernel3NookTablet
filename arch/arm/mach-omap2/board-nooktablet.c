@@ -667,8 +667,7 @@ static struct omap2_hsmmc_info mmc[] = {
 		.name           = "wl1271",
 		.mmc		= 3,
 		.caps		= MMC_CAP_4_BIT_DATA
-		| MMC_CAP_POWER_OFF_CARD
-		| MMC_PM_KEEP_POWER,
+		| MMC_CAP_POWER_OFF_CARD,
 		.gpio_cd	= -EINVAL,
  		.gpio_wp        = -EINVAL,
 		.ocr_mask	= MMC_VDD_165_195,
@@ -1414,18 +1413,13 @@ acclaim_disp_backlight_setpower(struct omap_pwm_led_platform_data *pdata,
 		gpio_direction_output(OMAP_LCD_ENABLE_PIN,
 				      (acclaim_board_type() >= EVT2) ? 1 : 0);
 	} else {
-		msleep (350); // give the pwm led driver some time do dim
+		msleep (100); // give the pwm led driver some time do dim
 		gpio_direction_output(OMAP_LCD_ENABLE_PIN,
 				      (acclaim_board_type() >= EVT2) ? 0 : 1);
 	}
 
 	gpio_direction_output(OMAP_BOXER_CABC0, 0);
 	gpio_direction_output(OMAP_BOXER_CABC1, 0);
-
-	if (! on_off) {
-		msleep (100);
-		gpio_direction_output (OMAP_FT5x06_POWER_GPIO, 0);
-	}
 
 	pr_debug("%s: on_off:%d\n", __func__, on_off);
 }
