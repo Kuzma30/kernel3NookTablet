@@ -58,10 +58,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <linux/pm_runtime.h>
 
 #if defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK)
-#include <linux/opp.h>
-#if defined(CONFIG_THERMAL_FRAMEWORK)
-#include <linux/thermal_framework.h>
-#endif
+#include "sgxfreq.h"
 #endif
 
 #if defined(SUPPORT_DRI_DRM_PLUGIN)
@@ -85,8 +82,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #else
 #define SGX_PARENT_CLOCK "core_ck"
 #endif
-
-extern uint sgx_apm_timeout;
 
 #if defined(LDM_PLATFORM) && !defined(PVR_DRI_DRM_NOT_PCI)
 extern struct platform_device *gpsPVRLDMDev;
@@ -167,14 +162,14 @@ IMG_VOID SysGetSGXTimingInformation(SGX_TIMING_INFORMATION *psTimingInfo)
 #endif
 #if defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK)
 	/*
-	 * Always report highest possible core clock speed for the purpose
-	 * of initializing SGX timers. This allows us the freedom to scale
-	 * core clock asynchronously without shortening timer period in
-	 * wall-clock time domain (potentially more problematic than
-	 * lengthening).
-	*/
-	psTimingInfo->ui32CoreClockSpeed =
-		gpsSysSpecificData->pui32SGXFreqList[gpsSysSpecificData->ui32SGXFreqListSize - 2];
+	 * The core SGX driver and ukernel code expects SGX frequency
+	 * changes to occur only just prior to SGX initialization. We
+	 * don't wish to constrain the DVFS implementation as such. So
+	 * we let these components believe that frequency setting is
+	 * always at maximum. This produces safe values for derived
+	 * parameters such as APM and HWR timeouts.
+	 */
+	psTimingInfo->ui32CoreClockSpeed = (IMG_UINT32)sgxfreq_get_freq_max();
 #else /* defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK) */
 	psTimingInfo->ui32CoreClockSpeed = SYS_SGX_CLOCK_SPEED;
 #endif
@@ -185,45 +180,8 @@ IMG_VOID SysGetSGXTimingInformation(SGX_TIMING_INFORMATION *psTimingInfo)
 #else
 	psTimingInfo->bEnableActivePM = IMG_FALSE;
 #endif /* SUPPORT_ACTIVE_POWER_MANAGEMENT */
-	psTimingInfo->ui32ActivePowManLatencyms = sgx_apm_timeout;
+	psTimingInfo->ui32ActivePowManLatencyms = SYS_SGX_ACTIVE_POWER_LATENCY_MS;
 }
-
-#if defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK)
-IMG_VOID RequestSGXFreq(SYS_DATA *psSysData, IMG_UINT32 freq_index)
-{
-	SYS_SPECIFIC_DATA *psSysSpecData = (SYS_SPECIFIC_DATA *) psSysData->pvSysSpecificData;
-	PVRSRV_SGXDEV_INFO *psDevInfo = (PVRSRV_SGXDEV_INFO *)psSysSpecData->psSGXDevNode->pvDevice;
-	struct gpu_platform_data *pdata;
-	int res;
-
-	pdata = (struct gpu_platform_data *)gpsPVRLDMDev->dev.platform_data;
-
-	if (psSysSpecData->ui32SGXFreqListIndex != freq_index)
-	{
-		PVR_ASSERT(pdata->device_scale != IMG_NULL);
-		res = pdata->device_scale(&gpsPVRLDMDev->dev,
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,4,0))
-					  &gpsPVRLDMDev->dev,
-#endif
-					  psSysSpecData->pui32SGXFreqList[freq_index]);
-
-		if (res == 0)
-			psSysSpecData->ui32SGXFreqListIndex = freq_index;
-		else if (res == -EBUSY)
-		{
-			PVR_DPF((PVR_DBG_WARNING, "RequestSGXFreq: Unable to scale SGX frequency (EBUSY)"));
-			psSysSpecData->ui32SGXFreqListIndex = psSysSpecData->ui32SGXFreqListSize - 1;
-		}
-		else if (res < 0)
-		{
-			PVR_DPF((PVR_DBG_ERROR, "RequestSGXFreq: Unable to scale SGX frequency (%d)", res));
-			psSysSpecData->ui32SGXFreqListIndex = psSysSpecData->ui32SGXFreqListSize - 1;
-		}
-	}
-	psDevInfo->ui32CoreClockSpeed =
-		psSysSpecData->pui32SGXFreqList[psSysSpecData->ui32SGXFreqListIndex];
-}
-#endif /* SYS_OMAP4_HAS_DVFS_FRAMEWORK */
 
 /*!
 ******************************************************************************
@@ -270,6 +228,9 @@ PVRSRV_ERROR EnableSGXClocks(SYS_DATA *psSysData)
 			return PVRSRV_ERROR_UNABLE_TO_ENABLE_CLOCK;
 		}
 	}
+#if defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK)
+	sgxfreq_notif_sgx_clk_on();
+#endif /* defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK) */
 #endif /* defined(LDM_PLATFORM) && !defined(PVR_DRI_DRM_NOT_PCI) */
 
 	SysEnableSGXInterrupts(psSysData);
@@ -324,6 +285,9 @@ IMG_VOID DisableSGXClocks(SYS_DATA *psSysData)
 		}
 #endif
 	}
+#if defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK)
+	sgxfreq_notif_sgx_clk_off();
+#endif /* defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK) */
 #endif /* defined(LDM_PLATFORM) && !defined(PVR_DRI_DRM_NOT_PCI) */
 
 	/* Indicate that the SGX clocks are disabled */
@@ -694,255 +658,24 @@ PVRSRV_ERROR SysPMRuntimeUnregister(SYS_SPECIFIC_DATA *psSysSpecificData)
 	return PVRSRV_OK;
 }
 
-#if defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK)
-static enum hrtimer_restart sgx_dvfs_idle_timer_func(struct hrtimer *timer)
-{
-	queue_work(system_unbound_wq, &gpsSysSpecificData->sgx_dvfs_idle_work);
-	return HRTIMER_NORESTART;
-}
-
-static void sgx_dvfs_idle_work_func(struct work_struct *work)
-{
-	mutex_lock(&gpsSysSpecificData->sgx_dvfs_lock);
-
-	RequestSGXFreq(gpsSysData, 0);
-
-	mutex_unlock(&gpsSysSpecificData->sgx_dvfs_lock);
-}
-
-static enum hrtimer_restart sgx_dvfs_active_timer_func(struct hrtimer *timer)
-{
-	queue_work(system_unbound_wq, &gpsSysSpecificData->sgx_dvfs_active_work);
-	return HRTIMER_NORESTART;
-}
-
-static void sgx_dvfs_active_work_func(struct work_struct *work)
-{
-	mutex_lock(&gpsSysSpecificData->sgx_dvfs_lock);
-
-	/* Reset active DVFS counter if min(active, limit) is changing. */
-	if(gpsSysSpecificData->ui32SGXFreqListIndexActive <
-		gpsSysSpecificData->ui32SGXFreqListIndexLimit)
-	{
-		gpsSysSpecificData->counter = 0;
-	}
-
-	gpsSysSpecificData->ui32SGXFreqListIndexActive =
-		gpsSysSpecificData->ui32SGXFreqListSize - 2;
-
-	/* Increase frequency now only if active. */
-	if(!gpsSysSpecificData->sgx_is_idle)
-	{
-		RequestSGXFreq(gpsSysData,
-			gpsSysSpecificData->ui32SGXFreqListIndexLimit);
-	}
-
-	mutex_unlock(&gpsSysSpecificData->sgx_dvfs_lock);
-}
-
-#if defined(CONFIG_THERMAL_FRAMEWORK)
-static int sgx_tmfw_cool_dev(struct thermal_dev *dev, int cooling_level)
-{
-	mutex_lock(&gpsSysSpecificData->sgx_dvfs_lock);
-
-	if((cooling_level > gpsSysSpecificData->cooling_level) &&
-		(gpsSysSpecificData->ui32SGXFreqListIndexLimit > 0))
-	{
-		gpsSysSpecificData->ui32SGXFreqListIndexLimit--;
-
-		/* Reduce frequency if needed */
-		if(gpsSysSpecificData->ui32SGXFreqListIndexLimit <
-			gpsSysSpecificData->ui32SGXFreqListIndex)
-		{
-			RequestSGXFreq(gpsSysData,
-				gpsSysSpecificData->ui32SGXFreqListIndexLimit);
-		}
-
-		/* Reset active DVFS counter if min(active, limit) changed. */
-		if(gpsSysSpecificData->ui32SGXFreqListIndexActive >
-			gpsSysSpecificData->ui32SGXFreqListIndexLimit)
-		{
-			gpsSysSpecificData->counter = 0;
-		}
-	}
-	else if((cooling_level < gpsSysSpecificData->cooling_level) &&
-		(gpsSysSpecificData->ui32SGXFreqListIndexLimit <
-		gpsSysSpecificData->ui32SGXFreqListSize - 2))
-	{
-		gpsSysSpecificData->ui32SGXFreqListIndexLimit++;
-
-		/* Increase frequency now only if active. */
-		if(!gpsSysSpecificData->sgx_is_idle)
-		{
-			RequestSGXFreq(gpsSysData,
-				min(gpsSysSpecificData->ui32SGXFreqListIndexActive,
-				gpsSysSpecificData->ui32SGXFreqListIndexLimit));
-		}
-		/* Reset active DVFS counter if min(active, limit) changed. */
-		if(gpsSysSpecificData->ui32SGXFreqListIndexActive >=
-			gpsSysSpecificData->ui32SGXFreqListIndexLimit)
-		{
-			gpsSysSpecificData->counter = 0;
-		}
-	}
-	gpsSysSpecificData->cooling_level = cooling_level;
-
-	mutex_unlock(&gpsSysSpecificData->sgx_dvfs_lock);
-
-	PVR_DPF((PVR_DBG_THERMAL, "cooling level = %d, limit freq = %d ",
-		cooling_level, gpsSysSpecificData->pui32SGXFreqList[gpsSysSpecificData->
-		ui32SGXFreqListIndexLimit]));
-
-	return 0;
-}
-
-static struct thermal_dev_ops sgx_tmfw_dev_ops = {
-	.cool_device = sgx_tmfw_cool_dev,
-};
-
-static struct thermal_dev sgx_tmfw_dev = {
-	.name = "gpu_cooling",
-	.domain_name = "gpu",
-	.dev_ops = &sgx_tmfw_dev_ops,
-};
-#endif /* CONFIG_THERMAL_FRAMEWORK */
-#endif /* SYS_OMAP4_HAS_DVFS_FRAMEWORK */
-
 PVRSRV_ERROR SysDvfsInitialize(SYS_SPECIFIC_DATA *psSysSpecificData)
 {
-#if !defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK)
 	PVR_UNREFERENCED_PARAMETER(psSysSpecificData);
-#else /* !defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK) */
-	IMG_UINT32 i, *freq_list;
-	IMG_INT32 opp_count;
-	unsigned long freq;
-	struct opp *opp;
-	struct gpu_platform_data *pdata;
-
-	/*
-	 * We query and store the list of SGX frequencies just this once under the
-	 * assumption that they are unchanging, e.g. no disabling of high frequency
-	 * option for thermal management. This is currently valid for 4430 and 4460.
-	 */
-	pdata = (struct gpu_platform_data *)gpsPVRLDMDev->dev.platform_data;
-	rcu_read_lock();
-	opp_count = pdata->opp_get_opp_count(&gpsPVRLDMDev->dev);
-	if (opp_count < 1)
-	{
-		rcu_read_unlock();
-		PVR_DPF((PVR_DBG_ERROR, "SysDvfsInitialize: Could not retrieve opp count"));
+#if defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK)
+	if (sgxfreq_init(&gpsPVRLDMDev->dev))
 		return PVRSRV_ERROR_NOT_SUPPORTED;
-	}
-
-	/*
-	 * Allocate the frequency list with a slot for each available frequency plus
-	 * one additional slot to hold a designated frequency value to assume when in
-	 * an unknown frequency state.
-	 */
-	freq_list = kmalloc((opp_count + 1) * sizeof(IMG_UINT32), GFP_ATOMIC);
-	if (!freq_list)
-	{
-		rcu_read_unlock();
-		PVR_DPF((PVR_DBG_ERROR, "SysDvfsInitialize: Could not allocate frequency list"));
-		return PVRSRV_ERROR_OUT_OF_MEMORY;
-	}
-
-	/*
-	 * Fill in frequency list from lowest to highest then finally the "unknown"
-	 * frequency value. We use the highest available frequency as our assumed value
-	 * when in an unknown state, because it is safer for APM and hardware recovery
-	 * timers to be longer than intended rather than shorter.
-	 */
-	freq = 0;
-	for (i = 0; i < opp_count; i++)
-	{
-		opp = pdata->opp_find_freq_ceil(&gpsPVRLDMDev->dev, &freq);
-		if (IS_ERR_OR_NULL(opp))
-		{
-			rcu_read_unlock();
-			PVR_DPF((PVR_DBG_ERROR, "SysDvfsInitialize: Could not retrieve opp level %d", i));
-			kfree(freq_list);
-			return PVRSRV_ERROR_NOT_SUPPORTED;
-		}
-		freq_list[i] = (IMG_UINT32)freq;
-		freq++;
-	}
-	rcu_read_unlock();
-	freq_list[opp_count] = freq_list[opp_count - 1];
-
-	psSysSpecificData->ui32SGXFreqListSize = opp_count + 1;
-	psSysSpecificData->pui32SGXFreqList = freq_list;
-
-	/* Start in unknown state - no frequency request to DVFS yet made */
-	psSysSpecificData->ui32SGXFreqListIndex = opp_count;
-	/* Initialize target active frequency and limit frequency to max */
-	psSysSpecificData->ui32SGXFreqListIndexActive = opp_count - 1;
-	psSysSpecificData->ui32SGXFreqListIndexLimit = opp_count - 1;
-
-	hrtimer_init(&psSysSpecificData->sgx_dvfs_idle_timer, HRTIMER_BASE_MONOTONIC,
-			HRTIMER_MODE_REL);
-	psSysSpecificData->sgx_dvfs_idle_timer.function = sgx_dvfs_idle_timer_func;
-	INIT_WORK(&psSysSpecificData->sgx_dvfs_idle_work, sgx_dvfs_idle_work_func);
-
-	hrtimer_init(&psSysSpecificData->sgx_dvfs_active_timer, HRTIMER_BASE_MONOTONIC,
-			HRTIMER_MODE_REL);
-	psSysSpecificData->sgx_dvfs_active_timer.function = sgx_dvfs_active_timer_func;
-	INIT_WORK(&psSysSpecificData->sgx_dvfs_active_work, sgx_dvfs_active_work_func);
-
-	mutex_init(&psSysSpecificData->sgx_dvfs_lock);
-
-	psSysSpecificData->sgx_idle_stamp = ktime_set(0, 0);
-	psSysSpecificData->sgx_active_stamp = ktime_set(0, 0);
-	psSysSpecificData->sgx_work_stamp = ktime_set(0, 0);
-	psSysSpecificData->dss_return_stamp = ktime_set(0, 0);
-	psSysSpecificData->sgx_is_idle = true;
-	psSysSpecificData->dss_kick_is_pending = false;
-	psSysSpecificData->sgx_active_kickcmd = SGXMKIF_CMD_MAX;
-	psSysSpecificData->counter = 0;
-
-#if defined(CONFIG_THERMAL_FRAMEWORK)
-	if(thermal_cooling_dev_register(&sgx_tmfw_dev))
-	{
-		PVR_DPF((PVR_DBG_ERROR, "SysDvfsInitialize: Could not register with thermal framework"));
-		kfree(psSysSpecificData->pui32SGXFreqList);
-		psSysSpecificData->pui32SGXFreqList = 0;
-		psSysSpecificData->ui32SGXFreqListSize = 0;
-		psSysSpecificData->ui32SGXFreqListIndexActive = 0;
-		psSysSpecificData->ui32SGXFreqListIndexLimit = 0;
-		return PVRSRV_ERROR_NOT_SUPPORTED;
-	}
-#endif /* CONFIG_THERMAL_FRAMEWORK */
-#endif /* !defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK) */
+#endif /* defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK) */
 
 	return PVRSRV_OK;
 }
 
 PVRSRV_ERROR SysDvfsDeinitialize(SYS_SPECIFIC_DATA *psSysSpecificData)
 {
-#if !defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK)
 	PVR_UNREFERENCED_PARAMETER(psSysSpecificData);
-#else /* !defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK) */
-#if defined(CONFIG_THERMAL_FRAMEWORK)
-	thermal_cooling_dev_unregister(&sgx_tmfw_dev);
-#endif /* CONFIG_THERMAL_FRAMEWORK */
-
-	hrtimer_cancel(&gpsSysSpecificData->sgx_dvfs_idle_timer);
-	cancel_work_sync(&gpsSysSpecificData->sgx_dvfs_idle_work);
-	hrtimer_cancel(&gpsSysSpecificData->sgx_dvfs_active_timer);
-	cancel_work_sync(&gpsSysSpecificData->sgx_dvfs_active_work);
-
-	mutex_lock(&gpsSysSpecificData->sgx_dvfs_lock);
-
-	RequestSGXFreq(gpsSysData, 0);
-
-	mutex_unlock(&gpsSysSpecificData->sgx_dvfs_lock);
-
-	kfree(psSysSpecificData->pui32SGXFreqList);
-	psSysSpecificData->pui32SGXFreqList = 0;
-	psSysSpecificData->ui32SGXFreqListSize = 0;
-	psSysSpecificData->ui32SGXFreqListIndexActive = 0;
-	psSysSpecificData->ui32SGXFreqListIndexLimit = 0;
-#endif /* !defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK) */
+#if defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK)
+	if (sgxfreq_deinit())
+		return PVRSRV_ERROR_NOT_SUPPORTED;
+#endif /* defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK) */
 
 	return PVRSRV_OK;
 }
@@ -993,4 +726,20 @@ int pvr_access_process_vm(struct task_struct *tsk, unsigned long addr, void *buf
 	if(!pdata || !pdata->access_process_vm)
 		return -1;
 	return pdata->access_process_vm(tsk, addr, buf, len, write);
+}
+
+IMG_VOID SysSGXIdleEntered(IMG_VOID)
+{
+#if defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK)
+	sgxfreq_notif_sgx_idle();
+#endif
+}
+
+IMG_VOID SysSGXCommandPending(IMG_BOOL bSGXIdle)
+{
+#if defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK)
+		sgxfreq_notif_sgx_active();
+#else
+	PVR_UNREFERENCED_PARAMETER(bSGXIdle);
+#endif
 }

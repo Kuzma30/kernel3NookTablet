@@ -154,11 +154,7 @@ static PVRSRV_ERROR SGXUpdateTimingInfo(PVRSRV_DEVICE_NODE	*psDeviceNode)
 #endif /* SUPPORT_HW_RECOVERY*/
 
 	/* Copy the SGX clock speed for use in the kernel */
-#if !defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK)
 	psDevInfo->ui32CoreClockSpeed = psSGXTimingInfo->ui32CoreClockSpeed;
-#else /* !defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK) */
-	/* System layer DVFS will update clock speed on DevInfo each time it changes. */
-#endif /* !defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK) */
 	psDevInfo->ui32uKernelTimerClock = psSGXTimingInfo->ui32CoreClockSpeed / psSGXTimingInfo->ui32uKernelFreq;
 
 	/* FIXME: no need to duplicate - remove it from psDevInfo */

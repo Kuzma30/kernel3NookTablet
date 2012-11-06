@@ -609,7 +609,6 @@ SGXDoKickBW(IMG_UINT32 ui32BridgeID,
 
 PVRSRV_BRIDGE_SGX_DOKICK_RETURN_RESULT:
 
-//#if (!defined(_UITRON_) && !defined(UNDER_VISTA)) || defined (SUPPORT_SID_INTERFACE)
 	if(phKernelSyncInfoHandles)
 	{
 		OSFreeMem(PVRSRV_OS_PAGEABLE_HEAP,
@@ -3751,7 +3750,7 @@ SGXPDumpHWPerfCBBW(IMG_UINT32						ui32BridgeID,
 	PVR_UNREFERENCED_PARAMETER(psRetOUT);
 	PVR_UNREFERENCED_PARAMETER(psPerProc);
 	return 0;
-#endif /* defined(LINUX) || defined(UNDER_XP) */
+#endif
 #else
 	PVR_UNREFERENCED_PARAMETER(ui32BridgeID);
 	PVR_UNREFERENCED_PARAMETER(psPDumpHWPerfCBIN);

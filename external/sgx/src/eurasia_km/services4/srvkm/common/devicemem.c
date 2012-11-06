@@ -535,14 +535,13 @@ static PVRSRV_ERROR AllocDeviceMem(IMG_HANDLE		hDevCookie,
 
 	psMemBlock = &(psMemInfo->sMemBlk);
 
-	/* ION, SPARSE and DYNAMIC re-mapping
-	 * all require PAGABLE FLAG
+	/* ION and DYNAMIC re-mapping
+	 * require the PAGEABLE FLAG set
 	 */
 	if (ui32Flags & (PVRSRV_MEM_ION |
-			PVRSRV_MEM_SPARSE |
 			PVRSRV_HAP_NO_GPU_VIRTUAL_ON_ALLOC))
 	{
-		psMemInfo->ui32Flags = ui32Flags | PVRSRV_HAP_GPU_PAGEABLE;
+		ui32Flags |= PVRSRV_HAP_GPU_PAGEABLE;
 	}
 
 	/* BM supplied Device Virtual Address with physical backing RAM */

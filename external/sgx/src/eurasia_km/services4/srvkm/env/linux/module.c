@@ -84,7 +84,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <linux/module.h>
 #include <linux/fs.h>
 #include <linux/proc_fs.h>
-#include <linux/moduleparam.h>
 
 #if defined(SUPPORT_DRI_DRM)
 #include <drm/drmP.h>
@@ -155,36 +154,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 MODULE_SUPPORTED_DEVICE(DEVNAME);
 
 #if defined(PVRSRV_NEED_PVR_DPF)
+#include <linux/moduleparam.h>
 extern IMG_UINT32 gPVRDebugLevel;
 module_param(gPVRDebugLevel, uint, 0644);
 MODULE_PARM_DESC(gPVRDebugLevel, "Sets the level of debug output (default 0x7)");
 #endif /* defined(PVRSRV_NEED_PVR_DPF) */
-
-uint sgx_apm_mode = SYS_SGX_ACTIVE_POWER_MODE;
-uint sgx_apm_timeout = SYS_SGX_ACTIVE_POWER_LATENCY_MS;
-#if defined(SUPPORT_ACTIVE_POWER_MANAGEMENT)
-module_param(sgx_apm_mode, uint, 0644);
-#if defined(SGX_DYNAMIC_TIMING_INFO)
-module_param(sgx_apm_timeout, uint, 0644);
-#endif
-#endif
-
-#if defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK)
-uint sgx_dvfs_idle_mode = SYS_DVFS_IDLE_MODE;
-module_param(sgx_dvfs_idle_mode, uint, 0644);
-uint sgx_dvfs_idle_timeout = SYS_DVFS_IDLE_TIMEOUT;
-module_param(sgx_dvfs_idle_timeout, uint, 0644);
-uint sgx_dvfs_active_mode = SYS_DVFS_ACTIVE_MODE;
-module_param(sgx_dvfs_active_mode, uint, 0644);
-uint sgx_dvfs_active_dc_length = SYS_DVFS_ACTIVE_DC_LENGTH;
-module_param(sgx_dvfs_active_dc_length, uint, 0644);
-uint sgx_dvfs_active_dc_dec_wait = SYS_DVFS_ACTIVE_DC_DEC_WAIT;
-module_param(sgx_dvfs_active_dc_dec_wait, uint, 0644);
-uint sgx_dvfs_active_dc_dec_reps = SYS_DVFS_ACTIVE_DC_DEC_REPS;
-module_param(sgx_dvfs_active_dc_dec_reps, uint, 0644);
-uint sgx_dvfs_active_dc_inc_wait = SYS_DVFS_ACTIVE_DC_INC_WAIT;
-module_param(sgx_dvfs_active_dc_inc_wait, uint, 0644);
-#endif /* defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK) */
 
 #if defined(CONFIG_ION_OMAP)
 #include <linux/ion.h>

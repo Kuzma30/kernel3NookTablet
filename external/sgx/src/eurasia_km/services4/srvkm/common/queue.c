@@ -1214,6 +1214,9 @@ IMG_VOID PVRSRVFreeCommandCompletePacketKM(IMG_HANDLE	hCmdCookie,
 
 #endif /* (SUPPORT_CUSTOM_SWAP_OPERATIONS) */
 
+#if defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK)
+extern void sgxfreq_notif_sgx_frame_done(void);
+#endif /* (SYS_OMAP4_HAS_DVFS_FRAMEWORK) */
 
 /*!
 ******************************************************************************
@@ -1236,7 +1239,9 @@ IMG_VOID PVRSRVCommandCompleteKM(IMG_HANDLE	hCmdCookie,
 	COMMAND_COMPLETE_DATA	*psCmdCompleteData = (COMMAND_COMPLETE_DATA *)hCmdCookie;
 	SYS_DATA				*psSysData;
 
-	SysDSSReturnFrame();
+#if defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK)
+	sgxfreq_notif_sgx_frame_done();
+#endif /* (SYS_OMAP4_HAS_DVFS_FRAMEWORK) */
 
 	SysAcquireData(&psSysData);
 

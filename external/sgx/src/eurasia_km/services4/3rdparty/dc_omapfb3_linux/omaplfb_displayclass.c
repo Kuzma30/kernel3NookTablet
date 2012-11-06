@@ -1304,7 +1304,7 @@ static OMAPLFB_ERROR OMAPLFBInitFBDev(OMAPLFB_DEVINFO *psDevInfo)
 			   __FUNCTION__, uiFBDevID, n);
 
 		/* INTEGRATION_POINT: limit to MAX 3 FBs to save TILER container space */
-		if (n > 3)
+		if (n != 3)
 			n = 3;
 
 		sAllocData.w *= n;

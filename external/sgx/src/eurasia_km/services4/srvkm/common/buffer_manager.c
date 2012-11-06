@@ -172,14 +172,20 @@ AllocMemory (BM_CONTEXT			*pBMContext,
 			}
 
 			/* Allocate physical memory */
-			bSuccess = BM_ImportMemory(psBMHeap,
+			if (!BM_ImportMemory(psBMHeap,
 					uRequestSize,
 					&puiActualSize,
 					&pMapping,
 					uFlags,
 					pvPrivData,
 					ui32PrivDataLength,
-					(IMG_UINTPTR_T *)&(pBuf->DevVAddr.uiAddr));
+					(IMG_UINTPTR_T *)&(pBuf->DevVAddr.uiAddr)))
+			{
+				PVR_DPF((PVR_DBG_ERROR,
+						"BM_ImportMemory: Failed to allocate device memory"));
+				return IMG_FALSE;
+			}
+			pBuf->hOSMemHandle = pMapping->hOSMemHandle;
 
 			/* We allocate VM space for sparse area */
 			if(uFlags & PVRSRV_MEM_SPARSE)
@@ -240,7 +246,8 @@ AllocMemory (BM_CONTEXT			*pBMContext,
 						  ui32PrivDataLength,
 						  (IMG_UINTPTR_T *)&(pBuf->DevVAddr.uiAddr)))
 			{
-				PVR_DPF((PVR_DBG_ERROR, "AllocMemory: RA_Alloc(0x%x) FAILED", uSize));
+				PVR_DPF((PVR_DBG_ERROR, "AllocMemory: RA_Alloc(0x%x) hOSMemHandle %p, flags 0x%08x FAILED",
+						uSize, pMapping->hOSMemHandle, uFlags));
 				return IMG_FALSE;
 			}
 		}
@@ -770,23 +777,11 @@ FreeBuf (BM_BUF *pBuf, IMG_UINT32 ui32Flags, IMG_BOOL bFromAllocator)
 				OSReleaseSubMemHandle(pBuf->hOSMemHandle, ui32Flags);
 			}
 		}
-		if (ui32Flags & PVRSRV_HAP_GPU_PAGEABLE)
-		{
-			/* see comment below */
-			if ((pBuf->ui32ExportCount == 0) && (pBuf->ui32RefCount == 0))
-			{
-				PVR_ASSERT(pBuf->ui32ExportCount == 0);
-				BM_FreeMemory(pMapping->pBMHeap, 0, pMapping);
-			}
-		}
-		else if(ui32Flags & PVRSRV_MEM_RAM_BACKED_ALLOCATION)
+
+		if(ui32Flags & PVRSRV_MEM_RAM_BACKED_ALLOCATION)
 		{
 			/* Submemhandle is required by exported mappings */
 
-			/* note: if below if() condition changes, we probably also
-			 * need to change the one above in PVRSRV_HAP_GPU_PAGEABLE
-			 * case..  see comments in unstripped driver
-			 */
 			if ((pBuf->ui32ExportCount == 0) && (pBuf->ui32RefCount == 0))
 			{
 				/*
@@ -794,17 +789,27 @@ FreeBuf (BM_BUF *pBuf, IMG_UINT32 ui32Flags, IMG_BOOL bFromAllocator)
 					Note: currently no need to distinguish between hm_env and hm_contiguous
 				*/
 				PVR_ASSERT(pBuf->ui32ExportCount == 0);
-				if (pBuf->pMapping->ui32Flags & PVRSRV_MEM_SPARSE)
+				if (pBuf->pMapping->ui32Flags & (PVRSRV_MEM_SPARSE | PVRSRV_HAP_GPU_PAGEABLE))
 				{
-					IMG_UINT32 ui32FreeSize = sizeof(IMG_BOOL) * pBuf->pMapping->ui32NumVirtChunks;
-					IMG_PVOID pvFreePtr = pBuf->pMapping->pabMapChunk;
-					
-					/* With sparse allocations we don't go through the sub-alloc RA */
+					IMG_UINT32 ui32FreeSize = 0;
+					IMG_PVOID pvFreePtr = IMG_NULL;
+
+					if(pBuf->pMapping->ui32Flags & PVRSRV_MEM_SPARSE)
+					{
+						ui32FreeSize = sizeof(IMG_BOOL) * pBuf->pMapping->ui32NumVirtChunks;
+						pvFreePtr = pBuf->pMapping->pabMapChunk;
+					}
+
+					/* With sparse and page-able allocations we don't go through the sub-alloc RA */
 					BM_FreeMemory(pBuf->pMapping->pBMHeap, pBuf->DevVAddr.uiAddr, pBuf->pMapping);
-					OSFreeMem(PVRSRV_OS_PAGEABLE_HEAP,
+
+					if(pvFreePtr)
+					{
+						OSFreeMem(PVRSRV_OS_PAGEABLE_HEAP,
 							  ui32FreeSize,
 							  pvFreePtr,
 							  IMG_NULL);
+					}
 				}
 				else
 				{
@@ -1767,7 +1772,7 @@ BM_Wrap (	IMG_HANDLE hDevMemHeap,
 	psBMHeap = (BM_HEAP*)hDevMemHeap;
 	psBMContext = psBMHeap->pBMContext;
 
-	uFlags = psBMHeap->ui32Attribs & (PVRSRV_HAP_CACHETYPE_MASK | PVRSRV_HAP_MAPTYPE_MASK);
+	uFlags = psBMHeap->ui32Attribs & (PVRSRV_HAP_CACHETYPE_MASK | PVRSRV_HAP_MAPTYPE_MASK | PVRSRV_HAP_MAPPING_CTRL_MASK);
 
 	if ((pui32Flags != IMG_NULL) && ((*pui32Flags & PVRSRV_HAP_CACHETYPE_MASK) != 0))
 	{
@@ -2576,7 +2581,8 @@ XProcWorkaroundAllocShareable(RA_ARENA *psArena,
 		if (ui32AllocFlags != gXProcWorkaroundShareData[gXProcWorkaroundShareIndex].ui32AllocFlags)
 		{
 			PVR_DPF((PVR_DBG_ERROR,
-					 "Can't!  Flags don't match! (I had 0x%08x, you gave 0x%08x)",
+					 "%s ERROR: Flags don't match (Shared 0x%08x, Requested 0x%08x)!",
+					 __FUNCTION__,
 					 gXProcWorkaroundShareData[gXProcWorkaroundShareIndex].ui32AllocFlags,
 					 ui32AllocFlags));
 			return PVRSRV_ERROR_INVALID_PARAMS;
@@ -2585,14 +2591,24 @@ XProcWorkaroundAllocShareable(RA_ARENA *psArena,
 		if (ui32Size != gXProcWorkaroundShareData[gXProcWorkaroundShareIndex].ui32Size)
 		{
 			PVR_DPF((PVR_DBG_ERROR,
-					 "Can't!  Size doesn't match!"));
+					 "%s ERROR: Size doesn't match (Shared %d, Requested %d) with flags 0x%08x - 0x%08x!",
+					 __FUNCTION__,
+					 gXProcWorkaroundShareData[gXProcWorkaroundShareIndex].ui32Size,
+					 ui32Size,
+					 gXProcWorkaroundShareData[gXProcWorkaroundShareIndex].ui32AllocFlags,
+					 ui32AllocFlags));
 			return PVRSRV_ERROR_INVALID_PARAMS;
 		}
 
 		if (ui32PageSize != gXProcWorkaroundShareData[gXProcWorkaroundShareIndex].ui32PageSize)
 		{
 			PVR_DPF((PVR_DBG_ERROR,
-					 "Can't!  Page Size doesn't match!"));
+					 "%s ERROR: Page Size doesn't match (Shared %d, Requested %d) with flags 0x%08x - 0x%08x!",
+					 __FUNCTION__,
+					 gXProcWorkaroundShareData[gXProcWorkaroundShareIndex].ui32PageSize,
+					 ui32PageSize,
+					 gXProcWorkaroundShareData[gXProcWorkaroundShareIndex].ui32AllocFlags,
+					 ui32AllocFlags));
 			return PVRSRV_ERROR_INVALID_PARAMS;
 		}
 

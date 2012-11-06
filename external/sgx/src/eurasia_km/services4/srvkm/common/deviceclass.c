@@ -2118,6 +2118,15 @@ PVRSRV_ERROR PVRSRVSwapToDCSystemKM(IMG_HANDLE	hDeviceKM,
 	psSwapChainRef = (PVRSRV_DC_SWAPCHAIN_REF*)hSwapChainRef;
 	psSwapChain = psSwapChainRef->psSwapChain;
 
+	/*
+		If more then 1 reference to the swapchain exist then
+		ignore any request to swap to the system buffer
+	*/
+	if (psSwapChain->ui32RefCount > 1)
+	{
+		return PVRSRV_OK;
+	}
+
 	/* get the queue from the buffer structure */
 	psQueue = psSwapChain->psQueue;
 

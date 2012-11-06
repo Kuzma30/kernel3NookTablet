@@ -54,10 +54,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define SYS_SGX_HWRECOVERY_TIMEOUT_FREQ		(100)	// 10ms (100hz)
 #define SYS_SGX_PDS_TIMER_FREQ				(1000)	// 1ms (1000hz)
 
-/* Allow the AP parameters to be overridden in the build config */
-#if !defined(SYS_SGX_ACTIVE_POWER_MODE)
-#define SYS_SGX_ACTIVE_POWER_MODE	(1)
-#endif
+/* Allow the AP latency to be overridden in the build config */
 #if !defined(SYS_SGX_ACTIVE_POWER_LATENCY_MS)
 #define SYS_SGX_ACTIVE_POWER_LATENCY_MS		(2)
 #endif

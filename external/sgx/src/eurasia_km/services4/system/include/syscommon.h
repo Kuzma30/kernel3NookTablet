@@ -55,7 +55,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "buffer_manager.h"
 #include "pvr_debug.h"
 #include "services.h"
-#include "sgxinfo.h"
 
 #if defined(NO_HARDWARE) && defined(__linux__) && defined(__KERNEL__)
 #include <asm/io.h>
@@ -165,26 +164,8 @@ PVRSRV_ERROR SysDevicePostPowerState(IMG_UINT32 ui32DeviceIndex,
 									 PVRSRV_DEV_POWER_STATE eNewPowerState,
 									 PVRSRV_DEV_POWER_STATE eCurrentPowerState);
 
-#if defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK)
 IMG_VOID SysSGXIdleEntered(IMG_VOID);
-IMG_VOID SysSGXCommandPending(SGXMKIF_CMD_TYPE eCmdType, IMG_BOOL bSGXIdle);
-IMG_VOID SysDSSReturnFrame(IMG_VOID);
-#else /* SYS_OMAP4_HAS_DVFS_FRAMEWORK */
-#ifdef INLINE_IS_PRAGMA
-#pragma inline(SysSGXIdleEntered)
-#endif
-static INLINE IMG_VOID SysSGXIdleEntered(IMG_VOID) {}
-
-#ifdef INLINE_IS_PRAGMA
-#pragma inline(SysSGXCommandPending)
-#endif
-static INLINE IMG_VOID SysSGXCommandPending(SGXMKIF_CMD_TYPE eCmdType, IMG_BOOL bSGXIdle) {}
-
-#ifdef INLINE_IS_PRAGMA
-#pragma inline(SysDSSReturnFrame)
-#endif
-static INLINE IMG_VOID SysDSSReturnFrame(IMG_VOID) {}
-#endif /* SYS_OMAP4_HAS_DVFS_FRAMEWORK */
+IMG_VOID SysSGXCommandPending(IMG_BOOL bSGXIdle);
 
 #if defined(SYS_CUSTOM_POWERLOCK_WRAP)
 PVRSRV_ERROR SysPowerLockWrap(IMG_BOOL bTryLock);

@@ -73,11 +73,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <linux/platform_device.h>
 #endif
 
-#if defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK)
-#include <linux/hrtimer.h>
-#include <linux/workqueue.h>
-#endif /* SYS_OMAP4_HAS_DVFS_FRAMEWORK */
-
 #if ((defined(DEBUG) || defined(TIMING)) && \
     (LINUX_VERSION_CODE == KERNEL_VERSION(2,6,34))) && \
     !defined(PVR_NO_OMAP_TIMER)
@@ -133,9 +128,6 @@ PVRSRV_ERROR EnableSystemClocks(SYS_DATA *psSysData);
 
 IMG_VOID DisableSGXClocks(SYS_DATA *psSysData);
 PVRSRV_ERROR EnableSGXClocks(SYS_DATA *psSysData);
-#if defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK)
-IMG_VOID RequestSGXFreq(SYS_DATA *psSysData, IMG_UINT32 freq_index);
-#endif /* SYS_OMAP4_HAS_DVFS_FRAMEWORK */
 
 /*
  * Various flags to indicate what has been initialised, and what
@@ -196,29 +188,6 @@ typedef struct _SYS_SPECIFIC_DATA_TAG_
 #if defined(PVR_OMAP_USE_DM_TIMER_API)
 	struct omap_dm_timer *psGPTimer;
 #endif
-#if defined(SYS_OMAP4_HAS_DVFS_FRAMEWORK)
-	IMG_UINT32 ui32SGXFreqListSize;
-	IMG_UINT32 *pui32SGXFreqList;
-	IMG_UINT32 ui32SGXFreqListIndex;
-	IMG_UINT32 ui32SGXFreqListIndexActive;
-	IMG_UINT32 ui32SGXFreqListIndexLimit;
-	struct hrtimer sgx_dvfs_idle_timer;
-	struct work_struct sgx_dvfs_idle_work;
-	struct hrtimer sgx_dvfs_active_timer;
-	struct work_struct sgx_dvfs_active_work;
-	struct mutex sgx_dvfs_lock;
-	ktime_t sgx_idle_stamp;
-	ktime_t sgx_active_stamp;
-	ktime_t sgx_work_stamp;
-	ktime_t dss_return_stamp;
-	bool sgx_is_idle;
-	bool dss_kick_is_pending;
-	SGXMKIF_CMD_TYPE sgx_active_kickcmd;
-	int counter;
-#if defined(CONFIG_THERMAL_FRAMEWORK)
-	int cooling_level;
-#endif /* CONFIG_THERMAL_FRAMEWORK */
-#endif /* SYS_OMAP4_HAS_DVFS_FRAMEWORK */
 #if defined(CONFIG_HAS_WAKELOCK)
 	struct wake_lock wake_lock;
 #endif /* CONFIG_HAS_WAKELOCK */

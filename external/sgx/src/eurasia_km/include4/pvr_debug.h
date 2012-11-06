@@ -61,9 +61,8 @@ extern "C" {
 #define DBGPRIV_CALLTRACE		0x20UL
 #define DBGPRIV_ALLOC			0x40UL
 #define DBGPRIV_DBGDRV_MESSAGE	0x80UL
-#define DBGPRIV_THERMAL			0x100UL
 
-#define DBGPRIV_DBGLEVEL_COUNT	9
+#define DBGPRIV_DBGLEVEL_COUNT	8
 
 #if !defined(PVRSRV_NEED_PVR_ASSERT) && defined(DEBUG)
 #define PVRSRV_NEED_PVR_ASSERT
@@ -145,12 +144,10 @@ IMG_IMPORT IMG_VOID IMG_CALLCONV PVRSRVDebugAssertFail(const IMG_CHAR *pszFile,
 	#define PVR_DBG_CALLTRACE	DBGPRIV_CALLTRACE
 	#define PVR_DBG_ALLOC		DBGPRIV_ALLOC
 	#define PVR_DBGDRIV_MESSAGE	DBGPRIV_DBGDRV_MESSAGE
-	#define PVR_DBG_THERMAL		DBGPRIV_THERMAL
 
 	/* These levels are always on with PVRSRV_NEED_PVR_DPF */
 	#define __PVR_DPF_0x01UL(x...) PVRSRVDebugPrintf(DBGPRIV_FATAL, x)
 	#define __PVR_DPF_0x02UL(x...) PVRSRVDebugPrintf(DBGPRIV_ERROR, x)
-	#define __PVR_DPF_0x100UL(x...) PVRSRVDebugPrintf(DBGPRIV_THERMAL, x)
 
 	/* Some are compiled out completely in release builds */
 #if defined(DEBUG)
@@ -192,7 +189,6 @@ IMG_IMPORT IMG_VOID IMG_CALLCONV PVRSRVDebugAssertFail(const IMG_CHAR *pszFile,
 	#define PVR_DBG_CALLTRACE	DBGPRIV_CALLTRACE,__FILE__, __LINE__
 	#define PVR_DBG_ALLOC		DBGPRIV_ALLOC,__FILE__, __LINE__
 	#define PVR_DBGDRIV_MESSAGE	DBGPRIV_DBGDRV_MESSAGE, "", 0
-	#define PVR_DBG_THERMAL		DBGPRIV_THERMAL,"", 0
 
 	#define PVR_DPF(X)			PVRSRVDebugPrintf X
 

@@ -365,11 +365,6 @@ IMG_VOID PVRSRVDebugPrintf	(
 					strncpy (pszBuf, "PVR_K:(Verbose): ", (ui32BufSiz -1));
 					break;
 				}
-				case DBGPRIV_THERMAL:
-				{
-					strncpy (pszBuf, "PVR_K:(Thermal): ", (ui32BufSiz -1));
-					break;
-				}
 				default:
 				{
 					strncpy (pszBuf, "PVR_K:(Unknown message level)", (ui32BufSiz -1));

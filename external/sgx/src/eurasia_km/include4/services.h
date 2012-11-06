@@ -105,15 +105,15 @@ extern "C" {
 #define PVRSRV_HAP_SINGLE_PROCESS			(1U<<16)
 #define PVRSRV_HAP_MULTI_PROCESS			(1U<<17)
 #define PVRSRV_HAP_FROM_EXISTING_PROCESS	(1U<<18)
-#define PVRSRV_HAP_NO_CPU_VIRTUAL			(1U<<19)
-#define PVRSRV_MAP_GC_MMU				(1UL<<20)
-#define PVRSRV_HAP_GPU_PAGEABLE				(1U<<21)
-#define PVRSRV_HAP_NO_GPU_VIRTUAL_ON_ALLOC	(1U<<22)
+#define PVRSRV_HAP_NO_CPU_VIRTUAL           (1U<<19)
+#define PVRSRV_MAP_GC_MMU                   (1UL<<20)
+#define PVRSRV_HAP_GPU_PAGEABLE             (1U<<21)
+#define PVRSRV_HAP_NO_GPU_VIRTUAL_ON_ALLOC  (1U<<22)
 #define PVRSRV_HAP_MAPTYPE_MASK				(PVRSRV_HAP_KERNEL_ONLY \
                                             |PVRSRV_HAP_SINGLE_PROCESS \
                                             |PVRSRV_HAP_MULTI_PROCESS \
-                                            |PVRSRV_HAP_FROM_EXISTING_PROCESS \
-                                            |PVRSRV_HAP_NO_CPU_VIRTUAL\
+                                            |PVRSRV_HAP_FROM_EXISTING_PROCESS)
+#define PVRSRV_HAP_MAPPING_CTRL_MASK		(PVRSRV_HAP_NO_CPU_VIRTUAL\
                                             |PVRSRV_HAP_GPU_PAGEABLE \
                                             |PVRSRV_HAP_NO_GPU_VIRTUAL_ON_ALLOC)
 
@@ -1584,7 +1584,7 @@ IMG_IMPORT IMG_VOID  IMG_CALLCONV PVRSRVFreeUserModeMemTracking(IMG_VOID *pvMem)
 
 IMG_IMPORT IMG_PVOID IMG_CALLCONV PVRSRVReallocUserModeMemTracking(IMG_VOID *pvMem, IMG_SIZE_T ui32NewSize, 
 													  IMG_CHAR *pszFileName, IMG_UINT32 ui32LineNumber);
-#endif /* defined(DEBUG) && (defined(__linux__) || defined(_UITRON_)) */
+#endif
 
 /******************************************************************************
  * PVR Event Object API(s)

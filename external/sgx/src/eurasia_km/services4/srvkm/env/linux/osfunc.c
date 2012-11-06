@@ -4084,7 +4084,14 @@ IMG_BOOL CheckExecuteCacheOp(IMG_HANDLE hOSMemHandle,
 	psMMapOffsetStructList = &psLinuxMemArea->sMMapOffsetStructList;
 	ui32AreaLength = psLinuxMemArea->ui32ByteSize;
 
-	PVR_ASSERT(ui32Length <= ui32AreaLength);
+	/*
+		Don't check the length in the case of sparse mappings as
+		we only know the physical length not the virtual
+	*/
+	if (!psLinuxMemArea->hBMHandle)
+	{
+		PVR_ASSERT(ui32Length <= ui32AreaLength);
+	}
 
 	if(psLinuxMemArea->eAreaType == LINUX_MEM_AREA_SUB_ALLOC)
 	{
