@@ -171,11 +171,13 @@ static int twl6030_irq_thread(void *data)
 	static unsigned i2c_errors;
 	static const unsigned max_i2c_errors = 100;
 	int ret;
+	int charger_vbus = 0;
 
 	current->flags |= PF_NOFREEZE;
 
 	while (!kthread_should_stop()) {
 		int i;
+		int start_time = 0;
 		union {
 		u8 bytes[4];
 		u32 int_sts;
@@ -210,6 +212,7 @@ static int twl6030_irq_thread(void *data)
 		 * use CHARGER VBUS detection status bit instead.
 		 */
 		if (sts.bytes[2] & 0x10)
+			charger_vbus = 1;
 			sts.bytes[2] |= 0x08;
 
 		int_sts = le32_to_cpu(sts.int_sts);
@@ -218,9 +221,42 @@ static int twl6030_irq_thread(void *data)
 			if (int_sts & 0x1) {
 				int module_irq = twl6030_irq_base +
 					twl6030_interrupt_mapping[i];
+#if 0
 				generic_handle_irq(module_irq);
+				}
+#endif
+#if 1 /* add from 2.6 */
+                                struct irq_desc *d = irq_to_desc(module_irq);
 
-			}
+                                if (!d) {
+                                        pr_err("twl6030: Invalid SIH IRQ: %d\n",
+                                               module_irq);
+                                        return -EINVAL;
+                                }
+
+                                /* this may be a wakeup event
+                                 * d->status flag's are masked while we are
+                                 * waking up, give some time for the
+                                 * IRQ to be enabled.
+                                 */
+                                start_time = jiffies;
+                                while ((d->status_use_accessors & IRQD_IRQ_DISABLED) &&
+                                       (jiffies_to_msecs(jiffies-start_time) < 100)) {
+                                        yield();
+                                }
+
+                                /* These can't be masked ... always warn
+                                 * if we get any surprises.
+                                 */
+                                if ((d->status_use_accessors & IRQD_IRQ_DISABLED) && !charger_vbus) {
+                                        pr_warning("twl handler not called, irq is disabled!\n");
+                                        note_interrupt(module_irq, d,
+                                                        IRQ_NONE);
+                                }
+                                else
+                                        d->handle_irq(module_irq, d);
+                        }
+#endif /*end of add from 2.6*/
 		local_irq_enable();
 		}
 
@@ -419,10 +455,6 @@ int twl6030_mmc_card_detect(struct device *dev, int slot)
 	if (polarity == 1 )
 		ret ^= 1;
 
-//	ret = twl_i2c_read_u8(TWL6030_MODULE_ID0, &read_reg,
-//						TWL6030_MMCCTRL);
-//	if (ret >= 0)
-//		ret = read_reg & STS_MMC;
 	return ret;
 }
 EXPORT_SYMBOL(twl6030_mmc_card_detect);
@@ -549,7 +581,7 @@ int twl6030_init_irq(int irq_num, unsigned irq_base, unsigned irq_end,
 		goto fail_kthread;
 	}
 
-	status = request_irq(irq_num, handle_twl6030_pih, IRQF_DISABLED,
+	status = request_irq(irq_num, handle_twl6030_pih, IRQF_TRIGGER_FALLING, //IRQF_DISABLED,
 				"TWL6030-PIH", &irq_event);
 	if (status < 0) {
 		pr_err("twl6030: could not claim irq%d: %d\n", irq_num, status);
