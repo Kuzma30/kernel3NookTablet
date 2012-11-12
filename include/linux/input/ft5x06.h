@@ -1,5 +1,5 @@
 /* Header file for:
- * Focaltech 5x06 touch screen controller. Some parts of the code are based on the Cypress 
+ * Focaltech 5x06 touch screen controller. Some parts of the code are based on the Cypress
  * TrueTouch(TM) Standard Product I2C touchscreen driver.
  *
  * drivers/input/touchscreen/ft5x06-i2c.c
@@ -34,8 +34,9 @@
 #include <linux/kernel.h>
 #include <linux/delay.h>
 
-#define FT_NAME      "ft5x06"
-#define FT_I2C_NAME  "ft5x06-i2c"
+#define FT_DRIVER_NAME      "ft5x06"
+#define FT_DEVICE_5x06_NAME  "ft5x06-i2c"
+#define FT5x06_I2C_SLAVEADDRESS  (0x70 >> 1)
 
 /********************************************************************
  * Register Offsets (Working Mode)
@@ -53,12 +54,19 @@
 #define FT5x06_WMREG_P2_YL              0x0C
 #define FT5x06_WMREG_TH_TOUCH           0x80
 #define FT5x06_WMREG_RPT_RATE           0x88
+#define FT5x06_WMREG_MAX_TOUCHES        0x8A
+#define FT5x06_WMREG_MAX_X_HIGH         0x8B
+#define FT5x06_WMREG_MAX_X_LOW          0x8C
+#define FT5x06_WMREG_MAX_Y_HIGH         0x8D
+#define FT5x06_WMREG_MAX_Y_LOW          0x8E
+#define FT5x06_WMREG_CONTROLLER_ID      0x8F
 #define FT5x06_WMREG_OFFSET_LEFT_RIGHT  0x92
 #define FT5x06_WMREG_DISTANCE_ZOOM      0x97
 #define FT5x06_WMREG_LIB_VER_H          0xA1
 #define FT5x06_WMREG_LIB_VER_L          0xA2
 #define FT5x06_WMREG_PWR_MODE           0xA5
 #define FT5x06_WMREG_FW_VER             0xA6
+#define FT5x06_WMREG_STAT_CFG          0xA7
 #define FT5x06_WMREG_FOCALTECH_ID       0xA8
 #define FT5x06_WMREG_RESET              0xFC
 
@@ -142,7 +150,6 @@
 #define FT5x06_FMREG_RAWDATA_29_H       0x4A
 #define FT5x06_FMREG_RAWDATA_29_L       0x4B
 #define FT5x06_FMREG_TH_POINT_NUM       0x4C
-#define FT5x06_FMREG_BASELINE_ENABLE    0x4D
 #define FT5x06_FMREG_IC_PARTNO          0x4E
 #define FT5x06_FMREG_INTERRUPT_TOGGLE   0x4F
 #define FT5x06_FMREG_TX_ORDER_0         0x50
@@ -335,6 +342,8 @@
 #define FT5x06_PART_FT5202              0x22
 #define FT5x06_PART_FT5302              0x32
 
+#define FT5x06_CONTROLLER_ID_5506       0x05
+#define FT5x06_CONTROLLER_ID_5606       0x06
 
 /********************************************************************
  * CTPM Commands
@@ -349,6 +358,23 @@
 #define FT5x06_CMD_GET_ID_P2            0x00
 #define FT5x06_CMD_GET_ID_P3            0x00
 
+
+#define GESTURE_NONE 	0x00
+#define GESTURE_ST_N 	0x10
+#define GESTURE_ST_NE 	0x12
+#define GESTURE_ST_E 	0x14
+#define GESTURE_ST_SE 	0x16
+#define GESTURE_ST_S 	0x18
+#define GESTURE_ST_SW 	0x1A
+#define GESTURE_ST_W 	0x1C
+#define GESTURE_ST_NW 	0x1E
+#define GESTURE_SC 	0x20
+#define GESTURE_DC 	0x22
+#define GESTURE_TD 	0x2F
+#define GESTURE_DT 	0x31
+#define GESTURE_ZI 	0x48
+#define GESTURE_ZO 	0x49
+#define GESTURE_LO 	0x4F
 
 /******************************************************************************
  * Global Control, Used to control the behavior of the driver
@@ -395,7 +421,6 @@
     #endif /* ABS_MT_TOUCH_MAJOR */
 #endif /* ABS_MT_TOUCH_MAJOR and FT_USE_MT_SIGNALS */
 
-#define FT_USE_MT_TRACK_ID
 #if defined(ABS_MT_TRACKING_ID)  && defined(FT_USE_MT_TRACK_ID)
     #define FT_USE_TRACKING_ID  1
 #else
@@ -451,10 +476,10 @@
 #define FT_NUM_ST_TCH_ID        2
 
 /* maximum number of concurrent MT track IDs */
-#define FT_NUM_MT_TCH_ID        5
+#define FT_NUM_MT_TCH_ID        4
 
 /* maximum number of track IDs */
-#define FT_NUM_TRK_ID           15
+#define FT_NUM_TRK_ID           16
 
 #define FT_NTCH                 0   /* no touch (lift off) */
 #define FT_TCH                  1   /* active touch (touchdown) */
@@ -470,45 +495,40 @@
 #define FT_SMALL_TOOL_WIDTH     10
 #define FT_LARGE_TOOL_WIDTH     255
 #define FT_MAXZ                 255
-#define FT_EVENT_DOWN 0
-#define FT_EVENT_UP 1
-#define FT_EVENT_MOVE 2
-#define FT_EVENT_RESERVED 3
 
 
 struct i2c_client;
 
 struct ft5x06_platform_data {
-       u32 maxx;
-       u32 maxy;
-       u32 rawx;
-       u32 rawy;
-       u32 flags;
+	u32 max_tx_lines;
+	u32 max_rx_lines;
+	u32 maxx;
+	u32 maxy;
+	u32 flags;
     u32 reset_gpio;
-       u8 gen;
-       u8 use_st;
-       u8 use_mt;
-       u8 use_hndshk;
-       u8 use_trk_id;
-       u8 use_sleep;
-       u8 use_gestures;
-       u8 gest_set;
-       u8 act_intrvl;
-       u8 tch_tmout;
-       u8 lp_intrvl;
-       u8 power_state;
-       s32 (*init)(struct i2c_client *client);
-       s32 (*resume)(struct i2c_client *client);
-       void (*platform_suspend)(void);
-       void (*platform_resume)(void);
-       void (*update_flags)(struct ft5x06_platform_data* pd, struct i2c_client *client);
+	u8 gen;
+	u8 use_st;
+	u8 use_mt;
+	u8 use_hndshk;
+	u8 use_trk_id;
+	u8 use_sleep;
+	u8 use_gestures;
+	u8 gest_set;
+	u8 act_intrvl;
+	u8 tch_tmout;
+	u8 lp_intrvl;
+	u8 power_state;
+	int (*request_resources)(struct device *dev);
+	int (*release_resources)(struct device *dev);
+	int (*power_on)(struct device *dev);
+	int (*power_off)(struct device *dev);
 };
 
 struct ft5x06_xydata_t {
     u8 gest_id;
     u16 x1 __attribute__ ((packed));
     u16 y1 __attribute__ ((packed));
-       u16 x2 __attribute__ ((packed));
-       u16 y2 __attribute__ ((packed));
+	u16 x2 __attribute__ ((packed));
+	u16 y2 __attribute__ ((packed));
 };
 #endif /* __FT5x06_H__ */
