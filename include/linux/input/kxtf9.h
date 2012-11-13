@@ -20,89 +20,89 @@
 #ifndef __KXTF9_H__
 #define __KXTF9_H__
 
-#ifdef         KXTF9_DEBUG
-#define aprintk(fmt, args...)  printk(fmt, ##args)
+#ifdef 	KXTF9_DEBUG
+#define aprintk(fmt, args...)	printk(fmt, ##args)
 #else
 #define aprintk(fmt, args...)
 #endif
 
-//#define KXTF9_I2C_SLAVE_ADDR 0x0F
+//#define KXTF9_I2C_SLAVE_ADDR	0x0F
 
 /* CONTROL REGISTER 1 BITS */
-#define RES_12BIT              0x40
-#define KXTF9_G_2G             0x00
-#define KXTF9_G_4G             0x08
-#define KXTF9_G_8G             0x10
-#define SHIFT_ADJ_2G           4
-#define SHIFT_ADJ_4G           3
-#define SHIFT_ADJ_8G           2
-#define TPE                    0x01    /* tilt position function enable bit */
-#define WUFE                   0x02    /* wake-up function enable bit */
-#define TDTE                   0x04    /* tap/double-tap function enable bit */
+#define RES_12BIT		0x40
+#define KXTF9_G_2G 		0x00
+#define KXTF9_G_4G 		0x08
+#define KXTF9_G_8G 		0x10
+#define SHIFT_ADJ_2G		4
+#define SHIFT_ADJ_4G		3
+#define SHIFT_ADJ_8G		2
+#define TPE			0x01	/* tilt position function enable bit */
+#define WUFE			0x02	/* wake-up function enable bit */
+#define TDTE			0x04	/* tap/double-tap function enable bit */
 /* CONTROL REGISTER 3 BITS */
-#define OTP1_6                 0x00    /* tilt ODR masks */
-#define OTP6_3                 0x20
-#define OTP12_5                        0x40
-#define OTP50                  0x60
-#define OWUF25                 0x00    /* wuf ODR masks */
-#define OWUF50                 0x01
-#define OWUF100                        0x02
-#define OWUF200                        0x03
-#define OTDT50                 0x00    /* tdt ODR masks */
-#define OTDT100                        0x04
-#define OTDT200                        0x08
-#define OTDT400                        0x0C
+#define OTP1_6			0x00	/* tilt ODR masks */
+#define OTP6_3			0x20
+#define OTP12_5			0x40
+#define OTP50			0x60
+#define OWUF25			0x00	/* wuf ODR masks */
+#define OWUF50			0x01
+#define OWUF100			0x02
+#define OWUF200			0x03
+#define OTDT50			0x00	/* tdt ODR masks */
+#define OTDT100			0x04
+#define OTDT200			0x08
+#define OTDT400			0x0C
 /* INTERRUPT CONTROL REGISTER 1 BITS */
-#define KXTF9_IEN              0x20    /* interrupt enable */
-#define KXTF9_IEA              0x10    /* interrupt polarity */
-#define KXTF9_IEL              0x08    /* interrupt response */
-#define IEU                    0x04    /* alternate unlatched response */
+#define KXTF9_IEN		0x20	/* interrupt enable */
+#define KXTF9_IEA		0x10	/* interrupt polarity */
+#define KXTF9_IEL		0x08	/* interrupt response */
+#define IEU			0x04	/* alternate unlatched response */
 /* DATA CONTROL REGISTER BITS */
-#define ODR800F                        0x06    /* lpf output ODR masks */
-#define ODR400F                        0x05
-#define ODR200F                        0x04
-#define ODR100F                        0x03
-#define ODR50F                 0x02
-#define ODR25F                 0x01
-#define ODR12_5F               0x00
+#define ODR800F			0x06	/* lpf output ODR masks */
+#define ODR400F			0x05
+#define ODR200F			0x04
+#define ODR100F			0x03
+#define ODR50F			0x02
+#define ODR25F			0x01
+#define ODR12_5F		0x00
 
 #ifdef __KERNEL__
 struct kxtf9_platform_data {
-       int poll_interval;
-       int min_interval;
+	int poll_interval;
+	int min_interval;
 
-       u8 g_range;
-       u8 shift_adj;
+	u8 g_range;
+	u8 shift_adj;
 
-       u8 axis_map_x;
-       u8 axis_map_y;
-       u8 axis_map_z;
+	u8 axis_map_x;
+	u8 axis_map_y;
+	u8 axis_map_z;
 
-       u8 negate_x;
-       u8 negate_y;
-       u8 negate_z;
+	u8 negate_x;
+	u8 negate_y;
+	u8 negate_z;
 
-       u8 data_odr_init;
-       u8 ctrl_reg1_init;
-       u8 int_ctrl_init;
-       u8 tilt_timer_init;
-       u8 engine_odr_init;
-       u8 wuf_timer_init;
-       u8 wuf_thresh_init;
-       u8 tdt_timer_init;
-       u8 tdt_h_thresh_init;
-       u8 tdt_l_thresh_init;
-       u8 tdt_tap_timer_init;
-       u8 tdt_total_timer_init;
-       u8 tdt_latency_timer_init;
-       u8 tdt_window_timer_init;
+	u8 data_odr_init;
+	u8 ctrl_reg1_init;
+	u8 int_ctrl_init;
+	u8 tilt_timer_init;
+	u8 engine_odr_init;
+	u8 wuf_timer_init;
+	u8 wuf_thresh_init;
+	u8 tdt_timer_init;
+	u8 tdt_h_thresh_init;
+	u8 tdt_l_thresh_init;
+	u8 tdt_tap_timer_init;
+	u8 tdt_total_timer_init;
+	u8 tdt_latency_timer_init;
+	u8 tdt_window_timer_init;
 
-       int (*init)(void);
-       void (*exit)(void);
-       int (*power_on)(void);
-       int (*power_off)(void);
+	int (*init)(void);
+	void (*exit)(void);
+	int (*power_on)(void);
+	int (*power_off)(void);
 
-       int gpio;
+	int gpio;
 };
 #endif /* __KERNEL__ */
 

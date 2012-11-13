@@ -30,8 +30,8 @@
 #include <linux/interrupt.h>
 #include <linux/slab.h>
 #include <linux/earlysuspend.h>
-#include <linux/module.h>
-#undef KXTF9_DEBUG
+
+//#define KXTF9_DEBUG
 
 #include <linux/input/kxtf9.h>
 
@@ -89,13 +89,14 @@ struct {
 	u8 mask;
 } kxtf9_odr_table[] = {
 	{
-	3, ODR800F}, {
-	5, ODR400F}, {
-	10, ODR200F}, {
-	20, ODR100F}, {
-	40, ODR50F}, {
-	80, ODR25F}, {
-0, ODR12_5F},};
+	3,	ODR800F}, {
+	5,	ODR400F}, {
+	10,	ODR200F}, {
+	20,	ODR100F}, {
+	40,	ODR50F}, {
+	80,	ODR25F}, {
+	0,	ODR12_5F},
+};
 
 struct kxtf9_data {
 	struct i2c_client *client;
@@ -112,21 +113,17 @@ struct kxtf9_data {
 	int irq;
 	struct early_suspend early_suspend;
 };
+static void  kxtf9_shutdown(struct i2c_client *client);
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
 static void kxtf9_late_resume(struct early_suspend *handler);
 static void kxtf9_early_suspend(struct early_suspend *handler);
 #else
-static void kxtf9_late_resume(struct early_suspend *handler)
-{
-}
-
-static void kxtf9_early_suspend(struct early_suspend *handler)
-{
-}
+static void kxtf9_late_resume(struct early_suspend *handler) {}
+static void kxtf9_early_suspend(struct early_suspend *handler) {}
 #endif
 
-static int kxtf9_i2c_read(struct kxtf9_data *tf9, u8 addr, u8 * data, int len)
+static int kxtf9_i2c_read(struct kxtf9_data *tf9, u8 addr, u8 *data, int len)
 {
 	int err;
 
@@ -154,7 +151,7 @@ static int kxtf9_i2c_read(struct kxtf9_data *tf9, u8 addr, u8 * data, int len)
 	return err;
 }
 
-static int kxtf9_i2c_write(struct kxtf9_data *tf9, u8 addr, u8 * data, int len)
+static int kxtf9_i2c_write(struct kxtf9_data *tf9, u8 addr, u8 *data, int len)
 {
 	int err;
 	int i;
@@ -196,8 +193,9 @@ static int kxtf9_verify(struct kxtf9_data *tf9)
 	/*** <end> DEBUG OUTPUT - REMOVE ***/
 	if (err < 0)
 		dev_err(&tf9->client->dev, "read err int source\n");
-	if (buf != 1)
-		err = -1;
+
+	pr_info("kxtf9(%u) detected\n", buf);
+
 	return err;
 }
 
@@ -211,7 +209,7 @@ static int kxtf9_hw_init(struct kxtf9_data *tf9)
 	buf[0] = PC1_OFF;
 
 	err = i2c_smbus_write_byte_data(tf9->client, CTRL_REG1, buf[0]);
-//      err = kxtf9_i2c_write(tf9, CTRL_REG1, buf, 1);
+//	err = kxtf9_i2c_write(tf9, CTRL_REG1, buf, 1);
 	if (err < 0)
 		return err;
 	aprintk("kxtf9: kxtf9_hw_init > kxtf9 in operating mode!\n");
@@ -297,9 +295,7 @@ static int kxtf9_device_power_on(struct kxtf9_data *tf9)
 		mdelay(100);
 		err = kxtf9_hw_init(tf9);
 		if (err < 0) {
-			aprintk
-			    ("kxtf9: kxtf9_device_power_on > kxtf9_hw_init Failed! %d\n",
-			     err);
+			aprintk("kxtf9: kxtf9_device_power_on > kxtf9_hw_init Failed! %d\n", err);
 			kxtf9_device_power_off(tf9);
 			return err;
 		}
@@ -323,7 +319,7 @@ static irqreturn_t kxtf9_isr(int irq, void *dev)
 static u8 kxtf9_resolve_dir(struct kxtf9_data *tf9, u8 dir)
 {
 	switch (dir) {
-	case 0x20:		/* -X */
+	case 0x20:	/* -X */
 		if (tf9->pdata->negate_x)
 			dir = 0x10;
 		if (tf9->pdata->axis_map_y == 0)
@@ -331,7 +327,7 @@ static u8 kxtf9_resolve_dir(struct kxtf9_data *tf9, u8 dir)
 		if (tf9->pdata->axis_map_z == 0)
 			dir >>= 4;
 		break;
-	case 0x10:		/* +X */
+	case 0x10:	/* +X */
 		if (tf9->pdata->negate_x)
 			dir = 0x20;
 		if (tf9->pdata->axis_map_y == 0)
@@ -339,7 +335,7 @@ static u8 kxtf9_resolve_dir(struct kxtf9_data *tf9, u8 dir)
 		if (tf9->pdata->axis_map_z == 0)
 			dir >>= 4;
 		break;
-	case 0x08:		/* -Y */
+	case 0x08:	/* -Y */
 		if (tf9->pdata->negate_y)
 			dir = 0x04;
 		if (tf9->pdata->axis_map_x == 1)
@@ -347,7 +343,7 @@ static u8 kxtf9_resolve_dir(struct kxtf9_data *tf9, u8 dir)
 		if (tf9->pdata->axis_map_z == 1)
 			dir >>= 2;
 		break;
-	case 0x04:		/* +Y */
+	case 0x04:	/* +Y */
 		if (tf9->pdata->negate_y)
 			dir = 0x08;
 		if (tf9->pdata->axis_map_x == 1)
@@ -355,7 +351,7 @@ static u8 kxtf9_resolve_dir(struct kxtf9_data *tf9, u8 dir)
 		if (tf9->pdata->axis_map_z == 1)
 			dir >>= 2;
 		break;
-	case 0x02:		/* -Z */
+	case 0x02:	/* -Z */
 		if (tf9->pdata->negate_z)
 			dir = 0x01;
 		if (tf9->pdata->axis_map_x == 2)
@@ -363,7 +359,7 @@ static u8 kxtf9_resolve_dir(struct kxtf9_data *tf9, u8 dir)
 		if (tf9->pdata->axis_map_y == 2)
 			dir <<= 2;
 		break;
-	case 0x01:		/* +Z */
+	case 0x01:	/* +Z */
 		if (tf9->pdata->negate_z)
 			dir = 0x02;
 		if (tf9->pdata->axis_map_x == 2)
@@ -393,7 +389,7 @@ static void kxtf9_irq_work_func(struct work_struct *work)
 	u8 buf[2];
 
 	struct kxtf9_data *tf9
-	    = container_of(work, struct kxtf9_data, irq_work);
+			= container_of(work, struct kxtf9_data, irq_work);
 
 	aprintk("kxtf9: kxtf9_irq_work_func ...\n");
 
@@ -409,7 +405,7 @@ static void kxtf9_irq_work_func(struct work_struct *work)
 		int_status |= kxtf9_resolve_dir(tf9, buf[1]) << 8;
 		/*** DEBUG OUTPUT - REMOVE ***/
 		dev_info(&tf9->client->dev, "IRQ TILT [%x]\n",
-			 kxtf9_resolve_dir(tf9, buf[0]));
+						kxtf9_resolve_dir(tf9, buf[0]));
 		/*** <end> DEBUG OUTPUT - REMOVE ***/
 	}
 	if (((status & TDTS0) | (status & TDTS1)) > 0) {
@@ -419,9 +415,7 @@ static void kxtf9_irq_work_func(struct work_struct *work)
 		int_status |= (kxtf9_resolve_dir(tf9, buf[0])) << 16;
 		/*** DEBUG OUTPUT - REMOVE ***/
 		dev_info(&tf9->client->dev, "IRQ TAP%d [%x]\n",
-			 ((status & TDTS1) ? (2) : (1)), kxtf9_resolve_dir(tf9,
-									   buf
-									   [0]));
+		((status & TDTS1) ? (2) : (1)), kxtf9_resolve_dir(tf9, buf[0]));
 		/*** <end> DEBUG OUTPUT - REMOVE ***/
 	}
 	/*** DEBUG OUTPUT - REMOVE ***/
@@ -439,7 +433,7 @@ static void kxtf9_irq_work_func(struct work_struct *work)
 	err = kxtf9_i2c_read(tf9, INT_REL, buf, 1);
 	if (err < 0)
 		dev_err(&tf9->client->dev,
-			"error clearing interrupt status: %d\n", err);
+				"error clearing interrupt status: %d\n", err);
 
 	enable_irq(tf9->irq);
 }
@@ -469,10 +463,10 @@ int kxtf9_update_g_range(struct kxtf9_data *tf9, u8 new_g_range)
 	if (shift != tf9->pdata->shift_adj) {
 		if (tf9->pdata->shift_adj > shift)
 			tf9->resume[RES_WUF_THRESH] >>=
-			    (tf9->pdata->shift_adj - shift);
+						(tf9->pdata->shift_adj - shift);
 		if (tf9->pdata->shift_adj < shift)
 			tf9->resume[RES_WUF_THRESH] <<=
-			    (shift - tf9->pdata->shift_adj);
+						(shift - tf9->pdata->shift_adj);
 
 		if (atomic_read(&tf9->enabled)) {
 			buf = PC1_OFF;
@@ -524,7 +518,7 @@ int kxtf9_update_odr(struct kxtf9_data *tf9, int poll_interval)
 		if (tf9->input_dev) {
 			cancel_delayed_work_sync(&tf9->input_work);
 			schedule_delayed_work(&tf9->input_work,
-					      msecs_to_jiffies(poll_interval));
+				      msecs_to_jiffies(poll_interval));
 		}
 	}
 	tf9->resume[RES_DATA_CTRL] = config;
@@ -540,15 +534,15 @@ static int kxtf9_get_acceleration_data(struct kxtf9_data *tf9, int *xyz)
 	/* x,y,z hardware values */
 	int hw_d[3];
 
-//      aprintk("kxtf9: kxtf9_get_acceleration_data ...\n");
+	aprintk("kxtf9: kxtf9_get_acceleration_data ...\n");
 
 	err = kxtf9_i2c_read(tf9, XOUT_L, acc_data, 6);
 	if (err < 0)
 		return err;
 
-	hw_d[0] = (int)(((acc_data[1]) << 8) | acc_data[0]);
-	hw_d[1] = (int)(((acc_data[3]) << 8) | acc_data[2]);
-	hw_d[2] = (int)(((acc_data[5]) << 8) | acc_data[4]);
+	hw_d[0] = (int) (((acc_data[1]) << 8) | acc_data[0]);
+	hw_d[1] = (int) (((acc_data[3]) << 8) | acc_data[2]);
+	hw_d[2] = (int) (((acc_data[5]) << 8) | acc_data[4]);
 
 	hw_d[0] = (hw_d[0] & 0x8000) ? (hw_d[0] | 0xFFFF0000) : (hw_d[0]);
 	hw_d[1] = (hw_d[1] & 0x8000) ? (hw_d[1] | 0xFFFF0000) : (hw_d[1]);
@@ -566,7 +560,7 @@ static int kxtf9_get_acceleration_data(struct kxtf9_data *tf9, int *xyz)
 		  : (hw_d[tf9->pdata->axis_map_z]));
 
 	/*** DEBUG OUTPUT - REMOVE ***/
-//      dev_info(&tf9->client->dev, "x:%d y:%d z:%d\n", xyz[0], xyz[1], xyz[2]);
+//	dev_info(&tf9->client->dev, "x:%d y:%d z:%d\n", xyz[0], xyz[1], xyz[2]);
 	/*** <end> DEBUG OUTPUT - REMOVE ***/
 
 	return err;
@@ -574,7 +568,7 @@ static int kxtf9_get_acceleration_data(struct kxtf9_data *tf9, int *xyz)
 
 static void kxtf9_report_values(struct kxtf9_data *tf9, int *xyz)
 {
-//      aprintk("kxtf9: kxtf9_report_value ...\n");
+	aprintk("kxtf9: kxtf9_report_value ...\n");
 
 	input_report_rel(tf9->input_dev, REL_X, xyz[0]);
 	input_report_rel(tf9->input_dev, REL_Y, xyz[1]);
@@ -595,7 +589,7 @@ static int kxtf9_enable(struct kxtf9_data *tf9)
 		err = kxtf9_i2c_read(tf9, INT_REL, &buf, 1);
 		if (err < 0) {
 			dev_err(&tf9->client->dev,
-				"error clearing interrupt: %d\n", err);
+					"error clearing interrupt: %d\n", err);
 			atomic_set(&tf9->enabled, 0);
 			return err;
 		}
@@ -604,14 +598,13 @@ static int kxtf9_enable(struct kxtf9_data *tf9)
 			if (err < 0) {
 				dev_err(&tf9->client->dev,
 					"read err current tilt\n");
-				int_status |= kxtf9_resolve_dir(tf9, buf);
-				input_report_rel(tf9->input_dev, REL_MISC,
-						 int_status);
-				input_sync(tf9->input_dev);
+			int_status |= kxtf9_resolve_dir(tf9, buf);
+			input_report_rel(tf9->input_dev, REL_MISC, int_status);
+			input_sync(tf9->input_dev);
 			}
 		}
 		schedule_delayed_work(&tf9->input_work,
-				      msecs_to_jiffies(tf9->res_interval));
+			msecs_to_jiffies(tf9->res_interval));
 	}
 
 	return 0;
@@ -621,21 +614,21 @@ static int kxtf9_disable(struct kxtf9_data *tf9)
 {
 	aprintk("kxtf9: kxtf9_disable ...\n");
 
-	//atomic_set(&tf9->enabled, 0);
 	if (atomic_cmpxchg(&tf9->enabled, 1, 0)) {
 		cancel_delayed_work_sync(&tf9->input_work);
 		kxtf9_device_power_off(tf9);
 	}
+
 	return 0;
 }
 
 static void kxtf9_input_work_func(struct work_struct *work)
 {
 	struct kxtf9_data *tf9 = container_of((struct delayed_work *)work,
-					      struct kxtf9_data, input_work);
+						struct kxtf9_data, input_work);
 	int xyz[3] = { 0 };
 
-//      aprintk("kxtf9: kxtf9_input_work_func ...\n");
+	aprintk("kxtf9: kxtf9_input_work_func ...\n");
 
 	mutex_lock(&tf9->lock);
 
@@ -643,7 +636,7 @@ static void kxtf9_input_work_func(struct work_struct *work)
 		kxtf9_report_values(tf9, xyz);
 
 	schedule_delayed_work(&tf9->input_work,
-			      msecs_to_jiffies(tf9->res_interval));
+			msecs_to_jiffies(tf9->res_interval));
 	mutex_unlock(&tf9->lock);
 }
 
@@ -730,8 +723,8 @@ static ssize_t kxtf9_delay_show(struct device *dev,
 }
 
 static ssize_t kxtf9_delay_store(struct device *dev,
-				 struct device_attribute *attr,
-				 const char *buf, size_t count)
+					struct device_attribute *attr,
+						const char *buf, size_t count)
 {
 	struct i2c_client *client = to_i2c_client(dev);
 	struct kxtf9_data *tf9 = i2c_get_clientdata(client);
@@ -746,7 +739,7 @@ static ssize_t kxtf9_delay_store(struct device *dev,
 }
 
 static ssize_t kxtf9_enable_show(struct device *dev,
-				 struct device_attribute *attr, char *buf)
+				struct device_attribute *attr, char *buf)
 {
 	struct i2c_client *client = to_i2c_client(dev);
 	struct kxtf9_data *tf9 = i2c_get_clientdata(client);
@@ -757,8 +750,8 @@ static ssize_t kxtf9_enable_show(struct device *dev,
 }
 
 static ssize_t kxtf9_enable_store(struct device *dev,
-				  struct device_attribute *attr,
-				  const char *buf, size_t count)
+					struct device_attribute *attr,
+						const char *buf, size_t count)
 {
 	struct i2c_client *client = to_i2c_client(dev);
 	struct kxtf9_data *tf9 = i2c_get_clientdata(client);
@@ -775,7 +768,7 @@ static ssize_t kxtf9_enable_store(struct device *dev,
 }
 
 static ssize_t kxtf9_tilt_show(struct device *dev,
-			       struct device_attribute *attr, char *buf)
+				struct device_attribute *attr, char *buf)
 {
 	struct i2c_client *client = to_i2c_client(dev);
 	struct kxtf9_data *tf9 = i2c_get_clientdata(client);
@@ -792,8 +785,8 @@ static ssize_t kxtf9_tilt_show(struct device *dev,
 }
 
 static ssize_t kxtf9_tilt_store(struct device *dev,
-				struct device_attribute *attr,
-				const char *buf, size_t count)
+					struct device_attribute *attr,
+						const char *buf, size_t count)
 {
 	struct i2c_client *client = to_i2c_client(dev);
 	struct kxtf9_data *tf9 = i2c_get_clientdata(client);
@@ -810,7 +803,7 @@ static ssize_t kxtf9_tilt_store(struct device *dev,
 }
 
 static ssize_t kxtf9_wake_show(struct device *dev,
-			       struct device_attribute *attr, char *buf)
+				struct device_attribute *attr, char *buf)
 {
 	struct i2c_client *client = to_i2c_client(dev);
 	struct kxtf9_data *tf9 = i2c_get_clientdata(client);
@@ -825,8 +818,8 @@ static ssize_t kxtf9_wake_show(struct device *dev,
 }
 
 static ssize_t kxtf9_wake_store(struct device *dev,
-				struct device_attribute *attr,
-				const char *buf, size_t count)
+					struct device_attribute *attr,
+						const char *buf, size_t count)
 {
 	struct i2c_client *client = to_i2c_client(dev);
 	struct kxtf9_data *tf9 = i2c_get_clientdata(client);
@@ -843,7 +836,7 @@ static ssize_t kxtf9_wake_store(struct device *dev,
 }
 
 static ssize_t kxtf9_tap_show(struct device *dev,
-			      struct device_attribute *attr, char *buf)
+				struct device_attribute *attr, char *buf)
 {
 	struct i2c_client *client = to_i2c_client(dev);
 	struct kxtf9_data *tf9 = i2c_get_clientdata(client);
@@ -858,8 +851,8 @@ static ssize_t kxtf9_tap_show(struct device *dev,
 }
 
 static ssize_t kxtf9_tap_store(struct device *dev,
-			       struct device_attribute *attr,
-			       const char *buf, size_t count)
+					struct device_attribute *attr,
+						const char *buf, size_t count)
 {
 	struct i2c_client *client = to_i2c_client(dev);
 	struct kxtf9_data *tf9 = i2c_get_clientdata(client);
@@ -876,8 +869,8 @@ static ssize_t kxtf9_tap_store(struct device *dev,
 }
 
 static ssize_t kxtf9_abort_store(struct device *dev,
-				 struct device_attribute *attr,
-				 const char *buf, size_t count)
+					struct device_attribute *attr,
+						const char *buf, size_t count)
 {
 	struct i2c_client *client = to_i2c_client(dev);
 	struct kxtf9_data *tf9 = i2c_get_clientdata(client);
@@ -891,8 +884,8 @@ static ssize_t kxtf9_abort_store(struct device *dev,
 }
 
 static ssize_t kxtf9_selftest_store(struct device *dev,
-				    struct device_attribute *attr,
-				    const char *buf, size_t count)
+					struct device_attribute *attr,
+						const char *buf, size_t count)
 {
 	struct i2c_client *client = to_i2c_client(dev);
 	struct kxtf9_data *tf9 = i2c_get_clientdata(client);
@@ -907,14 +900,13 @@ static ssize_t kxtf9_selftest_store(struct device *dev,
 	return count;
 }
 
-static DEVICE_ATTR(delay, S_IRUGO | S_IWUGO, kxtf9_delay_show,
-		   kxtf9_delay_store);
-static DEVICE_ATTR(enable, S_IRUGO | S_IWUGO, kxtf9_enable_show,
-		   kxtf9_enable_store);
-static DEVICE_ATTR(tilt, S_IRUGO | S_IWUSR, kxtf9_tilt_show, kxtf9_tilt_store);
-static DEVICE_ATTR(wake, S_IRUGO | S_IWUSR, kxtf9_wake_show, kxtf9_wake_store);
-static DEVICE_ATTR(tap, S_IRUGO | S_IWUSR, kxtf9_tap_show, kxtf9_tap_store);
-static DEVICE_ATTR(abort, S_IRUGO | S_IWUGO, NULL, kxtf9_abort_store);
+static DEVICE_ATTR(delay, S_IRUGO|S_IWUGO, kxtf9_delay_show, kxtf9_delay_store);
+static DEVICE_ATTR(enable, S_IRUGO|S_IWUGO, kxtf9_enable_show,
+						kxtf9_enable_store);
+static DEVICE_ATTR(tilt, S_IRUGO|S_IWUSR, kxtf9_tilt_show, kxtf9_tilt_store);
+static DEVICE_ATTR(wake, S_IRUGO|S_IWUSR, kxtf9_wake_show, kxtf9_wake_store);
+static DEVICE_ATTR(tap, S_IRUGO|S_IWUSR, kxtf9_tap_show, kxtf9_tap_store);
+static DEVICE_ATTR(abort, S_IRUGO|S_IWUGO, NULL, kxtf9_abort_store);
 static DEVICE_ATTR(selftest, S_IWUSR, NULL, kxtf9_selftest_store);
 
 static struct attribute *kxtf9_attributes[] = {
@@ -931,10 +923,9 @@ static struct attribute *kxtf9_attributes[] = {
 static struct attribute_group kxtf9_attribute_group = {
 	.attrs = kxtf9_attributes
 };
-
 /* /sysfs */
 static int __devinit kxtf9_probe(struct i2c_client *client,
-				 const struct i2c_device_id *id)
+						const struct i2c_device_id *id)
 {
 	int err = -1;
 	struct kxtf9_data *tf9 = kzalloc(sizeof(*tf9), GFP_KERNEL);
@@ -997,7 +988,7 @@ static int __devinit kxtf9_probe(struct i2c_client *client,
 	tf9->resume[RES_TAP_TIMER] = tf9->pdata->tdt_tap_timer_init;
 	tf9->resume[RES_TOTAL_TIMER] = tf9->pdata->tdt_total_timer_init;
 	tf9->resume[RES_LAT_TIMER] = tf9->pdata->tdt_latency_timer_init;
-	tf9->resume[RES_WIN_TIMER] = tf9->pdata->tdt_window_timer_init;
+	tf9->resume[RES_WIN_TIMER]    = tf9->pdata->tdt_window_timer_init;
 	tf9->res_interval = tf9->pdata->poll_interval;
 
 	err = kxtf9_device_power_on(tf9);
@@ -1029,8 +1020,7 @@ static int __devinit kxtf9_probe(struct i2c_client *client,
 	aprintk("kxtf9: kxtf9_probe > kxtf9 disabled!\n");
 
 	err = request_irq(tf9->irq, kxtf9_isr,
-			  IRQF_TRIGGER_FALLING | IRQF_DISABLED, "kxtf9-irq",
-			  tf9);
+			IRQF_TRIGGER_FALLING | IRQF_DISABLED, "kxtf9-irq", tf9);
 	aprintk("kxtf9: kxtf9_probe > Request IRQ successfully!\n");
 
 	if (err < 0) {
@@ -1068,6 +1058,7 @@ err0:
 	return err;
 }
 
+
 static int __devexit kxtf9_remove(struct i2c_client *client)
 {
 	struct kxtf9_data *tf9 = i2c_get_clientdata(client);
@@ -1094,32 +1085,39 @@ static int __devexit kxtf9_remove(struct i2c_client *client)
 static int kxtf9_resume(struct i2c_client *client)
 {
 	struct kxtf9_data *tf9 = i2c_get_clientdata(client);
-	printk("KXTF9 resume\n");
+
 	return kxtf9_enable(tf9);
 }
 
 static int kxtf9_suspend(struct i2c_client *client, pm_message_t mesg)
 {
 	struct kxtf9_data *tf9 = i2c_get_clientdata(client);
-	printk("KXTF9 suspend\n");
+
 	return kxtf9_disable(tf9);
 }
 #endif
+void remove_i2c_driver(void);
+static void  kxtf9_shutdown(struct i2c_client *client)
+{
+       struct kxtf9_data *tf9 = i2c_get_clientdata(client);
+       kxtf9_device_power_off(tf9);
+       cancel_work_sync(&tf9->irq_work);
+	cancel_delayed_work_sync(&tf9->input_work);
+       remove_i2c_driver();
+	printk("kxtf9: Shutdown. \n");
+}
+
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
 static void kxtf9_late_resume(struct early_suspend *handler)
 {
-	struct kxtf9_data *tf9 =
-	    container_of(handler, struct kxtf9_data, early_suspend);
-	printk("KXTF9 late resume\n");
+	struct kxtf9_data *tf9 = container_of(handler, struct kxtf9_data, early_suspend);
 	kxtf9_resume(tf9->client);
 }
 
 static void kxtf9_early_suspend(struct early_suspend *handler)
 {
-	struct kxtf9_data *tf9 =
-	    container_of(handler, struct kxtf9_data, early_suspend);
-	printk("KXTF9 early suspend\n");
+	struct kxtf9_data *tf9 = container_of(handler, struct kxtf9_data, early_suspend);
 	kxtf9_suspend(tf9->client, PMSG_SUSPEND);
 }
 #endif
@@ -1141,9 +1139,14 @@ static struct i2c_driver kxtf9_driver = {
 	.resume = kxtf9_resume,
 	.suspend = kxtf9_suspend,
 #endif
+       .shutdown = kxtf9_shutdown,
 	.id_table = kxtf9_id,
 };
 
+void remove_i2c_driver(void)
+{
+	i2c_del_driver(&kxtf9_driver);
+}
 static int __init kxtf9_init(void)
 {
 	aprintk("kxtf9: kxtf9_init ...\n");
@@ -1153,7 +1156,6 @@ static int __init kxtf9_init(void)
 static void __exit kxtf9_exit(void)
 {
 	i2c_del_driver(&kxtf9_driver);
-	printk("KXTF9 exit function\n");
 }
 
 module_init(kxtf9_init);
