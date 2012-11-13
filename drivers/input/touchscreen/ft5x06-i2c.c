@@ -89,8 +89,8 @@ typedef struct ft506_touch_data {
 	unsigned char x_l;
 	unsigned char y_h;
 	unsigned char y_l;
-	unsigned char res1;
-	unsigned char res2;
+	unsigned char pressure;
+	unsigned char area;
 } point_data;
 
 typedef struct ft506 {
@@ -284,6 +284,7 @@ void ft5x06_xy_worker(struct work_struct *work)
 		rev_y = false;
 	}
 
+	u8 touches = 0;
 	/* process the touches */
 	for(id = 0; id < FT_NUM_MT_TCH_ID; id++)
 	{
@@ -311,17 +312,16 @@ void ft5x06_xy_worker(struct work_struct *work)
 	        {
 	            y = INVERT_Y(y, ts->platform_data->maxy-1);
 	        }
+	        touches++;
 	        /* Fix sluggish scrolling */
 	        if (x == ts->prv_mt_pos[_id][FT_XPOS] &&
 	        	y == ts->prv_mt_pos[_id][FT_YPOS] && cur_tch == 1 && ts->prv_tch == cur_tch) {
 	        	continue;
 	        }
-         	input_report_abs(ts->input, ABS_MT_TRACKING_ID, _id);
-			input_report_abs(ts->input, ABS_MT_WIDTH_MAJOR, curr_tool_width);
+	        input_report_abs(ts->input, ABS_MT_PRESSURE, tch_data.points[id].pressure);
+         	input_report_abs(ts->input, ABS_MT_TOUCH_MAJOR, tch_data.points[id].area  >> 4);
 			input_report_abs(ts->input, ABS_MT_POSITION_X, x);
 			input_report_abs(ts->input, ABS_MT_POSITION_Y, y);
-			input_report_abs(ts->input, ABS_MT_TOUCH_MAJOR, 0xe);
-	        input_report_key(ts->input, BTN_TOUCH, 1);
 	        input_mt_sync(ts->input);
 	        ts->prv_mt_pos[_id][FT_XPOS] = x;
 	        ts->prv_mt_pos[_id][FT_YPOS] = y;
@@ -332,9 +332,11 @@ void ft5x06_xy_worker(struct work_struct *work)
          }
 	}
 
+	input_report_key(ts->input, BTN_TOUCH, touches > 0);
+
 	/* handle gestures */
 	if (ts->platform_data->use_gestures) {
-		if (g_xy_data.gest_id) {
+		if (g_xy_data.gest_id && touches) {
 			if (prev_gest == g_xy_data.gest_id) {
 				gest_count++;
 			} else {
@@ -2481,18 +2483,7 @@ static int ft5x06_initialize(struct i2c_client *client, struct ft5x06 *ts)
 	set_bit(EV_ABS, input_device->evbit);
 
 	set_bit(BTN_TOUCH, input_device->keybit);
-	set_bit(BTN_2, input_device->keybit);
 
-	if (ts->platform_data->use_gestures) {
-		set_bit(BTN_3, input_device->keybit);
-	}
-
-	input_set_abs_params(input_device, ABS_X, 0, ts->platform_data->maxx, 0,
-			     0);
-	input_set_abs_params(input_device, ABS_Y, 0, ts->platform_data->maxy, 0,
-			     0);
-	input_set_abs_params(input_device, ABS_TOOL_WIDTH, 0,
-			     FT_LARGE_TOOL_WIDTH, 0, 0);
 	input_set_abs_params(input_device, ABS_PRESSURE, 0, FT_MAXZ, 0, 0);
 	input_set_abs_params(input_device, ABS_HAT0X, 0,
 			     ts->platform_data->maxx, 0, 0);
@@ -2512,16 +2503,9 @@ static int ft5x06_initialize(struct i2c_client *client, struct ft5x06 *ts)
 				     ts->platform_data->maxy, 0, 0);
 		input_set_abs_params(input_device, ABS_MT_TOUCH_MAJOR, 0,
 				     FT_MAXZ, 0, 0);
-		input_set_abs_params(input_device, ABS_MT_WIDTH_MAJOR, 0,
-				     FT_LARGE_TOOL_WIDTH, 0, 0);
-
-		if (ts->platform_data->use_trk_id) {
-			input_set_abs_params(input_device, ABS_MT_TRACKING_ID,
-					     0, FT_NUM_TRK_ID, 0, 0);
-		}
+		input_set_abs_params(input_device, ABS_MT_PRESSURE, 0, FT_MAXZ,
+		                0, 0);
 	}
-
-	input_set_capability(input_device, EV_KEY, KEY_PROG1);
 
 	retval = input_register_device(input_device);
 	if (0 != retval) {
