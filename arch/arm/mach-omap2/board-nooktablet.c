@@ -109,10 +109,10 @@
 #define FT5x06_I2C_SLAVEADDRESS  	(0x70 >> 1)
 #define OMAP_FT5x06_POWER_GPIO   	36
 #define OMAP_FT5x06_GPIO     	37 /*99*/
-#define OMAP_LCD_ENABLE_PIN      	38
+#define LCD_BL_PWR_EN_GPIO      	38
 #define OMAP_FT5x06_RESET_GPIO   	39 /*46*/
-#define OMAP_BOXER_CABC0         	44
-#define OMAP_BOXER_CABC1         	45
+#define LCD_CABC0_GPIO         	44
+#define LCD_CABC1_GPIO         	45
 
 #define TWL6030_RTC_GPIO 		6
 #define CONSOLE_UART			UART1
@@ -1371,37 +1371,33 @@ acclaim_disp_backlight_setpower(struct omap_pwm_led_platform_data *pdata,
 	printk(KERN_INFO "Backlight set power, on_off = %d\n",on_off);
 	if (on_off) {
 		msleep (350);  // give the boxer resume some time do spi init
-		gpio_direction_output(OMAP_LCD_ENABLE_PIN,
+		gpio_direction_output(LCD_BL_PWR_EN_GPIO,
 				      (acclaim_board_type() >= EVT2) ? 1 : 0);
 	} else {
 		msleep (100); // give the pwm led driver some time do dim
-		gpio_direction_output(OMAP_LCD_ENABLE_PIN,
+		gpio_direction_output(LCD_BL_PWR_EN_GPIO,
 				      (acclaim_board_type() >= EVT2) ? 0 : 1);
 	}
 
-	gpio_direction_output(OMAP_BOXER_CABC0, 0);
-	gpio_direction_output(OMAP_BOXER_CABC1, 0);
+	gpio_direction_output(LCD_CABC0_GPIO, 0);
+	gpio_direction_output(LCD_CABC0_GPIO, 0);
 
 	pr_debug("%s: on_off:%d\n", __func__, on_off);
 }
 
-static struct omap_pwm_led_platform_data acclaim_disp_backlight_data = {
-	.name 		 = "lcd-backlight",
-	.default_trigger  = "backlight",
-	.intensity_timer = 11,
-	.bkl_max    = 254,
-	.bkl_min    = 5,
-	.bkl_freq    = 128*2,
-	.invert     = 1,
-	.def_brightness	 = DEFAULT_BACKLIGHT_BRIGHTNESS,
-	.set_power	 = acclaim_disp_backlight_setpower,
+static struct omap_pwm_led_platform_data acclaim4430_disp_backlight_data = {
+        .name            = "lcd-backlight",
+        .pwm_module_id   = 11,
+        .def_on          = 0,
+        .set_power       = acclaim_disp_backlight_setpower,
+        .def_brightness  = DEFAULT_BACKLIGHT_BRIGHTNESS,
 };
 
 static struct platform_device acclaim_disp_led = {
 	.name	=	"omap_pwm_led",
 	.id	=	0,
 	.dev	= {
-		.platform_data = &acclaim_disp_backlight_data,
+		.platform_data = &acclaim4430_disp_backlight_data,
 	},
 };
 
@@ -1414,16 +1410,16 @@ static void acclaim_panel_get_resource(void)
 	int ret_val = 0;
 
 	pr_info("acclaim_panel_get_resource\n");
-	ret_val = gpio_request(OMAP_LCD_ENABLE_PIN, "BOXER BL PWR EN");
+	ret_val = gpio_request(LCD_BL_PWR_EN_GPIO, "BOXER BL PWR EN");
 
 	if ( ret_val ) {
 		printk("%s : Could not request bl pwr en\n",__FUNCTION__);
 	}
-	ret_val = gpio_request(OMAP_BOXER_CABC0, "BOXER CABC0");
+	ret_val = gpio_request(LCD_CABC0_GPIO, "BOXER CABC0");
 	if ( ret_val ){
 		printk( "%s : could not request CABC0\n",__FUNCTION__);
 	}
-	ret_val = gpio_request(OMAP_BOXER_CABC1, "BOXER CABC1");
+	ret_val = gpio_request(LCD_CABC1_GPIO, "BOXER CABC1");
 	if ( ret_val ) {
 		printk("%s: could not request CABC1\n",__FUNCTION__);
 	}

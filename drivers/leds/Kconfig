@@ -376,19 +376,26 @@ config LEDS_OMAP4430_SDP_DISPLAY
 	  This option enables support for display LEDs on the
           OMAP4430 SDP.
 
+config LEDS_OMAP_PWM
+        tristate "PWM LED support for OMAP3/4 platforms"
+        depends on LEDS_CLASS
+        help
+          This option enables support for PWM LEDs on the
+	  OMAP3/4 platforms.
+
+config OMAP_PWM_LED_TYPE_DMTIMER
+        tristate "PWM LED support for OMAP3/4 GPTIMER"
+        depends on LEDS_OMAP_PWM
+        help
+          This option enables support for PWM LEDs on the
+          OMAP3/4 GPTIMER.
+
 config LEDS_OMAP4430_SDP_KEYPAD
 	bool "Keypad LED support for OMAP4430 SDP"
 	depends on LEDS_CLASS
 	help
 	  This option enables support for keypad LEDs on the
           OMAP4430 SDP
-
-config LEDS_OMAP_PWM
-	tristate "LED Support for OMAP PWM-controlled LEDs"
-	depends on LEDS_CLASS && ARCH_OMAP && OMAP_DM_TIMER
-	help
-	  This options enables support for LEDs connected to GPIO lines
-	  controlled by a PWM timer on OMAP CPUs.
 
 config LEDS_NS2
 	tristate "LED support for Network Space v2 GPIO LEDs"
@@ -409,13 +416,6 @@ config LEDS_NETXBIG
 	  and 5Big Network v2 boards. The LEDs are wired to a CPLD and are
 	  controlled through a GPIO extension bus.
 
-config LEDS_OMAP_PWM
-	tristate "PWM LED support for OMAP3/4 platforms"
-	depends on LEDS_CLASS
-	help
-	  This option enables support for PWM LEDs on the
-	  OMAP3/4 platforms.
-  
 config LEDS_ASIC3
 	bool "LED support for the HTC ASIC3"
 	depends on LEDS_CLASS

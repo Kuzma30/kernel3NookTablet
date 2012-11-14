@@ -114,20 +114,19 @@ struct omap_fbmem_config {
 	u32 size;
 };
 
+/*
+enum omap_pwm_led_pwm_type {
+	OMAP_PWM_LED_PWM_TYPE_DMTIMER = 0,
+	OMAP_PWM_LED_PWM_TYPE_TWL6030
+	};
+	*/
 struct omap_pwm_led_platform_data {
 	const char *name;
-	int intensity_timer;
-	int blink_timer;
+	//enum omap_pwm_led_pwm_type pwm_module_type;
+	int pwm_module_id;
+	int def_on;
 	void (*set_power)(struct omap_pwm_led_platform_data *self, int on_off);
-	void (*set_pad)(struct omap_pwm_led_platform_data *Self, int on_off);
-	u8 def_brightness;
-#ifdef CONFIG_LEDS_OMAP_PWM
-	const char *default_trigger;
-	unsigned int bkl_freq;
-	unsigned char bkl_max;
-	unsigned char bkl_min;
-	unsigned invert;
-#endif
+	int def_brightness;
 };
 
 struct omap_uart_config {
@@ -175,10 +174,6 @@ extern int omap_board_config_size;
 
 /* for TI reference platforms sharing the same debug card */
 extern int debug_card_init(u32 addr, unsigned gpio);
-
-u8 quanta_get_mbid(void);
-u8 quanta_get_touchid(void);
-u8 quanta_get_panelid(void);
 
 /* OMAP3EVM revision */
 #if defined(CONFIG_MACH_OMAP3EVM)

@@ -53,6 +53,7 @@
 #define _OMAP_TIMER_SYS_STAT_OFFSET	0x14
 #define _OMAP_TIMER_STAT_OFFSET		0x18
 #define _OMAP_TIMER_INT_EN_OFFSET	0x1c
+#define _OMAP_TIMER_INT_CLR_OFFSET	0x30
 #define _OMAP_TIMER_WAKEUP_EN_OFFSET	0x20
 #define _OMAP_TIMER_CTRL_OFFSET		0x24
 #define		OMAP_TIMER_CTRL_GPOCFG		(1 << 14)
@@ -109,6 +110,9 @@
 							| (WP_NONE << WPSHIFT))
 
 #define OMAP_TIMER_INT_EN_REG			(_OMAP_TIMER_INT_EN_OFFSET \
+							| (WP_NONE << WPSHIFT))
+
+#define	OMAP_TIMER_INT_CLR_REG			(_OMAP_TIMER_INT_CLR_OFFSET \
 							| (WP_NONE << WPSHIFT))
 
 #define OMAP_TIMER_WAKEUP_EN_REG		(_OMAP_TIMER_WAKEUP_EN_OFFSET \
@@ -181,10 +185,13 @@ static inline u32 omap_dm_timer_read_reg(struct omap_dm_timer *timer, u32 reg)
 {
 	int i = 0;
 
-	if (reg >= OMAP_TIMER_WAKEUP_EN_REG)
-		reg += timer->func_offset;
-	else if (reg >= OMAP_TIMER_STAT_REG)
-		reg += timer->intr_offset;
+	if (reg != OMAP_TIMER_INT_CLR_REG)
+	{
+		if (reg >= OMAP_TIMER_WAKEUP_EN_REG)
+			reg += timer->func_offset;
+		else if (reg >= OMAP_TIMER_STAT_REG)
+			reg += timer->intr_offset;
+	}
 
 	if (timer->posted) {
 		omap_test_timeout(!(readl(timer->io_base +
@@ -214,10 +221,13 @@ static void omap_dm_timer_write_reg(struct omap_dm_timer *timer, u32 reg,
 {
 	int i = 0;
 
-	if (reg >= OMAP_TIMER_WAKEUP_EN_REG)
-		reg += timer->func_offset;
-	else if (reg >= OMAP_TIMER_STAT_REG)
-		reg += timer->intr_offset;
+	if (reg != OMAP_TIMER_INT_CLR_REG)
+	{
+		if (reg >= OMAP_TIMER_WAKEUP_EN_REG)
+			reg += timer->func_offset;
+		else if (reg >= OMAP_TIMER_STAT_REG)
+			reg += timer->intr_offset;
+	}
 
 	if (timer->posted) {
 		omap_test_timeout(!(readl(timer->io_base +
@@ -283,14 +293,8 @@ static void omap_timer_restore_context(struct omap_dm_timer *timer)
 static void __timer_enable(struct omap_dm_timer *timer)
 {
 	if (!timer->enabled) {
-		if (timer->loses_context) {
+		if (timer->loses_context)
 			pm_runtime_get_sync(&timer->pdev->dev);
-			if (omap_pm_was_context_lost(&timer->pdev->dev) &&
-				timer->context_saved) {
-				omap_timer_restore_context(timer);
-				timer->context_saved = false;
-			}
-		}
 		timer->enabled = 1;
 	}
 }
@@ -298,11 +302,8 @@ static void __timer_enable(struct omap_dm_timer *timer)
 static void __timer_disable(struct omap_dm_timer *timer)
 {
 	if (timer->enabled) {
-		if (timer->loses_context) {
-			omap_timer_save_context(timer);
-			timer->context_saved = true;
+		if (timer->loses_context)
 			pm_runtime_put_sync_suspend(&timer->pdev->dev);
-		}
 		timer->enabled = 0;
 	}
 }
@@ -584,8 +585,6 @@ int omap_dm_timer_start(struct omap_dm_timer *timer)
 
 	spin_lock_irqsave(&timer->lock, flags);
 	__timer_enable(timer);
-/* FIXME-HASH: Removed for Archos dmtimer.c merge */
-#if 0
 	if (timer->loses_context) {
 		if (omap_pm_was_context_lost(&timer->pdev->dev) &&
 			timer->context_saved) {
@@ -593,7 +592,7 @@ int omap_dm_timer_start(struct omap_dm_timer *timer)
 			timer->context_saved = false;
 		}
 	}
-#endif
+
 	l = omap_dm_timer_read_reg(timer, OMAP_TIMER_CTRL_REG);
 	if (!(l & OMAP_TIMER_CTRL_ST)) {
 		l |= OMAP_TIMER_CTRL_ST;
@@ -639,13 +638,10 @@ int omap_dm_timer_stop(struct omap_dm_timer *timer)
 	omap_dm_timer_write_reg(timer, OMAP_TIMER_STAT_REG,
 			OMAP_TIMER_INT_OVERFLOW);
 
-/* FIXME-HASH: Removed for Archos dmtimer.c merge */
-#if 0
 	if (timer->loses_context) {
 		omap_timer_save_context(timer);
 		timer->context_saved = true;
 	}
-#endif
 	__timer_disable(timer);
 	spin_unlock_irqrestore(&timer->lock, flags);
 	return 0;
@@ -688,15 +684,11 @@ int omap_dm_timer_set_load(struct omap_dm_timer *timer, int autoreload,
 	u32 l;
 
 	unsigned long flags;
-	bool was_enabled;
-	
 	if (!timer)
 		return -EINVAL;
 
 	spin_lock_irqsave(&timer->lock, flags);
-	was_enabled = timer->enabled;
-	if (!was_enabled)
-		__timer_enable(timer);
+	__timer_enable(timer);
 	l = omap_dm_timer_read_reg(timer, OMAP_TIMER_CTRL_REG);
 	if (autoreload)
 		l |= OMAP_TIMER_CTRL_AR;
@@ -706,8 +698,7 @@ int omap_dm_timer_set_load(struct omap_dm_timer *timer, int autoreload,
 	omap_dm_timer_write_reg(timer, OMAP_TIMER_LOAD_REG, load);
 
 	omap_dm_timer_write_reg(timer, OMAP_TIMER_TRIGGER_REG, 0);
-	if (!was_enabled)
-		__timer_disable(timer);
+	__timer_disable(timer);
 	spin_unlock_irqrestore(&timer->lock, flags);
 	return 0;
 }
@@ -723,10 +714,6 @@ int omap_dm_timer_set_load_start(struct omap_dm_timer *timer, int autoreload,
 		return -EINVAL;
 
 	spin_lock_irqsave(&timer->lock, flags);
-	if (!timer->is_early_init)
-		__timer_enable(timer);
-/* FIXME-HASH: Removed for Archos dmtimer.c merge */
-#if 0
 	__timer_enable(timer);
 	if (timer->loses_context) {
 		if (omap_pm_was_context_lost(&timer->pdev->dev) &&
@@ -735,7 +722,7 @@ int omap_dm_timer_set_load_start(struct omap_dm_timer *timer, int autoreload,
 			timer->context_saved = false;
 		}
 	}
-#endif
+
 	l = omap_dm_timer_read_reg(timer, OMAP_TIMER_CTRL_REG);
 	if (autoreload) {
 		l |= OMAP_TIMER_CTRL_AR;
@@ -757,15 +744,12 @@ int omap_dm_timer_set_match(struct omap_dm_timer *timer, int enable,
 {
 	u32 l;
 	unsigned long flags;
-	bool was_enabled;
 
 	if (!timer)
 		return -EINVAL;
 
 	spin_lock_irqsave(&timer->lock, flags);
-	was_enabled = timer->enabled;
-	if (!was_enabled)
-		__timer_enable(timer);
+	__timer_enable(timer);
 	l = omap_dm_timer_read_reg(timer, OMAP_TIMER_CTRL_REG);
 	if (enable)
 		l |= OMAP_TIMER_CTRL_CE;
@@ -773,27 +757,40 @@ int omap_dm_timer_set_match(struct omap_dm_timer *timer, int enable,
 		l &= ~OMAP_TIMER_CTRL_CE;
 	omap_dm_timer_write_reg(timer, OMAP_TIMER_CTRL_REG, l);
 	omap_dm_timer_write_reg(timer, OMAP_TIMER_MATCH_REG, match);
-	if (!was_enabled)
-		__timer_disable(timer);
+	__timer_disable(timer);
 	spin_unlock_irqrestore(&timer->lock, flags);
 	return 0;
 }
 EXPORT_SYMBOL_GPL(omap_dm_timer_set_match);
+
+unsigned int omap_dm_timer_get_match(struct omap_dm_timer *timer)
+{
+	u32 match_val;
+	unsigned long flags;
+
+	if (!timer)
+		return -EINVAL;
+
+	spin_lock_irqsave(&timer->lock, flags);
+	__timer_enable(timer);
+	match_val = omap_dm_timer_read_reg(timer, OMAP_TIMER_MATCH_REG);
+	__timer_disable(timer);
+	spin_unlock_irqrestore(&timer->lock, flags);
+	return match_val;
+}
+EXPORT_SYMBOL_GPL(omap_dm_timer_get_match);
 
 int omap_dm_timer_set_pwm(struct omap_dm_timer *timer, int def_on,
 			   int toggle, int trigger)
 {
 	u32 l;
 	unsigned long flags;
-	bool was_enabled;
 
 	if (!timer)
 		return -EINVAL;
 
 	spin_lock_irqsave(&timer->lock, flags);
-	was_enabled = timer->enabled;
-	if (!was_enabled)
-		__timer_enable(timer);
+	__timer_enable(timer);
 	l = omap_dm_timer_read_reg(timer, OMAP_TIMER_CTRL_REG);
 	l &= ~(OMAP_TIMER_CTRL_GPOCFG | OMAP_TIMER_CTRL_SCPWM |
 	       OMAP_TIMER_CTRL_PT | (0x03 << 10));
@@ -803,8 +800,7 @@ int omap_dm_timer_set_pwm(struct omap_dm_timer *timer, int def_on,
 		l |= OMAP_TIMER_CTRL_PT;
 	l |= trigger << 10;
 	omap_dm_timer_write_reg(timer, OMAP_TIMER_CTRL_REG, l);
-	if (!was_enabled)
-		__timer_disable(timer);
+	__timer_disable(timer);
 	spin_unlock_irqrestore(&timer->lock, flags);
 	return 0;
 }
@@ -853,6 +849,37 @@ int omap_dm_timer_set_int_enable(struct omap_dm_timer *timer,
 	return 0;
 }
 EXPORT_SYMBOL_GPL(omap_dm_timer_set_int_enable);
+
+int omap_dm_timer_set_int_disable(struct omap_dm_timer *timer,
+				 unsigned int value)
+{
+	u32 l;
+	struct dmtimer_platform_data *pdata = timer->pdev->dev.platform_data;
+	unsigned long flags;
+
+	if (!timer)
+		return -EINVAL;
+
+	spin_lock_irqsave(&timer->lock, flags);
+	if (!timer->is_early_init)
+		__timer_enable(timer);
+
+	l = omap_dm_timer_read_reg(timer, OMAP_TIMER_WAKEUP_EN_REG);
+	if (pdata->timer_ip_type == OMAP_TIMER_IP_VERSION_2) {
+		l |= value;
+		omap_dm_timer_write_reg(timer, OMAP_TIMER_INT_CLR_REG, value);
+	} else {
+		l &= ~value;
+		omap_dm_timer_write_reg(timer, OMAP_TIMER_INT_EN_REG, l);
+	}
+	omap_dm_timer_write_reg(timer, OMAP_TIMER_WAKEUP_EN_REG, l);
+
+	if (!timer->is_early_init)
+		__timer_disable(timer);
+	spin_unlock_irqrestore(&timer->lock, flags);
+	return 0;
+}
+EXPORT_SYMBOL_GPL(omap_dm_timer_set_int_disable);
 
 unsigned int omap_dm_timer_read_status(struct omap_dm_timer *timer)
 {
