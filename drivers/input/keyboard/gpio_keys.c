@@ -33,6 +33,7 @@ struct gpio_button_data {
 	struct work_struct work;
 	int timer_debounce;	/* in msecs */
 	bool disabled;
+	bool suspend;
 };
 
 struct gpio_keys_drvdata {
@@ -328,8 +329,19 @@ static void gpio_keys_report_event(struct gpio_button_data *bdata)
 		if (state)
 			input_event(input, type, button->code, button->value);
 	} else {
-		input_event(input, type, button->code, !!state);
+	       /*
+         	* Workaround for BN home button resume
+		* System wake up is not fast enough,
+		* and there are possibilities home button press to not be detected
+         	*/
+		if (button->resume_event) {
+			button->resume_event = false;
+			bdata->suspend = false;
+			input_event(input, type, button->code, 1);
+		} else
+			input_event(input, type, button->code, !!state);
 	}
+
 	input_sync(input);
 }
 
@@ -354,6 +366,10 @@ static irqreturn_t gpio_keys_isr(int irq, void *dev_id)
 	struct gpio_keys_button *button = bdata->button;
 
 	BUG_ON(irq != gpio_to_irq(button->gpio));
+
+	/* workaround for BN home button resume */
+	if(bdata->suspend)
+		button->resume_event = true;
 
 	if (bdata->timer_debounce)
 		mod_timer(&bdata->timer,
@@ -503,6 +519,8 @@ static int __devinit gpio_keys_probe(struct platform_device *pdev)
 		if (button->wakeup)
 			wakeup = 1;
 
+		bdata->suspend = false;
+
 		input_set_capability(input, type, button->code);
 	}
 
@@ -579,6 +597,7 @@ static int gpio_keys_suspend(struct device *dev)
 {
 	struct platform_device *pdev = to_platform_device(dev);
 	struct gpio_keys_platform_data *pdata = pdev->dev.platform_data;
+	struct gpio_keys_drvdata *ddata = platform_get_drvdata(pdev);
 	int i;
 
 	if (device_may_wakeup(&pdev->dev)) {
@@ -587,6 +606,7 @@ static int gpio_keys_suspend(struct device *dev)
 			if (button->wakeup) {
 				int irq = gpio_to_irq(button->gpio);
 				enable_irq_wake(irq);
+				ddata->data[i].suspend = true;
 			}
 		}
 	}
@@ -612,7 +632,6 @@ static int gpio_keys_resume(struct device *dev)
 		gpio_keys_report_event(&ddata->data[i]);
 	}
 	input_sync(ddata->input);
-
 	return 0;
 }
 
