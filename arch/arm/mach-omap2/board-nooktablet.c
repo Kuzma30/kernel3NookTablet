@@ -621,9 +621,9 @@ static struct omap2_hsmmc_info mmc[] = {
 		.gpio_cd	= -EINVAL,
 		.gpio_wp	= -EINVAL,
 		.nonremovable 	= false,
-#ifdef CONFIG_PM_RUNTIME
-		.power_saving	= true,
-#endif
+//#ifdef CONFIG_PM_RUNTIME
+//		.power_saving	= true,
+//#endif
 	},
 	{
 		.name           = "wl1271",
