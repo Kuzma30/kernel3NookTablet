@@ -280,7 +280,6 @@ obj-$(CONFIG_MACH_OMAP_4430SDP)		+= board-4430sdp.o \
 					   omap4_apps_brd_id.o
 obj-$(CONFIG_MACH_OMAP4_NOOKTABLET)	+= board-nooktablet.o\
 					   hsmmc.o\
-					   board-acclaim-sensors.c \
 					   board-44xx-identity.o \
 					   omap4_apps_brd_id.o \
 					   omap_phy_internal.o
