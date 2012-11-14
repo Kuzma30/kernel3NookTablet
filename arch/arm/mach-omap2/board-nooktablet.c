@@ -607,10 +607,11 @@ static struct omap2_hsmmc_info mmc[] = {
 		.gpio_cd	= -EINVAL,
 		.gpio_wp	= -EINVAL,
 		.ocr_mask	= MMC_VDD_29_30,
-		.nonremovable   = true,
-#ifdef CONFIG_PM_RUNTIME
-		.power_saving	= true,
-#endif
+		.nonremovable	= true,
+		.no_off_init	= true,
+//#ifdef CONFIG_PM_RUNTIME
+//		.power_saving	= true,
+//#endif
 	},
 	{
 		.mmc		= 1,
@@ -845,13 +846,14 @@ static struct regulator_init_data acclaim_vusb = {
 
 static struct regulator_init_data acclaim_clk32kg = {
 	.constraints = {
-		.valid_ops_mask	 = REGULATOR_CHANGE_STATUS,
+		.valid_modes_mask	= REGULATOR_MODE_NORMAL,
+		.valid_ops_mask		= REGULATOR_CHANGE_STATUS,
 		.always_on	= true,
 	},
 };
 
 static struct twl4030_madc_platform_data acclaim_gpadc_data = {
-	.irq_line	= 1,
+	.irq_line	= -1,
 };
 
 static int acclaim_batt_table[] = {
@@ -1330,7 +1332,6 @@ static void __init acclaim_init(void)
 	status = omap4_keyboard_init(&acclaim_keypad_data);
 	if (status)
 		pr_err("Keypad initialization failed: %d\n", status);
-
 	omap_dmm_init();
 	acclaim_panel_init();
 	omap_enable_smartreflex_on_init();
