@@ -1260,9 +1260,7 @@ static int report_typeA_event(struct ft5x06 *ts)
 			{
 				DBG_PRINT(dbg_level_debug, "%s: " FTX_TAG ": %s(): DEBUG: Reporting MT touch event: NO EVENT\n", dev_name(&(ts->client->dev)), __func__);
 			}
-			/*
-			 * Fall through
-			 */
+			break;
 		case FT_TOUCH_EVENT_LIFT_UP:
 			{
 				DBG_PRINT(dbg_level_debug, "%s: " FTX_TAG ": %s(): DEBUG: Reporting MT touch event: LIFT UP\n", dev_name(&(ts->client->dev)), __func__);
@@ -1340,6 +1338,9 @@ static void ft5x06_process_touch(struct work_struct *work)
 			cur_tch->n_fingers = 0;
 		}
 
+		if (cur_tch->n_fingers > 0 && cur_tch->n_fingers < ts->prev_fingers.n_active_fingers) {
+			cur_tch->n_fingers = ts->prev_fingers.n_active_fingers;
+		}
 		for(iLoop = 0; iLoop < cur_tch->n_fingers; iLoop++)
 		{
 			ret = i2c_smbus_read_i2c_block_data(ts->client, FT5x06_WMREG_P1_XH + (iLoop * 6), sizeof(ft5x06_xydata_t), (u8 *)&(cur_tch->fingers[iLoop])); /* 6 = 4 xy data bytes + 1 pressure byte + 1 area byte */
@@ -1514,6 +1515,7 @@ static void ft5x06_process_touch(struct work_struct *work)
 
 		/* Swap the current and previous finger */
 		SWAP(ts->cur_fingers.n_fingers, ts->prev_fingers.n_fingers);
+		SWAP(ts->cur_fingers.n_active_fingers, ts->prev_fingers.n_active_fingers);
 		SWAP(ts->cur_fingers.fingers_mask, ts->prev_fingers.fingers_mask);
 		iLoop = (unsigned long)ts->cur_fingers.fingers;
 		ts->cur_fingers.fingers = ts->prev_fingers.fingers;
