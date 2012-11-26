@@ -661,7 +661,7 @@ void omap4_init_power_states(void)
 	omap4_power_states[OMAP4_STATE_C4].target_residency =
 			cpuidle_params_table[OMAP4_STATE_C4].target_residency;
 	omap4_power_states[OMAP4_STATE_C4].mpu_state = PWRDM_POWER_RET;
-	omap4_power_states[OMAP4_STATE_C4].mpu_logic_state = PWRDM_POWER_OFF;
+	omap4_power_states[OMAP4_STATE_C4].mpu_logic_state = PWRDM_POWER_RET;
 	omap4_power_states[OMAP4_STATE_C4].core_state = PWRDM_POWER_RET;
 	omap4_power_states[OMAP4_STATE_C4].core_logic_state = PWRDM_POWER_OFF;
 	omap4_power_states[OMAP4_STATE_C4].desc = "CPUs OFF, MPU OSWR + CORE OSWR";
