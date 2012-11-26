@@ -552,6 +552,12 @@ config OMAP_RFKILL_STE_MODEM
 	  of the modem as well as necessary dynamic pin muxing of AP/CP
 	  interfaces (platform data dependant)
 
+config OMAP_IPU_DEEPIDLE
+	bool "Enable C-states > C1 when IPU is active"
+	default n
+	help
+	  Enable C-states > C1 during hardware-accelerated video playback.
+
 endmenu
 
 endif
