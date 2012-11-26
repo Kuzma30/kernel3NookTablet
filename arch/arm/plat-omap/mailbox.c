@@ -255,7 +255,11 @@ static int omap_mbox_startup(struct omap_mbox *mbox)
 	if (!mbox_configured++) {
 		if (mbox->pm_constraint)
 			pm_qos_update_request(&mbox_qos_request,
+#ifdef CONFIG_OMAP_IPU_DEEPIDLE
+					mbox->pm_constraint * 4);
+#else
 					mbox->pm_constraint);
+#endif
 
 		if (likely(mbox->ops->startup)) {
 			ret = mbox->ops->startup(mbox);
