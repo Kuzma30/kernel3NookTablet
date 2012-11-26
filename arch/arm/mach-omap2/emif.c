@@ -403,7 +403,8 @@ static u32 get_sdram_tim_3_reg(const struct lpddr2_timings *timings,
 	mask_n_set(tim3, OMAP44XX_REG_T_RFC_SHIFT, OMAP44XX_REG_T_RFC_MASK,
 		   val);
 
-	val = ns_x2_2_cycles(timings->tDQSCKMAXx2) - 1;
+	/* Updated by Anand */
+	val = ns_x2_2_cycles(timings->tDQSCKMAXx2 + 2) - 1;
 	mask_n_set(tim3, OMAP44XX_REG_T_TDQSCKMAX_SHIFT,
 		   OMAP44XX_REG_T_TDQSCKMAX_MASK, val);
 
@@ -521,6 +522,8 @@ static u32 get_ddr_phy_ctrl_1(u32 freq, u8 RL)
 		val = EMIF_DLL_SLAVE_DLY_CTRL_100_MHZ_AND_LESS;
 	else if (freq <= 200000000)
 		val = EMIF_DLL_SLAVE_DLY_CTRL_200_MHZ;
+	else if (freq <= 233333333)
+		val = EMIF_DLL_SLAVE_DLY_CTRL_233_MHZ;
 	else if (freq <= 400000000)
 		val = EMIF_DLL_SLAVE_DLY_CTRL_400_MHZ;
 	else
@@ -1010,6 +1013,19 @@ static void emif_calculate_regs(const struct emif_device_details *devices,
 
 	regs->ref_ctrl = get_sdram_ref_ctrl(freq, addressing);
 	regs->ref_ctrl_derated = regs->ref_ctrl / 4;
+	switch (freq) {
+	case LPDDR2_466MHZ:
+		regs->ref_ctrl -= 2;
+		break;
+	case LPDDR2_233MHZ:
+		regs->ref_ctrl -= 1;
+		break;
+	default:
+		break;
+	}
+
+	pr_debug("\nEMIF freq=%d ref_ctrl=0x%x derated=0x%x\n",
+				freq, regs->ref_ctrl, regs->ref_ctrl_derated);
 
 	regs->sdram_tim1 = get_sdram_tim_1_reg(timings, min_tck, addressing);
 
@@ -1018,7 +1034,20 @@ static void emif_calculate_regs(const struct emif_device_details *devices,
 
 	regs->sdram_tim2 = get_sdram_tim_2_reg(timings, min_tck);
 
-	regs->sdram_tim3 = get_sdram_tim_3_reg(timings, min_tck, addressing);
+	switch (freq) {
+	case LPDDR2_466MHZ:
+		regs->sdram_tim3 = 0x00D4E3CF;
+		break;
+	case LPDDR2_233MHZ:
+		regs->sdram_tim3 = 0x006A21EF;
+		break;
+	default:
+		regs->sdram_tim3 =
+			get_sdram_tim_3_reg(timings, min_tck, addressing);
+		break;
+	}
+
+	pr_debug("\nSDRAM_TIM_3=0x%x\n", regs->sdram_tim3);
 
 	regs->read_idle_ctrl_normal =
 	    get_read_idle_ctrl_reg(LPDDR2_VOLTAGE_STABLE);
