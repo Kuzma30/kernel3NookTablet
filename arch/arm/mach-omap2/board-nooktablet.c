@@ -600,7 +600,6 @@ static struct twl4030_usb_data acclaim_usbphy_data = {
 
 static struct omap2_hsmmc_info mmc[] = {
 	{
-		//internal
 		.mmc		= 2,
 		.caps		= MMC_CAP_4_BIT_DATA 
 		| MMC_CAP_8_BIT_DATA 
@@ -615,12 +614,10 @@ static struct omap2_hsmmc_info mmc[] = {
 //#endif
 	},
 	{
-		//external
 		.mmc		= 1,
-		.caps		= MMC_CAP_4_BIT_DATA,
-//		| MMC_CAP_NEEDS_POLL,
-//		| MMC_CAP_8_BIT_DATA
-//		| MMC_CAP_1_8V_DDR,
+		.caps		= MMC_CAP_4_BIT_DATA 
+		| MMC_CAP_8_BIT_DATA
+		| MMC_CAP_1_8V_DDR,
 		.gpio_cd	= -EINVAL,
 		.gpio_wp	= -EINVAL,
 		.nonremovable 	= false,
