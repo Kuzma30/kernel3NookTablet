@@ -112,7 +112,7 @@ static struct clockdomain *cpu1_cd;
 
 static struct cpuidle_params cpuidle_params_table[] = {
 	/* C1 - CPUx WFI + MPU ON  + CORE ON */
-	{.exit_latency = 2 + 2,	.target_residency = 4, .valid = 1},
+	{.exit_latency = 2 + 2,	.target_residency = 5, .valid = 1},
 	/* C2 - CPU0 INA + CPU1 INA + MPU INA  + CORE INA */
 	{.exit_latency = 1100, .target_residency = 1100, .valid = 1},
 	/* C3 - CPU0 OFF + CPU1 OFF + MPU CSWR + CORE CSWR */
