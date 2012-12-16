@@ -113,8 +113,7 @@
 
 #define FT5x06_UPGRADEVER_REG		0xCD
 
-#define DEBUG				1
-#define FT5x06_DEBUG_VERBOSE             1
+#define FT5x06_DEBUG_VERBOSE             0
 
 #define GET_COORDINATE(l,h) ((l | (( h & 0x0F)<<8)))
 
@@ -1372,7 +1371,6 @@ static void ft5x06_process_touch(struct work_struct *work)
 		/* Determine if display is tilted */
 		if (FLIP_DATA(ts->platform_data->flags))
 		{
-			printk("%s: " FTX_TAG ": %s(): VERBOSE: tilted display, swapping X & Y\n", dev_name(&(ts->client->dev)), __func__);
 			DBG_PRINT(dbg_level_verbose, "%s: " FTX_TAG ": %s(): VERBOSE: tilted display, swapping X & Y\n", dev_name(&(ts->client->dev)), __func__);
 			for(iLoop = 0; iLoop < cur_tch->n_fingers; iLoop++)
 			{
@@ -1383,7 +1381,6 @@ static void ft5x06_process_touch(struct work_struct *work)
 		/* Check for switch in X origin */
 		if (REVERSE_X(ts->platform_data->flags))
 		{
-			printk("%s: " FTX_TAG ": %s(): VERBOSE: X origin reversed, shifting X origin\n", dev_name(&(ts->client->dev)), __func__);
 			DBG_PRINT(dbg_level_verbose, "%s: " FTX_TAG ": %s(): VERBOSE: X origin reversed, shifting X origin\n", dev_name(&(ts->client->dev)), __func__);
 			for(iLoop = 0; iLoop < cur_tch->n_fingers; iLoop++)
 			{
@@ -1394,7 +1391,6 @@ static void ft5x06_process_touch(struct work_struct *work)
 		/* Check for switch in Y origin */
 		if (REVERSE_Y(ts->platform_data->flags))
 		{
-			printk("%s: " FTX_TAG ": %s(): VERBOSE: Y origin reversed, shifting Y origin\n", dev_name(&(ts->client->dev)), __func__);
 			DBG_PRINT(dbg_level_verbose, "%s: " FTX_TAG ": %s(): VERBOSE: Y origin reversed, shifting Y origin\n", dev_name(&(ts->client->dev)), __func__);
 			for(iLoop = 0; iLoop < cur_tch->n_fingers; iLoop++)
 			{
@@ -6534,8 +6530,7 @@ static int __devinit ft5x06_probe(struct i2c_client *client, const struct i2c_de
 	{
 	case 0x0b:
 		{
-			printk("Firmaware version 0x0b\n");
-			//ts->platform_data->flags = FLIP_DATA_FLAG | REVERSE_X_FLAG | REVERSE_Y_FLAG ;
+			DBG_PRINT("Firmaware version 0x0b\n");
 			ts->platform_data->maxy = 768;
 		}
 		break;
