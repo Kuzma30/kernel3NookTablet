@@ -641,14 +641,8 @@ wl_cfgp2p_enable_discovery(struct wl_priv *wl, struct net_device *dev,
 	}
 set_ie:
 	ret = wl_cfgp2p_set_management_ie(wl, dev,
-<<<<<<< HEAD
-	            wl_to_p2p_bss_bssidx(wl, P2PAPI_BSSCFG_DEVICE),
-	            VNDR_IE_PRBREQ_FLAG, ie, ie_len);
-=======
 				wl_to_p2p_bss_bssidx(wl, P2PAPI_BSSCFG_DEVICE),
 				VNDR_IE_PRBREQ_FLAG, ie, ie_len);
->>>>>>> 6fb1ff1... net: wireless: bcmdhd: Enable P2P probe request handling only during discovery
-
 	if (unlikely(ret < 0)) {
 		CFGP2P_ERR(("set probreq ie occurs error %d\n", ret));
 		goto exit;
